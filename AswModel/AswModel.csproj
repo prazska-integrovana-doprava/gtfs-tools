@@ -1,0 +1,79 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{8B18E218-B6E4-4D79-BD17-E0263D942183}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>AswModel</RootNamespace>
+    <AssemblyName>AswModel</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>..\bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AswXmlSerializer.cs" />
+    <Compile Include="JR_XML_EXP\Bod.cs" />
+    <Compile Include="JR_XML_EXP\CharakterVykonu.cs" />
+    <Compile Include="JR_XML_EXP\DavkaJR.cs" />
+    <Compile Include="JR_XML_EXP\DlouhySpoj.cs" />
+    <Compile Include="JR_XML_EXP\Dopravce.cs" />
+    <Compile Include="JR_XML_EXP\DruhDopravy.cs" />
+    <Compile Include="JR_XML_EXP\Grafikon.cs" />
+    <Compile Include="JR_XML_EXP\IntegrovanySystem.cs" />
+    <Compile Include="JR_XML_EXP\KategorieLinkyProIdos.cs" />
+    <Compile Include="JR_XML_EXP\Linka.cs" />
+    <Compile Include="JR_XML_EXP\Majo.cs" />
+    <Compile Include="JR_XML_EXP\Obeh.cs" />
+    <Compile Include="JR_XML_EXP\Poznamka.cs" />
+    <Compile Include="JR_XML_EXP\Preference.cs" />
+    <Compile Include="JR_XML_EXP\Tablo.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="JR_XML_EXP\Spoj.cs" />
+    <Compile Include="JR_XML_EXP\Trajektorie.cs" />
+    <Compile Include="JR_XML_EXP\Trasa.cs" />
+    <Compile Include="JR_XML_EXP\TypVozu.cs" />
+    <Compile Include="JR_XML_EXP\TypVykonu.cs" />
+    <Compile Include="JR_XML_EXP\Vzdalenost.cs" />
+    <Compile Include="JR_XML_EXP\Zastaveni.cs" />
+    <Compile Include="JR_XML_EXP\Zastavka.cs" />
+    <Compile Include="JR_XML_EXP\RowBase.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

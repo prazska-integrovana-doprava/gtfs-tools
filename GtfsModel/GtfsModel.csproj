@@ -1,0 +1,113 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{EFA7BF8A-D351-4E97-8562-4DEA7767A377}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>GtfsModel</RootNamespace>
+    <AssemblyName>GtfsModel</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>..\bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Extended\BaseTransfer.cs" />
+    <Compile Include="Extended\BoardingArea.cs" />
+    <Compile Include="Extended\CalendarExceptionRecord.cs" />
+    <Compile Include="Extended\CalendarRecord.cs" />
+    <Compile Include="Extended\Feed.cs" />
+    <Compile Include="Extended\GenericNode.cs" />
+    <Compile Include="Extended\BaseStop.cs" />
+    <Compile Include="Extended\MinimumTimeTransfer.cs" />
+    <Compile Include="Extended\Route.cs" />
+    <Compile Include="Extended\Shape.cs" />
+    <Compile Include="Extended\ShapePoint.cs" />
+    <Compile Include="Extended\Station.cs" />
+    <Compile Include="Extended\StationEntrance.cs" />
+    <Compile Include="Extended\Stop.cs" />
+    <Compile Include="Extended\StopTime.cs" />
+    <Compile Include="Extended\TimedTransfer.cs" />
+    <Compile Include="Extended\Trip.cs" />
+    <Compile Include="Functions\CalendarIdManager.cs" />
+    <Compile Include="Functions\IdentifierManagement.cs" />
+    <Compile Include="Functions\VerboseDescriptor.cs" />
+    <Compile Include="GtfsAgency.cs" />
+    <Compile Include="GtfsCalendarRecord.cs" />
+    <Compile Include="GtfsCalendarDate.cs" />
+    <Compile Include="Enumerations\BikeAccessibility.cs" />
+    <Compile Include="Enumerations\CalendarExceptionType.cs" />
+    <Compile Include="Enumerations\Direction.cs" />
+    <Compile Include="Enumerations\DropOffType.cs" />
+    <Compile Include="Enumerations\PickupType.cs" />
+    <Compile Include="Enumerations\TrafficType.cs" />
+    <Compile Include="Enumerations\TransferType.cs" />
+    <Compile Include="Enumerations\WheelchairAccessibility.cs" />
+    <Compile Include="GtfsFareRule.cs" />
+    <Compile Include="GtfsFeedInfo.cs" />
+    <Compile Include="Enumerations\LocationType.cs" />
+    <Compile Include="GtfsFeed.cs" />
+    <Compile Include="Functions\GtfsFeedSerializer.cs" />
+    <Compile Include="RouteStop.cs" />
+    <Compile Include="RouteSubAgency.cs" />
+    <Compile Include="GtfsStop.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="GtfsRoute.cs" />
+    <Compile Include="GtfsShapePoint.cs" />
+    <Compile Include="GtfsStopTime.cs" />
+    <Compile Include="GtfsTransfer.cs" />
+    <Compile Include="GtfsTrip.cs" />
+    <Compile Include="Enumerations\WheelchairBoarding.cs" />
+    <Compile Include="RunTrip.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CommonLibrary\CommonLibrary.csproj">
+      <Project>{0d03b588-9405-4dc4-9cef-2b6f3fd41416}</Project>
+      <Name>CommonLibrary</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\CsvSerializer\CsvSerializer.csproj">
+      <Project>{e7b3ffbc-ae55-4612-90ce-38bae11d087b}</Project>
+      <Name>CsvSerializer</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

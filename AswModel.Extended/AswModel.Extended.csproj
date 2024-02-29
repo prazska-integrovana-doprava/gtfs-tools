@@ -1,0 +1,115 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{CA33F0ED-D624-4212-83A9-21E237784C44}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>AswModel.Extended</RootNamespace>
+    <AssemblyName>AswModel.Extended</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AswAgency.cs" />
+    <Compile Include="AswLineType.cs" />
+    <Compile Include="AswTrafficType.cs" />
+    <Compile Include="BaseCollectionOfVersionedItems.cs" />
+    <Compile Include="Coordinates.cs" />
+    <Compile Include="Graph.cs" />
+    <Compile Include="IdosRouteCategory.cs" />
+    <Compile Include="IVersionableByBitmap.cs" />
+    <Compile Include="LineDatabase.cs" />
+    <Compile Include="Logging\IgnoredTripsLogger.cs" />
+    <Compile Include="Logging\IIgnoredTripsLogger.cs" />
+    <Compile Include="Logging\ITrajectoryDbLogger.cs" />
+    <Compile Include="Logging\Loggers.cs" />
+    <Compile Include="Logging\NullIgnoredTripsLogger.cs" />
+    <Compile Include="Logging\NullTrajectoryDbLogger.cs" />
+    <Compile Include="Logging\TrajectoryDbLogger.cs" />
+    <Compile Include="Processors\AgencyProcessor.cs" />
+    <Compile Include="Processors\GraphProcessor.cs" />
+    <Compile Include="Processors\IProcessor.cs" />
+    <Compile Include="Processors\LineProcessor.cs" />
+    <Compile Include="Processors\RemarksProcessor.cs" />
+    <Compile Include="Processors\ShapeProcessor.cs" />
+    <Compile Include="Processors\StopProcessor.cs" />
+    <Compile Include="Processors\StopTimeProcessor.cs" />
+    <Compile Include="Processors\TariffSystemProcessor.cs" />
+    <Compile Include="Processors\TripProcessor.cs" />
+    <Compile Include="Processors\RunProcessor.cs" />
+    <Compile Include="Processors\VehicleTypeProcessor.cs" />
+    <Compile Include="Processors\XmlConnectionsProcessor.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Remark.cs" />
+    <Compile Include="Route.cs" />
+    <Compile Include="RouteAgency.cs" />
+    <Compile Include="ShapeFragment.cs" />
+    <Compile Include="ShapeFragmentCollection.cs" />
+    <Compile Include="ShapeFragmentDescriptor.cs" />
+    <Compile Include="Stop.cs" />
+    <Compile Include="StopDatabase.cs" />
+    <Compile Include="StopRef.cs" />
+    <Compile Include="StopTime.cs" />
+    <Compile Include="AswSingleFileFeed.cs" />
+    <Compile Include="TheAswDatabase.cs" />
+    <Compile Include="Trip.cs" />
+    <Compile Include="TripDatabase.cs" />
+    <Compile Include="RunDescriptor.cs" />
+    <Compile Include="VersionedItemByBitmap.cs" />
+    <Compile Include="WheelchairAccessibility.cs" />
+    <Compile Include="ZoneInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\AswModel\AswModel.csproj">
+      <Project>{8b18e218-b6e4-4d79-bd17-e0263d942183}</Project>
+      <Name>AswModel</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\CommonLibrary\CommonLibrary.csproj">
+      <Project>{0d03b588-9405-4dc4-9cef-2b6f3fd41416}</Project>
+      <Name>CommonLibrary</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\GtfsLogging\GtfsLogging.csproj">
+      <Project>{6e305575-db41-4baf-9112-baf5ed6ef863}</Project>
+      <Name>GtfsLogging</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

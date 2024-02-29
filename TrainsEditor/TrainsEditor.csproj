@@ -1,0 +1,226 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{3EE631F2-8EF6-43CA-AA02-EC5BAF8DD9D2}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>TrainsEditor</RootNamespace>
+    <AssemblyName>TrainsEditor</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <WarningLevel>4</WarningLevel>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>..\bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug - db vlaky|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\bin\Debug - db vlaky\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="FluentFTP, Version=45.0.3.0, Culture=neutral, PublicKeyToken=f4af092b1d8df44f, processorArchitecture=MSIL">
+      <HintPath>..\packages\FluentFTP.45.0.3\lib\net472\FluentFTP.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Windows.Shell, Version=3.5.41019.1, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
+    <Reference Include="RibbonControlsLibrary, Version=3.5.41019.1, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xaml">
+      <RequiredTargetFramework>4.0</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="UIAutomationProvider" />
+    <Reference Include="UIAutomationTypes" />
+    <Reference Include="WindowsBase" />
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+  </ItemGroup>
+  <ItemGroup>
+    <ApplicationDefinition Include="App.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </ApplicationDefinition>
+    <Compile Include="CommonLogic\IntegratedSystemsEnum.cs" />
+    <Compile Include="CommonLogic\IntegratedSystemsExtensions.cs" />
+    <Compile Include="CommonLogic\TrainNetworkSpecificParamsProvider.cs" />
+    <Compile Include="CommonLogic\TrainTextComparison.cs" />
+    <Compile Include="CommonModel\CalendarValue.cs" />
+    <Compile Include="CommonLogic\CorrectionConfig.cs" />
+    <Compile Include="CommonModel\SingleTrainFile.cs" />
+    <Compile Include="CommonModel\TrainGroup.cs" />
+    <Compile Include="CommonModel\TrainGroupCollection.cs" />
+    <Compile Include="CommonLogic\TrainGroupLoader.cs" />
+    <Compile Include="EditorLogic\FilesDownloader.cs" />
+    <Compile Include="EditorLogic\FtpFileInfo.cs" />
+    <Compile Include="EditorLogic\XmlSerializeToObjectHelper.cs" />
+    <Compile Include="EditorLogic\TimeConverter.cs" />
+    <Compile Include="ExportModel\ShapeDatabase.cs" />
+    <Compile Include="GtfsExport\CalendarConstructor.cs" />
+    <Compile Include="GtfsExport\GtfsExportModule.cs" />
+    <Compile Include="GtfsExport\TrainVariantMerge.cs" />
+    <Compile Include="GtfsExport\TripDirectionSpec.cs" />
+    <Compile Include="LocationWindow.xaml.cs">
+      <DependentUpon>LocationWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ExportModel\RouteDatabase.cs" />
+    <Compile Include="ExportModel\StationDatabase.cs" />
+    <Compile Include="DateSelectWindow.xaml.cs">
+      <DependentUpon>DateSelectWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ExportModel\StationTime.cs" />
+    <Compile Include="ExportModel\Train.cs" />
+    <Compile Include="ExportModel\TrainRoute.cs" />
+    <Compile Include="CommonLogic\TrainLineInfo.cs" />
+    <Compile Include="CommonLogic\TrainLineType.cs" />
+    <Compile Include="ExportModel\TrainStop.cs" />
+    <Compile Include="ExportModel\TrainTrip.cs" />
+    <Compile Include="GtfsExport\Loggers.cs" />
+    <Compile Include="Settings.cs" />
+    <Compile Include="TextWindow.xaml.cs">
+      <DependentUpon>TextWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ViewModel\CalendarVisualBitmap.cs" />
+    <Compile Include="EditorLogic\FilesManager.cs" />
+    <Compile Include="CommonLogic\LocationExtensions.cs" />
+    <Compile Include="TrainWindow.xaml.cs">
+      <DependentUpon>TrainWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ViewModel\AbstractTrainFile.cs" />
+    <Compile Include="ViewModel\TrainActivityViewModel.cs" />
+    <Compile Include="ViewModel\TrainCalendar.cs" />
+    <Compile Include="ViewModel\TrainCancelationFile.cs" />
+    <Compile Include="ViewModel\TrainLocation.cs" />
+    <Compile Include="ViewModel\TrainFile.cs" />
+    <Page Include="DateSelectWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="LocationWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="MainWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Compile Include="App.xaml.cs">
+      <DependentUpon>App.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MainWindow.xaml.cs">
+      <DependentUpon>MainWindow.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Page Include="TextWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="TrainWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <None Include="packages.config" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <AppDesigner Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\AswModel.Extended\AswModel.Extended.csproj">
+      <Project>{ca33f0ed-d624-4212-83a9-21e237784c44}</Project>
+      <Name>AswModel.Extended</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\AswModel\AswModel.csproj">
+      <Project>{8b18e218-b6e4-4d79-bd17-e0263d942183}</Project>
+      <Name>AswModel</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\CommonLibrary\CommonLibrary.csproj">
+      <Project>{0d03b588-9405-4dc4-9cef-2b6f3fd41416}</Project>
+      <Name>CommonLibrary</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\CsvSerializer\CsvSerializer.csproj">
+      <Project>{e7b3ffbc-ae55-4612-90ce-38bae11d087b}</Project>
+      <Name>CsvSerializer</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\CzpttModel\CzpttModel.csproj">
+      <Project>{7a13e227-10a4-4948-9d13-d4bd5838aea7}</Project>
+      <Name>CzpttModel</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\GtfsLogging\GtfsLogging.csproj">
+      <Project>{6e305575-db41-4baf-9112-baf5ed6ef863}</Project>
+      <Name>GtfsLogging</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\GtfsModel\GtfsModel.csproj">
+      <Project>{efa7bf8a-d351-4e97-8562-4dea7767a377}</Project>
+      <Name>GtfsModel</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

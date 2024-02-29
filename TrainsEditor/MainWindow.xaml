@@ -1,0 +1,163 @@
+﻿<Window
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TrainsEditor"
+        xmlns:Custom="http://schemas.microsoft.com/winfx/2006/xaml/presentation/ribbon" x:Class="TrainsEditor.MainWindow"
+        mc:Ignorable="d"
+        Title="Editor vlaků" Height="728.757" Width="1127.527" Closing="Window_Closing">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </Window.Resources>
+    <Grid>
+        <ListView x:Name="listView" Margin="0,155,0,0" ItemsSource="{Binding Mode=OneWay}" MouseDoubleClick="listView_MouseDoubleClick" VirtualizingPanel.IsVirtualizingWhenGrouping="True">
+            <ListView.ItemContainerStyle>
+                <Style TargetType="{x:Type ListViewItem}">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding HasUnsavedChanges}" Value="True">
+                            <Setter Property="Foreground" Value="Red" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </ListView.ItemContainerStyle>
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="Vlak" Width="80">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding TrainTypeAndNumber}" FontWeight="Bold" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="Linka" Width="55" DisplayMemberBinding="{Binding LineName}" />
+                    <GridViewColumn Header="IDS" Width="45">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel>
+                                    <TextBlock Text="pid" FontWeight="Bold" Foreground="Red" Visibility="{Binding IsPid, Converter={StaticResource BoolToVis}}" />
+                                    <TextBlock Text="odis" FontWeight="Bold" Foreground="DarkBlue" Visibility="{Binding IsOdis, Converter={StaticResource BoolToVis}}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="Platí od" Width="80" DisplayMemberBinding="{Binding Calendar.StartDate, StringFormat=dd.MM.yyyy}"/>
+                    <GridViewColumn Header="Platí do" Width="80" DisplayMemberBinding="{Binding Calendar.EndDate, StringFormat=dd.MM.yyyy}"/>
+                    <GridViewColumn Header="Platnost">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <Rectangle Fill="{Binding VisualBitmap.Brush}" Height="15" Width="376" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="Po">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <Rectangle Fill="{Binding DaysOfWeekColors[0]}" Height="15" Width="15" Margin="-4,0" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="Út">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <Rectangle Fill="{Binding DaysOfWeekColors[1]}" Height="15" Width="15" Margin="-4,0" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="St">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <Rectangle Fill="{Binding DaysOfWeekColors[2]}" Height="15" Width="15" Margin="-4,0" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="Čt">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <Rectangle Fill="{Binding DaysOfWeekColors[3]}" Height="15" Width="15" Margin="-4,0" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="Pá">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <Rectangle Fill="{Binding DaysOfWeekColors[4]}" Height="15" Width="15" Margin="-4,0" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="So">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <Rectangle Fill="{Binding DaysOfWeekColors[5]}" Height="15" Width="15" Margin="-4,0" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="Ne">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <Rectangle Fill="{Binding DaysOfWeekColors[6]}" Height="15" Width="15" Margin="-4,0" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="Trasa" Width="260" DisplayMemberBinding="{Binding Route}"/>
+                    <GridViewColumn Header="Varianta" DisplayMemberBinding="{Binding TrainId.Variant}"/>
+                    <GridViewColumn Header="Vytvořeno" Width="125" DisplayMemberBinding="{Binding CreationDate, StringFormat=dd.MM.yyyy HH:mm:ss}"/>
+                    <GridViewColumn Header="Soubor" Width="450" DisplayMemberBinding="{Binding FullPath}"/>
+                </GridView>
+            </ListView.View>
+            <ListView.GroupStyle>
+                <GroupStyle>
+                    <GroupStyle.HeaderTemplate>
+                        <DataTemplate>
+                            <TextBlock FontStyle="Italic" Text="{Binding Name}" />
+                        </DataTemplate>
+                    </GroupStyle.HeaderTemplate>
+                </GroupStyle>
+            </ListView.GroupStyle>
+        </ListView>
+        <Button x:Name="btnSelectFolder" Content="..." HorizontalAlignment="Right" Margin="0,9,159,0" VerticalAlignment="Top" Width="35" Height="25" Click="btnSelectFolder_Click"/>
+        <TextBox x:Name="txtFilter" HorizontalAlignment="Right" Height="23" Margin="0,39,75,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="142" FontStyle="Italic" TextChanged="txtFilter_TextChanged"/>
+        <Label x:Name="label" Content="Filtr:" HorizontalAlignment="Right" Margin="0,38,222,0" VerticalAlignment="Top" HorizontalContentAlignment="Right" RenderTransformOrigin="0.545,0.808"/>
+        <DatePicker x:Name="dtStartDate" HorizontalAlignment="Right" Margin="0,66,528,0" VerticalAlignment="Top" FirstDayOfWeek="Monday" Width="110" SelectedDate="2023-12-10"/>
+        <DatePicker x:Name="dtEndDate" HorizontalAlignment="Right" Margin="0,66,413,0" VerticalAlignment="Top" FirstDayOfWeek="Monday" Width="110" SelectedDate="2024-12-14"/>
+        <Label x:Name="label1" Content="Rozsah časové osy platnosti:" HorizontalAlignment="Right" Margin="0,40,473,0" VerticalAlignment="Top" HorizontalContentAlignment="Right" Width="165"/>
+        <Button x:Name="btnSelectAll" Content="Vše" HorizontalAlignment="Left" Margin="55,126,0,0" VerticalAlignment="Top" Width="45" IsEnabled="False" Click="btnSelectAll_Click"/>
+        <Button x:Name="btnSelectNone" Content="Nic" HorizontalAlignment="Left" Margin="105,126,0,0" VerticalAlignment="Top" Width="45" IsEnabled="False" Click="btnSelectNone_Click"/>
+        <Label x:Name="label2" Content="Výběr" HorizontalAlignment="Left" Margin="10,124,0,0" VerticalAlignment="Top"/>
+        <Label x:Name="label3" Content="Akce s výběrem" HorizontalAlignment="Left" Margin="188,124,0,0" VerticalAlignment="Top" Width="92"/>
+        <Button x:Name="btnDeleteFile" Content="Smazat" HorizontalAlignment="Left" Margin="285,102,0,0" VerticalAlignment="Top" Width="75" IsEnabled="False" Click="btnDeleteFile_Click"/>
+        <Button x:Name="btnDuplicateFile" Content="Duplikovat" HorizontalAlignment="Left" Margin="285,127,0,0" VerticalAlignment="Top" Width="75" IsEnabled="False" Click="btnDuplicateFile_Click"/>
+        <Button x:Name="btnLoadRepo" Content="Načíst data z repozitáře" HorizontalAlignment="Left" Margin="155,9,0,0" VerticalAlignment="Top" Width="154" Height="25" Click="btnLoadRepo_Click"/>
+        <TextBox x:Name="txtFolderRepo" Height="23" Margin="314,10,199,0" TextWrapping="Wrap" Text="." VerticalAlignment="Top" HorizontalContentAlignment="Stretch"/>
+        <Button x:Name="btnCancelFilter" Content="zruš" HorizontalAlignment="Right" Margin="0,39,32,0" VerticalAlignment="Top" Width="38" Height="23" Click="btnCancelFilter_Click"/>
+        <Button x:Name="btnReloadFile" Content="Obnovit" HorizontalAlignment="Left" Margin="482,102,0,0" VerticalAlignment="Top" Width="78" IsEnabled="False" Click="btnReloadFile_Click"/>
+        <ProgressBar x:Name="progressBar" HorizontalAlignment="Left" Height="23" Margin="10,66,0,0" VerticalAlignment="Top" Width="208" Visibility="Hidden"/>
+        <Button x:Name="btnStop" Content="stop" HorizontalAlignment="Left" Margin="223,67,0,0" VerticalAlignment="Top" Width="58" Click="btnStop_Click" Visibility="Hidden"/>
+        <Button x:Name="btnGenerateGtfs" Content="Generovat GTFS PID" HorizontalAlignment="Right" Margin="0,9,10,0" VerticalAlignment="Top" Width="144" Height="25" Click="btnGenerateGtfs_Click"/>
+        <Label x:Name="label4" Content="IDS:" HorizontalAlignment="Right" Margin="0,99,224,0" VerticalAlignment="Top"/>
+        <ComboBox x:Name="cbFilterIntegratedSystem" HorizontalAlignment="Right" Margin="0,99,75,0" VerticalAlignment="Top" Width="142" SelectionChanged="cbFilterIntegratedSystem_SelectionChanged">
+            <ComboBoxItem x:Name="cbFilterSelectAll" Content="(zobrazit vše)" HorizontalAlignment="Left" Width="205" IsSelected="True"/>
+            <ComboBoxItem x:Name="cbFilterIntegratedOnly" Content="vlaky v IDS" HorizontalAlignment="Left" Width="205" />
+            <ComboBoxItem x:Name="cbFilterNonIntegratedOnly" Content="vlaky mimo IDS" HorizontalAlignment="Left" Width="205"/>
+        </ComboBox>
+        <ComboBox x:Name="cbFilterValidity" HorizontalAlignment="Right" Margin="0,126,8,0" VerticalAlignment="Top" Width="209" SelectionChanged="cbFilterValidity_SelectionChanged">
+            <ComboBoxItem x:Name="cbFilterValiditySelectAll" Content="(zobrazit vše)" HorizontalAlignment="Left" Width="205" IsSelected="True"/>
+            <ComboBoxItem x:Name="cbFilterValiditySelectValidOnly" Content="pouze vlaky stále platné" HorizontalAlignment="Left" Width="205"/>
+            <ComboBoxItem x:Name="cbFilterValiditySelectNotValidOnly" Content="pouze vlaky již neplatné" HorizontalAlignment="Left" Width="205"/>
+        </ComboBox>
+        <Label x:Name="label5" Content="Platnost:" HorizontalAlignment="Right" Margin="0,124,222,0" VerticalAlignment="Top"/>
+        <Button x:Name="btnFilterHelp" Content="?" HorizontalAlignment="Right" Margin="0,39,10,0" VerticalAlignment="Top" Width="17" Height="23" Click="btnFilterHelp_Click"/>
+        <Button x:Name="btnSaveChanges" Content="Uložit změny" HorizontalAlignment="Left" Margin="482,126,0,0" VerticalAlignment="Top" Width="78" IsEnabled="False" Click="btnSaveChanges_Click"/>
+        <CheckBox x:Name="chcIgnorePastData" Content="Ignorovat data v minulosti" HorizontalAlignment="Left" Margin="155,39,0,0" VerticalAlignment="Top" IsChecked="True"/>
+        <Button x:Name="btnRefreshVisuals" Content="Překreslit" Margin="0,66,333,0" VerticalAlignment="Top" Height="23" Click="btnRefreshVisuals_Click" HorizontalAlignment="Right" Width="75"/>
+        <Button x:Name="btnDownload" Content="Stáhnout nové soubory" HorizontalAlignment="Left" Margin="10,9,0,0" VerticalAlignment="Top" Width="140" Height="25" Click="btnDownload_Click"/>
+        <ComboBox x:Name="cbIntegratedSystemsList" HorizontalAlignment="Right" Margin="0,99,10,0" VerticalAlignment="Top" Width="60" SelectionChanged="cbIntegratedSystemsList_SelectionChanged"/>
+        <DatePicker x:Name="dtFilterNewerThan" HorizontalAlignment="Right" Margin="0,66,10,0" VerticalAlignment="Top" Width="207" FirstDayOfWeek="Monday" SelectedDateFormat="Short" SelectedDateChanged="dtFilterNewerThan_SelectedDateChanged"/>
+        <CheckBox x:Name="chcFilterApplyNewerThan" Content="Novější než:" HorizontalAlignment="Right" Margin="0,71,222,0" VerticalAlignment="Top" Width="86" Checked="chcFilterApplyNewerThan_Checked" Unchecked="chcFilterApplyNewerThan_Unchecked"/>
+        <Button x:Name="btnCreateCancelFile" Content="Vytvořit zrušení" HorizontalAlignment="Left" Margin="365,102,0,0" VerticalAlignment="Top" Width="88" IsEnabled="False" Click="btnCreateCancelFile_Click"/>
+        <Button x:Name="btnOpenInTextEditor" Content="Textový editor" HorizontalAlignment="Left" Margin="593,102,0,0" VerticalAlignment="Top" Width="86" IsEnabled="False" Click="btnOpenInTextEditor_Click"/>
+        <Button x:Name="btnShowGtfs" Content="GTFS obraz" HorizontalAlignment="Left" Margin="593,126,0,0" VerticalAlignment="Top" Width="86" IsEnabled="False" Click="btnShowGtfs_Click"/>
+        <Button x:Name="btnShowChanges" Content="Zobraz změny" HorizontalAlignment="Left" Margin="684,102,0,0" VerticalAlignment="Top" Width="86" IsEnabled="False" Click="btnShowChanges_Click"/>
+        <Label x:Name="lblCurrentAction" Content="" HorizontalAlignment="Left" Margin="10,89,0,0" VerticalAlignment="Top" Width="270"/>
+    </Grid>
+</Window>

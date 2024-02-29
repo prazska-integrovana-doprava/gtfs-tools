@@ -1,0 +1,79 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="TrainsEditor.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="StopsAndLinesFileName" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">..\..\ZastavkyLinkyDopravci.xml</Value>
+    </Setting>
+    <Setting Name="SR70Stops" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">..\..\SR70_2021.csv</Value>
+    </Setting>
+    <Setting Name="RepositoryFolder" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">c:\temp\jrspoje\GVD2023+KADR</Value>
+    </Setting>
+    <Setting Name="TrackNetworkFile" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">..\..\sit_vlak.csv</Value>
+    </Setting>
+    <Setting Name="OutputFolder" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">c:\temp\jrspoje\gtfs_vlaky</Value>
+    </Setting>
+    <Setting Name="LogFolder" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">c:\temp\jrspoje\log</Value>
+    </Setting>
+    <Setting Name="RepresentativeTrips" Type="System.Collections.Generic.List&lt;TrainsEditor.GtfsExport.TripDirectionSpec&gt;" Scope="Application">
+      <Value Profile="(Default)">					&lt;ArrayOfTripDirectionSpec xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"&gt;
+						&lt;TripDirectionSpec&gt;
+							&lt;LineName&gt;S33&lt;/LineName&gt;
+							&lt;TrainNumber&gt;8515&lt;/TrainNumber&gt;
+						&lt;/TripDirectionSpec&gt;
+                        &lt;TripDirectionSpec&gt;
+							&lt;LineName&gt;S33&lt;/LineName&gt;
+							&lt;TrainNumber&gt;8518&lt;/TrainNumber&gt;
+						&lt;/TripDirectionSpec&gt;
+						&lt;TripDirectionSpec&gt;
+							&lt;LineName&gt;S9&lt;/LineName&gt;
+							&lt;TrainNumber&gt;2540&lt;/TrainNumber&gt;
+						&lt;/TripDirectionSpec&gt;
+						&lt;TripDirectionSpec&gt;
+							&lt;LineName&gt;S9&lt;/LineName&gt;
+							&lt;TrainNumber&gt;2509&lt;/TrainNumber&gt;
+						&lt;/TripDirectionSpec&gt;
+						&lt;TripDirectionSpec&gt;
+							&lt;LineName&gt;S2&lt;/LineName&gt;
+							&lt;TrainNumber&gt;5802&lt;/TrainNumber&gt;
+						&lt;/TripDirectionSpec&gt;
+						&lt;TripDirectionSpec&gt;
+							&lt;LineName&gt;S2&lt;/LineName&gt;
+							&lt;TrainNumber&gt;5805&lt;/TrainNumber&gt;
+						&lt;/TripDirectionSpec&gt;
+					&lt;/ArrayOfTripDirectionSpec&gt;
+					
+						
+							S33
+							8515
+						
+						
+							S33
+							8518
+						
+						
+							S9
+							2540
+						
+						
+							S9
+							2509
+						
+						
+							S2
+							5802
+						
+						
+							S2
+							5805
+						
+					
+				</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>

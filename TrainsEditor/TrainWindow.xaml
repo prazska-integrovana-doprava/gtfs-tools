@@ -1,0 +1,161 @@
+﻿<Window x:Class="TrainsEditor.TrainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TrainsEditor"
+        mc:Ignorable="d"
+        Title="Vlak" Height="729.276" Width="1087.712" KeyDown="Window_KeyDown">
+    <Grid DataContextChanged="Grid_DataContextChanged">
+
+        <ListView x:Name="lvDates" HorizontalAlignment="Left" Margin="10,39,0,91" Width="225" ItemsSource="{Binding Calendar.DateRecords}">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="Datum" DisplayMemberBinding="{Binding Date, StringFormat=dd.MM.yyyy}"/>
+                    <GridViewColumn Header="Den" DisplayMemberBinding="{Binding Date, StringFormat=ddd}"/>
+                    <GridViewColumn Header="Jede">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox IsChecked="{Binding Value}" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                </GridView>
+            </ListView.View>
+        </ListView>
+        <ListView x:Name="lvLocations" Margin="287,10,10,185" ItemsSource="{Binding Locations}" SelectionChanged="lvLocations_SelectionChanged" MouseDoubleClick="lvLocations_MouseDoubleClick" KeyDown="lvLocations_KeyDown">
+            <ListView.ItemContainerStyle>
+                <Style TargetType="{x:Type ListViewItem}">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding TrainStopsHere}" Value="False">
+                            <Setter Property="Foreground" Value="Gray" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding IsPublicTrainPart}" Value="False">
+                            <Setter Property="FontStyle" Value="Italic" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </ListView.ItemContainerStyle>
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="Vlak" DisplayMemberBinding="{Binding TrainTypeAndNumber, Mode=OneWay}"/>
+                    <GridViewColumn Header="Linka" DisplayMemberBinding="{Binding LineNumber, Mode=OneWay}" />
+                    <GridViewColumn Header="Stanice" DisplayMemberBinding="{Binding LocationName, Mode=OneWay}"/>
+                    <GridViewColumn Header="Tarif" DisplayMemberBinding="{Binding ZoneIds, Mode=OneWay}"/>
+                    <GridViewColumn Header="Příj." DisplayMemberBinding="{Binding ArrivalTime, Mode=OneWay}"/>
+                    <GridViewColumn Header="Odj." DisplayMemberBinding="{Binding DepartureTime, Mode=OneWay}"/>
+                    <GridViewColumn Header="NAD">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox IsChecked="{Binding IsAlternativeTransport, Mode=TwoWay}" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="Bezba" DisplayMemberBinding="{Binding WheelchairAccessibilityIndicator, Mode=OneWay}" />
+                    <GridViewColumn Header="0001">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox IsChecked="{Binding TrainActivity[0001], Mode=TwoWay}" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="CZ02">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox IsChecked="{Binding TrainActivity[CZ02], Mode=TwoWay}" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="0002">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox IsChecked="{Binding TrainActivity[0002], Mode=TwoWay}" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="0028">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox IsChecked="{Binding TrainActivity[0028], Mode=TwoWay}" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="0029">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox IsChecked="{Binding TrainActivity[0029], Mode=TwoWay}" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="0030">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox IsChecked="{Binding TrainActivity[0029], Mode=TwoWay}" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="0031">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox IsChecked="{Binding TrainActivity[0031], Mode=TwoWay}" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="0032">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox IsChecked="{Binding TrainActivity[0032], Mode=TwoWay}" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="CZ01">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox IsChecked="{Binding TrainActivity[CZ01], Mode=TwoWay}" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="IPTS" DisplayMemberBinding="{Binding IPTSNotesText, Mode=OneWay}"/>
+                </GridView>
+            </ListView.View>
+        </ListView>
+        <Label x:Name="label" Content="0001 = Nástup a výstup cestujících&#xD;&#xA;CZ02 = Pobyt kratší než 1/2 min&#xD;&#xA;0002 = Zastavení jen z dopravních důvodů&#xA;0028 = Zastavení jen pro nástup&#xD;&#xA;0029 = Zastavení jen pro výstup&#xA;0030 = Zastavení jen na znamení&#xA;0031 = Odjezd v čase příjezdu&#xD;&#xA;0032 = Odjezd ihned po výstupu&#xD;&#xA;CZ01 = Zastavuje od otevření zastávky" Margin="287,0,0,2" VerticalAlignment="Bottom" Height="159" HorizontalContentAlignment="Stretch" HorizontalAlignment="Left" Width="261"/>
+        <Button x:Name="btnCancel" Content="Zrušit" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="95" RenderTransformOrigin="-0.067,-0.5" Height="30" Click="btnCancel_Click" FontWeight="Bold"/>
+        <Button x:Name="btnSave" Content="Uložit &amp; Zavřít" HorizontalAlignment="Right" Margin="0,0,110,10" VerticalAlignment="Bottom" Width="110" Height="30" Click="btnSave_Click" FontWeight="Bold"/>
+        <Button x:Name="btnChangeBitmap" Content="Změnit rozsah od – do" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="225" Height="24" Click="btnChangeBitmap_Click"/>
+        <Button x:Name="btnSetTrainNumber" Content="Nastavit vlak" HorizontalAlignment="Left" Margin="541,0,0,131" VerticalAlignment="Bottom" Width="95" Click="btnSetTrainNumber_Click"/>
+        <TextBox x:Name="txtTrainNumber" HorizontalAlignment="Left" Height="23" Margin="695,0,0,131" VerticalAlignment="Bottom" Width="133"/>
+        <Button x:Name="btnSetLineName" Content="Nastavit linku" HorizontalAlignment="Left" Margin="541,0,0,103" VerticalAlignment="Bottom" Width="95" Click="btnSetLineName_Click"/>
+        <TextBox x:Name="txtLineName" HorizontalAlignment="Left" Height="23" Margin="641,0,0,103" VerticalAlignment="Bottom" Width="116"/>
+        <Button x:Name="btnShiftTime" Content="Posun časů" HorizontalAlignment="Left" Margin="541,0,0,76" VerticalAlignment="Bottom" Width="95" Click="btnShiftTime_Click"/>
+        <ComboBox x:Name="cbShiftTimeValue" HorizontalAlignment="Left" Margin="641,0,0,76" VerticalAlignment="Bottom" Width="187"/>
+        <CheckBox x:Name="chcShiftTimeIncludeFirstArrival" Content="včetně prvního příjezdu" HorizontalAlignment="Left" Margin="641,0,0,55" VerticalAlignment="Bottom" RenderTransformOrigin="0.676,0.5" IsChecked="True"/>
+        <CheckBox x:Name="chcShiftTimeIncludeLastDeparture" Content="včetně posledního odjezdu" HorizontalAlignment="Left" Margin="641,0,0,34" VerticalAlignment="Bottom" IsChecked="True"/>
+        <Label x:Name="label1" Content="Úprava vybraných záznamů" HorizontalAlignment="Left" Margin="541,0,0,154" VerticalAlignment="Bottom" FontWeight="Bold"/>
+        <Label x:Name="label2" Content="Vysvětlivky" HorizontalAlignment="Left" Margin="287,0,0,154" VerticalAlignment="Bottom" FontWeight="Bold"/>
+        <ComboBox x:Name="cbTrainType" HorizontalAlignment="Left" Margin="641,0,0,131" VerticalAlignment="Bottom" Width="49"/>
+        <Button x:Name="btnCopyLocation" Content="Kopírovat vybrané (Ctrl+C)" HorizontalAlignment="Right" Margin="0,0,10,148" VerticalAlignment="Bottom" Width="162" Click="btnCopyLocation_Click"/>
+        <Button x:Name="btnPasteLocation" Content="Vložit za vybranou (Ctrl+V)" HorizontalAlignment="Right" Margin="0,0,10,121" VerticalAlignment="Bottom" Width="162" Click="btnPasteLocation_Click"/>
+        <Button x:Name="btnDeleteLocation" Content="Smazat vybrané(Del)" HorizontalAlignment="Right" Margin="0,0,10,67" VerticalAlignment="Bottom" Width="162" Click="btnDeleteLocation_Click"/>
+        <Button x:Name="btnInsertLocationTop" Content="Vložit před první" HorizontalAlignment="Right" Margin="0,0,10,94" VerticalAlignment="Bottom" Width="162" Click="btnInsertLocationTop_Click"/>
+        <Button x:Name="btnDatesSetInvert" Content="Invertovat vybrané" HorizontalAlignment="Left" Margin="10,0,0,10" VerticalAlignment="Bottom" Width="225" Click="btnDatesSetInvert_Click"/>
+        <Button x:Name="btnDatesSet0" Content="Odškrtnout vybrané" HorizontalAlignment="Left" Margin="10,0,0,37" VerticalAlignment="Bottom" Width="113" Click="btnDatesSet0_Click"/>
+        <Button x:Name="btnDatesSet1" Content="Zaškrtnout vybrané" HorizontalAlignment="Left" Margin="10,0,0,64" VerticalAlignment="Bottom" Width="113" Click="btnDatesSet1_Click"/>
+        <Button x:Name="btnSetWheelchair" Content="Nastavit bezba" HorizontalAlignment="Left" Margin="541,0,0,7" VerticalAlignment="Bottom" Width="95" Click="btnSetWheelchair_Click"/>
+        <ComboBox x:Name="cbWheelchairModes" HorizontalAlignment="Left" Margin="641,0,0,7" VerticalAlignment="Bottom" Width="187">
+            <ComboBoxItem x:Name="cbWheelchairModesNotAvailableItem" Content="Nelze přepravovat vozíky"/>
+            <ComboBoxItem x:Name="cbWheelchairModesTransportAvailableItem" Content="Bez zvedací plošiny"/>
+            <ComboBoxItem x:Name="cbWheelchairModesTransportAndPickupItem" Content="Včetně zvedací plošiny"/>
+        </ComboBox>
+        <CheckBox x:Name="cbSetAlternativeTransport" Content="NAD" HorizontalAlignment="Left" Margin="783,0,0,107" VerticalAlignment="Bottom" Checked="cbSetAlternativeTransport_Checked" Unchecked="cbSetAlternativeTransport_Unchecked"/>
+        <Button x:Name="btnDatesSet1Holidays" Content="Sv" HorizontalAlignment="Left" Margin="212,0,0,64" VerticalAlignment="Bottom" Width="23" Click="btnDatesSet1Holidays_Click"/>
+        <Button x:Name="btnDatesSet1Sundays" Content="Ne" HorizontalAlignment="Left" Margin="184,0,0,64" VerticalAlignment="Bottom" Width="23" Click="btnDatesSet1Sundays_Click"/>
+        <Button x:Name="btnDatesSet1Saturdays" Content="So" HorizontalAlignment="Left" Margin="156,0,0,64" VerticalAlignment="Bottom" Width="23" Click="btnDatesSet1Saturdays_Click"/>
+        <Button x:Name="btnDatesSet1Workdays" Content="PD" HorizontalAlignment="Left" Margin="128,0,0,64" VerticalAlignment="Bottom" Width="23" Click="btnDatesSet1Workdays_Click"/>
+        <Button x:Name="btnDatesSet0Holidays" Content="Sv" HorizontalAlignment="Left" Margin="212,0,0,37" VerticalAlignment="Bottom" Width="23" Click="btnDatesSet0Holidays_Click"/>
+        <Button x:Name="btnDatesSet0Workdays" Content="PD" HorizontalAlignment="Left" Margin="128,0,0,37" VerticalAlignment="Bottom" Width="23" Click="btnDatesSet0Workdays_Click"/>
+        <Button x:Name="btnDatesSet0Sundays" Content="Ne" HorizontalAlignment="Left" Margin="184,0,0,37" VerticalAlignment="Bottom" Width="23" Click="btnDatesSet0Sundays_Click"/>
+        <Button x:Name="btnDatesSet0Saturdays" Content="So" HorizontalAlignment="Left" Margin="156,0,0,37" VerticalAlignment="Bottom" Width="23" Click="btnDatesSet0Saturdays_Click"/>
+
+    </Grid>
+</Window>
