@@ -190,13 +190,21 @@ namespace GtfsProcessor
             Dictionary<MergedRun, GtfsModel.Extended.CalendarRecord> calendarToRunAssignment;
             gtfsFeedEx.Calendar.AddRange(calendarGenerator.GenerateCalendarsForRuns(runsProcessor.Runs, out calendarToRunAssignment).ToDictionary(cal => cal.GtfsId));
 
+            // ještě než půjdeme generovat trasy, musíme zkorigovat polohy nástupišť metra (možná je totiž opravuje dodatečný list zastávek)
+            List<GtfsStop> extraStops = null;
+            if (config.AdditionalStopsFileName != null)
+            {
+                extraStops = CsvFileSerializer.DeserializeFile<GtfsStop>(config.AdditionalStopsFileName);
+                CorrectStopPositionsInAsw(db.Stops, extraStops);
+            }
+
             // vyrobíme GTFS trasy spojům tak, že spoje se stejnou posloupností zastávek a variant tras budou sdílet stejnou trasu;
             // zároveň si uložíme mapování spojů na trasy a použijeme ho při konstrukci GTFS tripů
             Console.WriteLine("Generuji trasy...");
             Dictionary<MergedTripGroup, ShapeEx> shapeToTripAssignment;
             var shapeConstructor = new ShapeConstructor();
             shapeConstructor.LoadPointData(config.MetroNetworkFile);
-            var metroStationPlatforms = db.Stops.Select(s => s.FirstVersion()).Where(s => s.IsMetro);
+            var metroStationPlatforms = db.Stops.Select(s => s.FirstVersion()).Where(s => s.IsMetro && s.IsPublic);
             gtfsFeedEx.Shapes = new ShapeGenerator().GenerateAndAssignShapes(mergedTripGroups, out shapeToTripAssignment, shapeConstructor, metroStationPlatforms, log).ToDictionary(sh => sh.Id);
 
             // protože spoje mají IDčka v ASW víceméně náhodná (každý den jiná) a protože chceme, aby byly IDčka spojů pokud možno
@@ -285,11 +293,10 @@ namespace GtfsProcessor
             gtfsFeedEx.Transfers.AddRange(timedTransfers);
 
             var gtfsFeed = gtfsFeedEx.ToGtfsFeed();
-            if (config.AdditionalStopsFileName != null)
+            if (extraStops != null)
             {
                 // nakonec ruční doplnění vstupů do metra a případných ručních zásahů do zastávek a stanic z externího zdroje
                 Console.WriteLine($"Doplňuji zastávky z {config.AdditionalStopsFileName}...");
-                var extraStops = CsvFileSerializer.DeserializeFile<GtfsStop>(config.AdditionalStopsFileName);
                 MergeFeedStops(gtfsFeed, extraStops);
             }
             else
@@ -371,6 +378,26 @@ namespace GtfsProcessor
                 {
                     // nový záznam
                     gtfsFeed.Stops.Add(stop);
+                }
+            }
+        }
+
+        private static void CorrectStopPositionsInAsw(StopDatabase stops, List<GtfsStop> extraStops)
+        {
+            foreach (var extraStop in extraStops.Where(es => es.AswNodeId > 0 && es.AswStopId > 0))
+            {
+                var stopDbKey = StopDatabase.CreateKey(extraStop.AswNodeId, extraStop.AswStopId);
+                var stopInDb = stops.Find(stopDbKey);
+                if (stopInDb == null)
+                    continue;
+
+                foreach (var stopVersion in stopInDb.AllVersions())
+                {
+                    stopVersion.Position = new Coordinates()
+                    {
+                        GpsLatitude = extraStop.Latitude,
+                        GpsLongitude = extraStop.Longitude,
+                    };
                 }
             }
         }

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using CommonLibrary;
 using CsvSerializer;
@@ -22,8 +21,6 @@ namespace GtfsProcessor
         // načtené body v síti reprezentující pozice stanic nad sítí
         private Dictionary<Stop, ShapeConstructor.Point> stopsToPointsMapping;
 
-        private Dictionary<Route, int> lastRouteShapeIndex = new Dictionary<Route, int>();
-
         private ICommonLogger log;
 
         /// <summary>
@@ -44,15 +41,17 @@ namespace GtfsProcessor
             result.Points = new List<GtfsModel.Extended.ShapePoint>();
             result.ReferenceTrip = trip;
             result.PointsForStopTimes = new GtfsModel.Extended.ShapePoint[trip.StopTimes.Length];
-            result.ServiceAsBits = ServiceDaysBitmap.CreateAlwaysValidBitmap(trip.ServiceAsBits.Length); // pro začátek samé jedničky
+            result.ServiceAsBits = ServiceDaysBitmap.CreateAlwaysValidBitmap(trip.ServiceAsBits.Length);
 
             double currentDistance = 0;
+            var stopTimeFrom = trip.StopTimes[0];
 
-            // stop time obsahuje vždy info o trase DO zastávky, čili začínáme až od druhého
             for (int i = 1; i < trip.StopTimes.Length; i++)
             {
-                var stopTimeFrom = trip.StopTimes[i - 1];
                 var stopTimeTo = trip.StopTimes[i];
+                if (!stopTimeTo.Stop.IsPublic)
+                    continue;
+
                 var path = FindOrCreatePath(stopTimeFrom.Stop, stopTimeTo.Stop);
 
                 foreach (var point in path)
@@ -74,6 +73,7 @@ namespace GtfsProcessor
                 }
 
                 result.PointsForStopTimes[i] = result.Points.Last();
+                stopTimeFrom = stopTimeTo;
             }
 
             result.PointsForStopTimes[0] = result.Points.First();
@@ -100,7 +100,7 @@ namespace GtfsProcessor
             var resultPath = shapeConstructor.FindPath(pointFrom, pointTo);
             if (resultPath == null)
             {
-                log.Log(LogMessageType.WARNING_TRAIN_SHAPE_PATH_NOT_FOUND, $"Cesta ze stanice {from.Name} {from.NodeId}/{to.NodeId} do stanice {to.Name} {to.NodeId}/{to.StopId} nebyla nalezena. Používám přímé propojení.");
+                log.Log(LogMessageType.WARNING_TRAIN_SHAPE_PATH_NOT_FOUND, $"Cesta ze stanice {from.Name} {from.NodeId}/{from.StopId} do stanice {to.Name} {to.NodeId}/{to.StopId} nebyla nalezena. Používám přímé propojení.");
                 return new List<GpsCoordinates>() 
                 {
                     new GpsCoordinates(from.Position.GpsLatitude, from.Position.GpsLongitude),

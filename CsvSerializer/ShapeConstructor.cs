@@ -15,19 +15,12 @@ namespace CsvSerializer
         // Jeden bod sítě (transformuje se z CsvPoint) a jeho sousedé
         public class Point
         {
-            public double X { get; set; }
-
-            public double Y { get; set; }
-
             public GpsCoordinates Gps { get; private set; }
 
             public List<Point> Neighbours { get; private set; }
 
-            public Point(double x, double y)
+            public Point(double lat, double lon)
             {
-                X = x;
-                Y = y;
-                MapFunctions.ConvertJtskToWsg84(-x, -y, out double lat, out double lon);
                 Gps = new GpsCoordinates(lat, lon);
                 Neighbours = new List<Point>();
             }
@@ -45,11 +38,11 @@ namespace CsvSerializer
             [CsvField("cis", 1)]
             public long LineId { get; set; }
 
-            [CsvField("x", 2)]
-            public double X { get; set; }
+            [CsvField("lat", 2)]
+            public double Latitude { get; set; }
 
-            [CsvField("y", 3)]
-            public double Y { get; set; }
+            [CsvField("lon", 3)]
+            public double Longitude { get; set; }
         }
 
 
@@ -80,10 +73,10 @@ namespace CsvSerializer
             
             foreach (var multiline in allLines.GroupBy(l => l.LineId))
             {
-                var points = multiline.Select(p => new Point(p.X, p.Y)).ToArray();
+                var points = multiline.Select(p => new Point(p.Latitude, p.Longitude)).ToArray();
                 AllPoints.AddRange(points.Skip(1).Take(points.Length - 2)); // bez prvního a posledního, ty až podmínečně
 
-                var firstPointAlreadyLoaded = FindBorderPointByPosition(points.First().X, points.First().Y);
+                var firstPointAlreadyLoaded = FindBorderPointByPosition(points.First().Gps);
                 if (firstPointAlreadyLoaded != null)
                 {
                     points[0] = firstPointAlreadyLoaded;
@@ -93,7 +86,7 @@ namespace CsvSerializer
                     AddBorderPoint(points.First());
                 }
 
-                var lastPointAlreadyLoaded = FindBorderPointByPosition(points.Last().X, points.Last().Y);
+                var lastPointAlreadyLoaded = FindBorderPointByPosition(points.Last().Gps);
                 if (lastPointAlreadyLoaded != null)
                 {
                     points[points.Length - 1] = lastPointAlreadyLoaded;
@@ -203,15 +196,15 @@ namespace CsvSerializer
             return resultPoint;
         }
 
-        private Point FindBorderPointByPosition(double x, double y)
+        private Point FindBorderPointByPosition(GpsCoordinates gps)
         {
-            return borderPoints.GetValueOrDefault(x)?.GetValueOrDefault(y);
+            return borderPoints.GetValueOrDefault(gps.GpsLatitude)?.GetValueOrDefault(gps.GpsLongitude);
         }
 
         private void AddBorderPoint(Point p)
         {
             AllPoints.Add(p);
-            borderPoints.GetValueAndAddIfMissing(p.X, new Dictionary<double, Point>()).Add(p.Y, p);
+            borderPoints.GetValueAndAddIfMissing(p.Gps.GpsLatitude, new Dictionary<double, Point>()).Add(p.Gps.GpsLongitude, p);
         }
     }
 }
