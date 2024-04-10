@@ -1,11 +1,11 @@
-The repository contains multiple libraries and applications useful for working with GTFS of Prague Integrated Transport (PID) or transit data in specific formats in general. These tools are used to manage and generate multiple data exports including the PID GTFS at https://data.pid.cz/PID_GTFS.zip.
+﻿The repository contains multiple libraries and applications useful for working with GTFS of Prague Integrated Transport (PID) or transit data in specific formats in general. These tools are used to manage and generate multiple data exports including the PID GTFS at https://data.pid.cz/PID_GTFS.zip and other open data.
 
 ## Who could find the tools useful
 - Anyone who plans to use GTFS of PID or any general GTFS (since PID GTFS is just a slight extension of standard GTFS)
 - Transit authorities that transform data from their systems to GTFS standard (can contain useful tips in general; includes complete transformation libraries from ASW JŘ system and from CZPTT train schedule files)
 - Anyone interested in working with train timetables that are published in CZPTT XML files by Czech Rail Authority (Správa železnic) - includes complete editor tool for these files and transformation to GTFS in PID
 
-_Documentation of the source code is provided, however currently only in Czech language. If you're interested to work with the libraries and do not understand Czech, feel free to contact us and we'll see what we can do: opendata@ropid.cz._
+_Documentation of the source code is provided, however currently only in Czech language. If you're interested to work with the libraries and do not understand Czech, feel free to contact us and we'll see what we can do: opendata@pid.cz._
 
 ## Respository Content
 
@@ -42,3 +42,8 @@ Common functions for manipulating with Time, GPS coordinates or Map functions
 ### GtfsLogging
 Common tools for logging used mostly for complex data transformation processes.
 
+## Attribution
+
+The tool was created for purposes of ROPID and Operátor ICT by Zbyněk Jiráček and colleagues.
+
+Contact us at: opendata@pid.cz
