@@ -5,7 +5,7 @@
 - Transit authorities that transform data from their systems to GTFS standard (can contain useful tips in general; includes complete transformation libraries from ASW JŘ system and from CZPTT train schedule files)
 - Anyone interested in working with train timetables that are published in CZPTT XML files by Czech Rail Authority (Správa železnic) - includes complete editor tool for these files and transformation to GTFS in PID
 
-_Documentation of the source code is provided, however currently only in Czech language. If you're interested to work with the libraries and do not understand Czech, feel free to contact us and we'll see what we can do: opendata@pid.cz._
+_Documentation of the source code is provided, however, currently only in Czech language. If you're interested to work with the libraries and do not understand Czech, feel free to contact us and we'll see what we can do: opendata@pid.cz._
 
 ## Respository Content
 
@@ -19,13 +19,13 @@ Data classes for working with the "PID XML" files (can transform from/to _AswMod
 Standalone library which allows easy mapping of data classes to CSV files (and GTFS .txt files as well) using .NET Attributes.
 
 ### CzpttModel
-Library wit hdata classes representing "CZPTT XML" file format, which is used by Czech National Rail Authority (Správa železnic) to publis timetable data (located at https://portal.cisjr.cz/pub/draha/celostatni/szdc/). The library is used just to load/save the XML files to/from data classes. In order to manipulate with the data, use the _TrainsEditor_ application.
+Library with data classes representing "CZPTT XML" file format, which is used by Czech National Rail Authority (Správa železnic) to publish timetable data (located at https://portal.cisjr.cz/pub/draha/celostatni/szdc/). The library is used just to load/save the XML files from/to data classes. In order to manipulate with the data, use the _TrainsEditor_ application.
 
 ### GtfsModel
 Data classes representing GTFS data model with a few extensions (new files and columns used in PID data feed) compatible with the GTFS standard. Contains classes that allow loading, reading, searching, editing and saving the GTFS data.
 
 ### GtfsProcessor
-Application for transforming data from _AswModel_ to _GtfsModel_. Reads data from "PID XML" file format exported from ASW JŘ system and transforms the data to GTFS file. Contains also a unique mechanism for keeping stable TRIP IDs, which could be useful for other systems that do not have their own system of unique identification of trips. Simply said, this mechanism ensures that the same trip has identical ID as in previous feed generated (if the timetable of the trip did not change).
+Application for transforming data from _AswModel_ to _GtfsModel_. Reads data from "PID XML" file format exported from ASW JŘ system and transforms the data to GTFS file. Contains also a unique mechanism for keeping stable TRIP IDs, which could be useful for other systems that do not have their own system of unique identification of trips. Simply said, this mechanism ensures that the same trip has identical ID as in previous feed (if the timetable of the trip did not change).
 
 ### TrainsEditor
 .NET WPF application with user interface allowing its user to view, create and edit train data files in CZPTT XML used by Czech National Rail Authority (Správa železnic). Contains also modules that transform this data to GTFS standard in PID.
