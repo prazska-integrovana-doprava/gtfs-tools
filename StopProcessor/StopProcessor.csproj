@@ -38,6 +38,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -58,6 +59,7 @@
     <Compile Include="StopCollectionId.cs" />
     <Compile Include="StopDatabase.cs" />
     <Compile Include="StopsByNameWithMetadata.cs" />
+    <Compile Include="TrafficTypeExtended.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

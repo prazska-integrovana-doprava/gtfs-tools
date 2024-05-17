@@ -108,6 +108,14 @@ namespace StopProcessor
         public string ZoneId { get; set; }
 
         /// <summary>
+        /// Typ dopravního prostředku
+        /// </summary>
+        [XmlAttribute(AttributeName = "mainTrafficType")]
+        [JsonProperty(PropertyName = "mainTrafficType")]
+        [JsonConverter(typeof(StringEnumConverter))]
+        public TrafficTypeExtended MainTrafficType { get; set; }
+
+        /// <summary>
         /// CIS číslo zastávky
         /// </summary>
         [XmlIgnore()]

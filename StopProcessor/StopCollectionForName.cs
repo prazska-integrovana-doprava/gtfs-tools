@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿using GtfsModel.Enumerations;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -125,6 +127,11 @@ namespace StopProcessor
         [XmlAttribute(AttributeName = "municipality")]
         [JsonProperty(PropertyName = "municipality")]
         public string Municipality { get; set; }
+
+        [XmlAttribute(AttributeName = "mainTrafficType")]
+        [JsonProperty(PropertyName = "mainTrafficType")]
+        [JsonConverter(typeof(StringEnumConverter))]
+        public TrafficTypeExtended MainTrafficType { get; set; }
 
         [XmlElement(ElementName = "stop")]
         [JsonProperty(PropertyName = "stops")]

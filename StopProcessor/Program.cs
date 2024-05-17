@@ -45,6 +45,7 @@ namespace StopProcessor
             LoadGtfsData(db, config);
             Console.WriteLine($"Třídění dle názvů ..");
             db.InitStopsByName();
+            FillStopTrafficTypes(db);
             Console.WriteLine($"Kontrola ..");
             FillAndCheckStopNames(db, fullNamesProvider);
             CheckIdosNamesAndCisAreUnique(db);
@@ -221,6 +222,91 @@ namespace StopProcessor
                         passingRouteRecord.AddHeadsign(gtfsTrip.Headsign);
                     }
                 }
+            }
+        }
+
+        private static void FillStopTrafficTypes(StopDatabase db)
+        {
+            // 4. propagace druhů dopravy projíždějících linek na zastávky a skupiny
+            foreach (var stopGroup in db)
+            {
+                var groupTypes = new HashSet<TrafficType>();
+                var groupMetroRoutes = new HashSet<string>();
+
+                foreach (var stop in stopGroup.Stops)
+                {
+                    var stopTypes = new HashSet<TrafficType>();
+                    var stopMetroRoutes = new HashSet<string>();
+                    foreach (var passingRoute in stop.PassingRoutesFlat)
+                    {
+                        stopTypes.Add(passingRoute.Type);
+                        groupTypes.Add(passingRoute.Type);
+                        if (passingRoute.Type == TrafficType.Metro)
+                        {
+                            stopMetroRoutes.Add(passingRoute.Name);
+                            groupMetroRoutes.Add(passingRoute.Name);
+                        }
+                    }
+
+                    stop.MainTrafficType = SelectMainTrafficType(stopTypes, stopMetroRoutes);
+                }
+
+                stopGroup.MainTrafficType = SelectMainTrafficType(groupTypes, groupMetroRoutes);
+            }
+        }
+
+        private static TrafficTypeExtended SelectMainTrafficType(HashSet<TrafficType> trafficTypes, HashSet<string> metroRoutes)
+        {
+            if (trafficTypes.Contains(TrafficType.Metro))
+            {
+                if (metroRoutes.Contains("A") && metroRoutes.Contains("B"))
+                {
+                    return TrafficTypeExtended.MetroAB;
+                }
+                else if (metroRoutes.Contains("B") && metroRoutes.Contains("C"))
+                {
+                    return TrafficTypeExtended.MetroBC;
+                }
+                else if (metroRoutes.Contains("B"))
+                {
+                    return TrafficTypeExtended.MetroB;
+                }
+                else if (metroRoutes.Contains("C"))
+                {
+                    return TrafficTypeExtended.MetroC;
+                }
+                else
+                {
+                    return TrafficTypeExtended.MetroA;
+                }
+            }
+            else if (trafficTypes.Contains(TrafficType.Tram))
+            {
+                return TrafficTypeExtended.Tram;
+            }
+            else if (trafficTypes.Contains(TrafficType.Rail))
+            {
+                return TrafficTypeExtended.Train;
+            }
+            else if (trafficTypes.Contains(TrafficType.Trolleybus))
+            {
+                return TrafficTypeExtended.Trolleybus;
+            }
+            else if (trafficTypes.Contains(TrafficType.Bus))
+            {
+                return TrafficTypeExtended.Bus;
+            }
+            else if (trafficTypes.Contains(TrafficType.Funicular))
+            {
+                return TrafficTypeExtended.Funicular;
+            }
+            else if (trafficTypes.Contains(TrafficType.Ferry))
+            {
+                return TrafficTypeExtended.Ferry;
+            }
+            else
+            {
+                return TrafficTypeExtended.Undefined;
             }
         }
 
