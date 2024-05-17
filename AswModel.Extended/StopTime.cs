@@ -32,12 +32,22 @@ namespace AswModel.Extended
         /// <summary>
         /// Je zastavení pro veřejnost? Pozor na to, že může být veřejné zastavení v neveřejné zastávce, je třeba vždy kontrolovat i Stop.IsPublic!
         /// </summary>
-        public bool BoardingAllowed { get; set; }
+        public bool IsForPublic { get; set; }
 
         /// <summary>
-        /// Kombinace <see cref="BoardingAllowed"/> a veřejnosti zastávky. Pokud je true, je zastavení veřejné, pokud je false, jde buď o neveřejnou zastávku, nebo neveřejné zastavení v zastávce.
+        /// Pouze pro nástup
         /// </summary>
-        public bool IsPublic { get { return BoardingAllowed && Stop.IsPublic; } }
+        public bool BoardingOnly { get; set; }
+
+        /// <summary>
+        /// Pouze pro výstup
+        /// </summary>
+        public bool ExitOnly { get; set; }
+
+        /// <summary>
+        /// Kombinace <see cref="IsForPublic"/> a veřejnosti zastávky. Pokud je true, je zastavení veřejné, pokud je false, jde buď o neveřejnou zastávku, nebo neveřejné zastavení v zastávce.
+        /// </summary>
+        public bool IsPublic { get { return IsForPublic && Stop.IsPublic; } }
         
         /// <summary>
         /// True, pokud je zastavení jen na znamení

@@ -60,7 +60,7 @@ namespace AswModel.Extended.Processors
             if (previousStopTime != null && xmlStopTime.VarTr != 0)
             {
                 trackToThisStop = ProcessTrack(trackVariant, ownerTrip, 
-                    previousStopTime.BoardingAllowed && boardingAllowed && !previousStopTime.IsDepot && !xmlStopTime.DeponovaciMisto && ownerTrip.IsPublic);
+                    previousStopTime.IsForPublic && boardingAllowed && !previousStopTime.IsDepot && !xmlStopTime.DeponovaciMisto && ownerTrip.IsPublic);
             }
 
             return new StopTime()
@@ -74,9 +74,11 @@ namespace AswModel.Extended.Processors
                 TrackToThisStop = trackToThisStop,
                 DirectionChange = xmlStopTime.ZmenaSmeruOkruzniLinky,
                 Remarks = remarks.ToArray(),
-                BoardingAllowed = boardingAllowed,
+                IsForPublic = boardingAllowed,
                 IsDepot = xmlStopTime.DeponovaciMisto,
                 TripOperationType = (TripOperationType) xmlStopTime.CTypVyk,
+                BoardingOnly = xmlStopTime.JenProNastup,
+                ExitOnly = xmlStopTime.JenProVystup,
             };
         }
 
