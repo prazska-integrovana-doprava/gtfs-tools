@@ -195,11 +195,7 @@ namespace GtfsProcessor
             }
             else if (headsignStop.CommonName == "Letiště" || headsignStop.CommonName == "Terminál 1" || headsignStop.CommonName == "Terminál 2")
             {
-                if (trip.Route.LineNumber == 100 && trip.ReferenceTrip.OwnerRun.Any(r => r.RunNumber == 1))
-                {
-                    return headsignStop.CommonName + " / Airport ✈";
-                }
-                return headsignStop.CommonName + " / Airport";
+                return headsignStop.CommonName + " / Airport ✈";
             }
             else
             {

@@ -40,6 +40,10 @@ namespace StopProcessor
         [EnumMember(Value = "metroBC")]
         MetroBC,
 
+        [XmlEnum(Name = "metroAC")]
+        [EnumMember(Value = "metroAC")]
+        MetroAC,
+
         [XmlEnum(Name = "train")]
         [EnumMember(Value = "train")]
         Train,

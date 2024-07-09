@@ -267,6 +267,10 @@ namespace StopProcessor
                 {
                     return TrafficTypeExtended.MetroBC;
                 }
+                else if (metroRoutes.Contains("A") && metroRoutes.Contains("C"))
+                {
+                    return TrafficTypeExtended.MetroAC;
+                }
                 else if (metroRoutes.Contains("B"))
                 {
                     return TrafficTypeExtended.MetroB;
