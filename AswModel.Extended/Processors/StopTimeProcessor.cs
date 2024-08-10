@@ -79,6 +79,7 @@ namespace AswModel.Extended.Processors
                 TripOperationType = (TripOperationType) xmlStopTime.CTypVyk,
                 BoardingOnly = xmlStopTime.JenProNastup,
                 ExitOnly = xmlStopTime.JenProVystup,
+                IsOnPhoneRequest = xmlStopTime.NaObjednani,
             };
         }
 

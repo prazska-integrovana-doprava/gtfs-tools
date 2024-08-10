@@ -55,6 +55,11 @@ namespace AswModel.Extended
         public bool IsRequestStop { get; set; }
 
         /// <summary>
+        /// Pouze na objednání
+        /// </summary>
+        public bool IsOnPhoneRequest { get; set; }
+
+        /// <summary>
         /// Popis trasy do této zastávky (číslo závodu + předchozí zastávka + tato zastávka + číslo varianty trasy).
         /// Je vždy vyplněno, může ale odkazovat na neexistující trasu (např. vždy v první zastávce bude předchozí zastávka = null).
         /// Pokud trasa existuje, je vyplněno <see cref="TrackToThisStop"/>.
