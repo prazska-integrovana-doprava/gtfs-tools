@@ -54,13 +54,10 @@ namespace GtfsProcessor
             {
                 foreach (var stopTime in trip.PublicStopTimes)
                 {
-                    if (trip.LineType != AswLineType.UndefinedTransport)
+                    stopsMapping.GetValueAndAddIfMissing(stopTime.Stop, new StopVariantsMapping()).UsedVariants.Add(trip.LineType);
+                    if (trip.LineType == AswLineType.UndefinedTransport)
                     {
-                        stopsMapping.GetValueAndAddIfMissing(stopTime.Stop, new StopVariantsMapping()).UsedVariants.Add(trip.LineType);
-                    }
-                    else
-                    {
-                        log.Log(LogMessageType.ERROR_ROUTE_USED_BUT_UNDEF_TRANSPORT_TYPE, $"Spoj {trip.TripId} linky {trip.Route.LineName} je veřejný, ale linka nemá zadaný typ, co je zač.", trip);
+                        log.Log(LogMessageType.ERROR_ROUTE_USED_BUT_UNDEF_TRANSPORT_TYPE, $"Spoj {trip.TripId} linky {trip.Route.LineName} je veřejný, ale linka nemá zadaný typ, co je zač. Může být chybně přiřazen tarif.", trip);
                     }
                 }
             }
@@ -196,7 +193,8 @@ namespace GtfsProcessor
 
             // záznam se všemi pásmy (pro divné linky a také pro náhradní dopravu za vlaky)
             // používáme pokud možno regionální variantu, pražskou jen pokud má zastávka výhradně pásmo P (takto by to mělo být pro vlaky ideál a u ostatních linek je to buřt)
-            if (stopsMapping.UsedVariants.Contains(AswLineType.RailTransport) || stopsMapping.UsedVariants.Contains(AswLineType.SpecialTransport))
+            if (stopsMapping.UsedVariants.Contains(AswLineType.RailTransport) || stopsMapping.UsedVariants.Contains(AswLineType.SpecialTransport)
+                || stopsMapping.UsedVariants.Contains(AswLineType.UndefinedTransport))
             {
                 if (aswStop.PidZoneId == "P")
                 {

@@ -50,6 +50,7 @@ namespace GtfsProcessor.DataClasses
 
                 case AswLineType.RailTransport:
                 case AswLineType.SpecialTransport:
+                case AswLineType.UndefinedTransport:
                     return UniversalStop;
 
                 default:
