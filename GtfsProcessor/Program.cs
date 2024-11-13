@@ -116,7 +116,9 @@ namespace GtfsProcessor
         {
             VerifyTripCount(db, trip => trip.TrafficType == AswTrafficType.Metro, config.MinimumMetroTrips, "METRO");
             VerifyTripCount(db, trip => trip.TrafficType == AswTrafficType.Tram, config.MinimumTramTrips, "TRAM");
+            VerifyTripCount(db, trip => trip.TrafficType == AswTrafficType.Tram && trip.RootLineNumber != trip.Route.LineNumber, config.MinimumTramNonRootTrips, "TRAM přejezdy");
             VerifyTripCount(db, trip => trip.TrafficType == AswTrafficType.Bus && trip.Route.LineNumber <= 299, config.MinimumBusTo299Trips, "BUS do 299");
+            VerifyTripCount(db, trip => trip.TrafficType == AswTrafficType.Bus && trip.Route.LineNumber <= 299 && trip.RootLineNumber != trip.Route.LineNumber, config.MinimumBusTo299NonRootTrips, "BUS do 299 přejezdy");
             VerifyTripCount(db, trip => trip.TrafficType == AswTrafficType.Bus && trip.Route.LineNumber >= 300 && trip.Route.LineNumber < 800, config.MinimumBusFrom300Trips, "BUS od 300 do 800");
         }
 

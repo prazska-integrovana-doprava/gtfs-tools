@@ -91,9 +91,19 @@ namespace GtfsProcessor
         public int MinimumTramTrips { get; private set; }
 
         /// <summary>
+        /// Minimální počet spojů tramvají, které jsou z jiné kmenové linky, jinak bude export abortován (ochrana proti chybě při replikaci, kdy se ztrácely přejezdy)
+        /// </summary>
+        public int MinimumTramNonRootTrips { get; private set; }
+
+        /// <summary>
         /// Minimální počet spojů městských busů, které musí být načteny, jinak bude export abortován
         /// </summary>
         public int MinimumBusTo299Trips { get; private set; }
+
+        /// <summary>
+        /// Minimální počet spojů městských busů, které jsou z jiné kmenové linky, jinak bude export abortován (ochrana proti chybě při replikaci, kdy se ztrácely přejezdy)
+        /// </summary>
+        public int MinimumBusTo299NonRootTrips { get; private set; }
 
         /// <summary>
         /// Minimální počet spojů příměstských busů, které musí být načteny, jinak bude export abortován
@@ -181,7 +191,9 @@ namespace GtfsProcessor
             {
                 MinimumMetroTrips = ParseInt(verificationSection["MinimumMetroTrips"]);
                 MinimumTramTrips = ParseInt(verificationSection["MinimumTramTrips"]);
+                MinimumTramNonRootTrips = ParseInt(verificationSection["MinimumTramNonRootTrips"]);
                 MinimumBusTo299Trips = ParseInt(verificationSection["MinimumBusTo299Trips"]);
+                MinimumBusTo299NonRootTrips = ParseInt(verificationSection["MinimumBusTo299NonRootTrips"]);
                 MinimumBusFrom300Trips = ParseInt(verificationSection["MinimumBusFrom300Trips"]);
                 MinimumTrainTrips = ParseInt(verificationSection["MinimumTrainTrips"]);
                 MinimumTripDatabaseHitPercentage = ParseInt(verificationSection["MinimumTripDatabaseHitPercentage"]);
