@@ -82,7 +82,7 @@ namespace TrainsEditor
                 var isFirstAdded = (locationObj == locationObjects.First());
                 var isLastAdded = (locationObj == locationObjects.Last());
                 var isNewLast = (currentIndex == lvLocations.Items.Count);
-                var locationViewModel = TrainLocation.Construct(locationObj, prevLocation?.LocationData, isNewFirst || isNewLast && isLastAdded, StationDatabase, RouteDatabase, null);
+                var locationViewModel = TrainLocation.Construct(locationObj, prevLocation?.LocationData, isNewFirst || isNewLast && isLastAdded, StationDatabase, RouteDatabase, Train.NetworkSpecificParamsProvider);
                 if (isNewFirst && lvLocations.Items.Count > 1)
                 {
                     var nextLocation = (TrainLocation)lvLocations.Items[0];
@@ -95,6 +95,8 @@ namespace TrainsEditor
 
                 Train.Locations.Insert(currentIndex, locationViewModel);
             }
+
+            Train.NetworkSpecificParamsProvider.ResetParamsForLocations();
         }
 
         private void DeleteSelectedLocations()
@@ -303,12 +305,26 @@ namespace TrainsEditor
 
         private void btnPasteLocation_Click(object sender, RoutedEventArgs e)
         {
-            PasteSelectedLocations();
+            try
+            {
+                PasteSelectedLocations();
+            }
+            catch
+            {
+                MessageBox.Show("Nepodařilo se vložit záznam. Máte ve schránce zkopírována korektní data? (Použijte nejdříve \"Kopírovat vybrané\")", "Editor vlaků", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+            }
         }
 
         private void btnInsertLocationTop_Click(object sender, RoutedEventArgs e)
         {
-            PasteSelectedLocations(true);
+            try
+            { 
+                PasteSelectedLocations(true);
+            }
+            catch
+            {
+                MessageBox.Show("Nepodařilo se vložit záznam. Máte ve schránce zkopírována korektní data? (Použijte nejdříve \"Kopírovat vybrané\")", "Editor vlaků", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+            }
         }
 
         private void btnDeleteLocation_Click(object sender, RoutedEventArgs e)

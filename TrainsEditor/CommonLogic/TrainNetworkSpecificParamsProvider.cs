@@ -31,7 +31,7 @@ namespace TrainsEditor.CommonLogic
         }
 
         // načte z dat vlaku položku _locationParams (přiřazení poznámek ke stanicím)
-        private void ResetParamsForLocations()
+        public void ResetParamsForLocations()
         {
             _locationParams = new Dictionary<CZPTTLocation, List<IStationRangeParam>>();
             var notYetValidParams = _trainData.GetTrainCentralNotes().Cast<IStationRangeParam>().Union(_trainData.GetTrainIntegratedSystemsNotes()).ToList();

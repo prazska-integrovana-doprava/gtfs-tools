@@ -20,6 +20,11 @@ namespace TrainsEditor.CommonLogic
         private Dictionary<string, SingleTrainFile> _loadedFilesCache = new Dictionary<string, SingleTrainFile>();
 
         /// <summary>
+        /// Například při načítání dat je zde aktuálně zpracovávaný soubor. V případě chyby tu zůstane a pozná se, kde byl problém
+        /// </summary>
+        public string CurrentlyProcessedFileName { get; private set; }
+
+        /// <summary>
         /// Callback pro <see cref="LoadTrainFiles" />. Reportuje status a umožňuje přerušit načítací proces.
         /// </summary>
         /// <param name="numberOfFilesLoaded">Počet načtených souborů</param>
@@ -52,6 +57,7 @@ namespace TrainsEditor.CommonLogic
             int nLoaded = 0;
             foreach (var file in fileList)
             {
+                CurrentlyProcessedFileName = file;
                 var trainFile = LoadFileInternal(file);
 
                 if (!pastDataLimit.HasValue || trainFile.EndDate >= pastDataLimit.Value.Date)
@@ -61,6 +67,7 @@ namespace TrainsEditor.CommonLogic
                 }
             
                 reportCallback?.Invoke(++nLoaded, fileList.Length, out shouldResume);
+                CurrentlyProcessedFileName = null;
                 if (!shouldResume)
                     break;
             }

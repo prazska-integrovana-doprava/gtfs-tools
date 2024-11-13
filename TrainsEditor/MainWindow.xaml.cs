@@ -59,6 +59,7 @@ namespace TrainsEditor
         {
             public ObservableCollection<AbstractTrainFile> LoadedFiles { get; set; }
             public Exception Exception { get; set; }
+            public string ExceptionFileName { get; set; }
         }
 
         private class BackgroundGtfsGenerateResult
@@ -112,7 +113,8 @@ namespace TrainsEditor
                 e.Result = new BackgroundLoaderResult()
                 {
                     LoadedFiles = new ObservableCollection<AbstractTrainFile>(),
-                    Exception = ex
+                    Exception = ex,
+                    ExceptionFileName = FilesManager.TrainGroupLoader.CurrentlyProcessedFileName,
                 };
             }
         }
@@ -134,7 +136,8 @@ namespace TrainsEditor
             var result = (BackgroundLoaderResult)e.Result;
             if (result.Exception != null)
             {
-                MessageBox.Show($"Během načítání dat došlo k chybě a bylo přerušeno!\n\n{result.Exception.Message}", "Editor vlaků", MessageBoxButton.OK, MessageBoxImage.Warning);
+                var exceptionFileName = result.ExceptionFileName != null ? "\n\nSoubor: " + result.ExceptionFileName : "";
+                MessageBox.Show($"Během načítání dat došlo k chybě a bylo přerušeno!\n\n{result.Exception.Message}{exceptionFileName}", "Editor vlaků", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
 
             TrainsView = new CollectionViewSource() { Source = result.LoadedFiles };
@@ -566,7 +569,7 @@ namespace TrainsEditor
         private void btnDownload_Click(object sender, RoutedEventArgs e)
         {
             var startYear = 2024;
-            var endYear = 2024;
+            var endYear = 2025;
 
             var filesDownloaders = new List<FilesDownloader>();
             for (int year = startYear; year <= endYear; year++)
