@@ -81,7 +81,7 @@
             this.dtStartDate.Name = "dtStartDate";
             this.dtStartDate.Size = new System.Drawing.Size(200, 20);
             this.dtStartDate.TabIndex = 2;
-            this.dtStartDate.Value = new System.DateTime(2023, 12, 10, 0, 0, 0, 0);
+            this.dtStartDate.Value = new System.DateTime(2024, 12, 15, 0, 0, 0, 0);
             // 
             // dtEndDate
             // 
@@ -89,7 +89,7 @@
             this.dtEndDate.Name = "dtEndDate";
             this.dtEndDate.Size = new System.Drawing.Size(200, 20);
             this.dtEndDate.TabIndex = 3;
-            this.dtEndDate.Value = new System.DateTime(2024, 12, 13, 0, 0, 0, 0);
+            this.dtEndDate.Value = new System.DateTime(2025, 12, 12, 0, 0, 0, 0);
             // 
             // label2
             // 

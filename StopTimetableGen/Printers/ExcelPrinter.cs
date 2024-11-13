@@ -24,8 +24,8 @@ namespace StopTimetableGen.Printers
         {
             { "PRAHA-VELESLAVÍN", "A" },
             { "PRAHA-DEJVICE", "A" },
+            { "PRAHA-JINONICE", "B" },
             { "PRAHA-SMÍCHOV", "B" },
-            { "PRAHA-SMÍCHOV SEV.N.", "B" },
             { "PRAHA MASARYKOVO NÁDR.", "B" },
             { "PRAHA-VYSOČANY", "B" },
             { "PRAHA-RAJSKÁ ZAHRADA", "B" },
