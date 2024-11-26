@@ -44,7 +44,8 @@ namespace GtfsProcessor
         /// </summary>
         /// <param name="stopsMapping">Vrací mapování zastávek z ASW na GTFS.</param>
         /// <returns>Zastávky z ASW + vygenerované stanice</returns>
-        public IEnumerable<GtfsModel.Extended.BaseStop> CollectAllStopsAndStations(out Dictionary<Stop, StopVariantsMapping> stopsMapping)
+        public IEnumerable<GtfsModel.Extended.BaseStop> CollectAllStopsAndStations(out Dictionary<Stop, StopVariantsMapping> stopsMapping,
+            ArchivedStopsDb archivedStopsDb)
         {
             // Ke každé zastávce si uložíme typy linek, které ji využívají (městské / příměstské / vlakové).
             // Přítomnost zastávky v této dictionary značí, že je využitá.
@@ -109,6 +110,11 @@ namespace GtfsProcessor
                 }
 
                 stops.AddRange(gtfsStops);
+                if (!stop.IsTemporary)
+                {
+                    archivedStopsDb.AddMultipleStopsToBeArchived(gtfsStops);
+                }
+
                 foreach (var gtfsId in gtfsStops.Select(s => s.GtfsId))
                 {
                     if (!usedGtfsIds.Add(gtfsId))

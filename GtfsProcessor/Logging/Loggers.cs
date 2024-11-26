@@ -15,6 +15,8 @@ namespace GtfsProcessor.Logging
 
         public static ISimpleLogger CalendarLoggerInstance;
 
+        public static ISimpleLogger StopsArchiveLoggerInstance;
+
         public static void InitLoggers(string logFolder, int maxSimilarLogRecords)
         {
             var logFactory = new LogWriterFactory(logFolder);
@@ -32,6 +34,7 @@ namespace GtfsProcessor.Logging
             TrajectoryConnectorLoggerInstance = new TrajectoryConnectorLogger(logFactory.CreateWriterToFile("GtfsProcess_TrajectoryDbConnect"));
             MergedTripsLoggerInstance = new MergedTripsLogger(logFactory.CreateWriterToFile("GtfsProcess_MergedTrips"));
             CalendarLoggerInstance = new SimpleLogger(logFactory.CreateWriterToFile("GtfsProcess_Calendar"));
+            StopsArchiveLoggerInstance = new SimpleLogger(logFactory.CreateWriterToFile("GtfsProcess_StopsArchive"));
         }
 
         public static void CloseLoggers()
@@ -41,6 +44,7 @@ namespace GtfsProcessor.Logging
             TrajectoryConnectorLoggerInstance.Close();
             MergedTripsLoggerInstance.Close();
             CalendarLoggerInstance.Close();
+            StopsArchiveLoggerInstance.Close();
 
             AswModel.Extended.Logging.Loggers.CloseLoggers();
         }

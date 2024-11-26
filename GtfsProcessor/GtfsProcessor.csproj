@@ -49,8 +49,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ArchivedStopsDb.cs" />
     <Compile Include="BikeAllowanceDefinition.cs" />
     <Compile Include="Configuration.cs" />
+    <Compile Include="DataClasses\ArchivedGtfsStop.cs" />
     <Compile Include="DataClasses\MergedRun.cs" />
     <Compile Include="Logging\IMergedTripsLogger.cs" />
     <Compile Include="Logging\ITrajectoryConnectorLogger.cs" />

@@ -104,6 +104,11 @@ namespace AswModel.Extended
         public bool IsPublic { get; set; }
 
         /// <summary>
+        /// Dočasná zastávka (dle zadání v číselníku)
+        /// </summary>
+        public bool IsTemporary { get; set; }
+
+        /// <summary>
         /// Vrací true, pokud jde o stanici metra (pozná se podle čísla sloupku)
         /// </summary>
         public bool IsMetro { get { return StopId >= 100 && StopId < 200; } }

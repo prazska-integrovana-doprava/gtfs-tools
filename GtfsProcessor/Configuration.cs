@@ -50,7 +50,7 @@ namespace GtfsProcessor
         public string MetroNetworkFile { get; private set; }
 
         /// <summary>
-        /// Složka, do které se ukládají (a zpětně načítají) data o spojích, aby měly stejná IDčka v navazujících feedech
+        /// Složka, do které se ukládají (a zpětně načítají) data o spojích a zastávkách, aby měly stejná IDčka v navazujících feedech
         /// </summary>
         public string TripPersistentDbFolder { get; private set; }
 

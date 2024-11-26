@@ -521,7 +521,7 @@ namespace GtfsProcessor
             for (int i = 0; i < 14; i++)
             {
                 var fileName = ConstructFileName(current.AddDays(-i));
-                if (File.Exists(fileName))
+                if (File.Exists(fileName) && new FileInfo(fileName).Length > 0)
                 {
                     using (var stream = new StreamReader(fileName))
                     {

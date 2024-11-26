@@ -1,6 +1,7 @@
 ﻿using CommonLibrary;
 using CsvSerializer.Attributes;
 using GtfsModel.Enumerations;
+using System;
 
 namespace GtfsModel
 {
@@ -93,6 +94,31 @@ namespace GtfsModel
         /// </summary>
         [CsvField("zone_region_type", 53, CsvFieldPostProcess.None, ZoneRegionType.Undefined)]
         public ZoneRegionType ZoneRegionType { get; set; }
+
+        public GtfsStop()
+        {
+        }
+
+        // Kopírovací konstruktor, nezapomenout přidat položky
+        public GtfsStop(GtfsStop other)
+        {
+            if (other == null) throw new ArgumentNullException(nameof(other));
+
+            Id = other.Id;
+            Name = other.Name;
+            Latitude = other.Latitude;
+            Longitude = other.Longitude;
+            ZoneId = other.ZoneId;
+            Url = other.Url;
+            LocationType = other.LocationType;
+            ParentStationId = other.ParentStationId;
+            WheelchairBoarding = other.WheelchairBoarding;
+            LevelId = other.LevelId;
+            PlatformCode = other.PlatformCode;
+            AswNodeId = other.AswNodeId;
+            AswStopId = other.AswStopId;
+            ZoneRegionType = other.ZoneRegionType;
+        }
 
         public override string ToString()
         {

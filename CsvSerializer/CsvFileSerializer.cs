@@ -72,6 +72,7 @@ namespace CsvSerializer
                 result.Add(current);
             }
 
+            reader.Close();
             return result;
         }
 

@@ -84,7 +84,7 @@ namespace GtfsProcessor
                 ////////////////
 
                 // načtené XML soubory postupně zapracujeme do databáze ASW (AswModel.Extended)
-                Console.WriteLine("Zpracování dat...");
+                Console.WriteLine("Zpracovávám ASW data...");
                 var db = TheAswDatabase.Construct(config.ProcessNonpublicTrips, aswXmlFileData.ToArray());
                 aswXmlFileData = null; // lze collectovat
 
@@ -107,7 +107,7 @@ namespace GtfsProcessor
         // pouze deserializace XML souboru do AswModelu (C# reprezentace obsahu XML souboru 1:1)
         static DavkaJR ProcessFile(string fileName)
         {
-            Console.WriteLine($"Načítání souboru: {Path.GetFileName(fileName)} ..");
+            Console.WriteLine($"Načítám soubor: {Path.GetFileName(fileName)} ..");
             return AswXmlSerializer.Deserialize(fileName);
         }
 
@@ -160,7 +160,8 @@ namespace GtfsProcessor
             // zároveň si uložíme mapopvání ASW zastávek na GTFS zastávky, ještě se bude hodit při konstrukci stop times
             Console.WriteLine("Sestavuji stops...");
             Dictionary<Stop, StopVariantsMapping> stopsTransformation; // pro následnou tvorbu mapování asw zastávka -> gtfs zastávka, až budeme generovat stoptimes
-            gtfsFeedEx.Stops = new StopsTransformation(db, log).CollectAllStopsAndStations(out stopsTransformation).ToDictionary(s => s.GtfsId);
+            var archivedStopsDb = new ArchivedStopsDb(db.GlobalStartDate, config.TripPersistentDbFolder, Loggers.StopsArchiveLoggerInstance);
+            gtfsFeedEx.Stops = new StopsTransformation(db, log).CollectAllStopsAndStations(out stopsTransformation, archivedStopsDb).ToDictionary(s => s.GtfsId);
 
             // GTFS linky jednoduše odpovídají číselníkovým položkám, maximálně kdyby nějaká linka měnila název, bude v GTFS dvakrát;
             // zároveň si uložíme mapování ASW linek na GTFS linky, ještě se bude hodit při konstrukci spojů
@@ -176,7 +177,7 @@ namespace GtfsProcessor
             mergedTripGroups = mergedTripGroups.OrderBy(t => t.TripIds.Min()).ToList();
             
             // tady trochu opravujeme data v případě přejezdů v síti tramvají, více viz TramTripBlockHeadsignProcessor, upravuje přímo data v 'mergedTripGroups'
-            Console.WriteLine("Opravy headsign a čísel linek tramvají...");
+            Console.WriteLine("Provádím opravy headsign a čísel linek tramvají...");
             mergedTripGroups = new TramTripBlockHeadsignProcessor(log).ProcessTripsBlocks(mergedTripGroups); // tohle vždy musíme provést před formací tripů, protože zde měníme owner routes a to má vliv na GTFS ID tripu
 
             // vyrobíme GTFS kalendáře podle bitmapových kalendářů, jak to funguje viz CalendarGenerator;
@@ -262,20 +263,21 @@ namespace GtfsProcessor
                     GtfsModel.Extended.Feed.MergeDuplicityRule.DisallowDuplicity,
                     GtfsModel.Extended.Feed.MergeDuplicityRule.DisallowDuplicity,
                     GtfsModel.Extended.Feed.MergeDuplicityRule.DisallowDuplicity,
-                    GtfsModel.Extended.Feed.MergeDuplicityRule.DisallowDuplicity);  
+                    GtfsModel.Extended.Feed.MergeDuplicityRule.DisallowDuplicity);
+                archivedStopsDb.AddMultipleStopsToBeArchived(trainsGtfsFeed.Stops.Where(s => s.AswNodeId != 0 && s.AswStopId != 0));
             }
             else
             {
                 Console.WriteLine("XX Soubor s GTFS vlaků nezadán, vlaky nebudou načteny.");
             }
 
-            Console.WriteLine("Verifikace počtu vygenerovaných spojů...");
+            Console.WriteLine("Verifikuji počty vygenerovaných spojů...");
             VerifyLoadedTripCount(gtfsFeedEx, trip => trip.Route.Type == GtfsModel.Enumerations.TrafficType.Metro, config.MinimumMetroTrips, "METRO");
             VerifyLoadedTripCount(gtfsFeedEx, trip => trip.Route.Type == GtfsModel.Enumerations.TrafficType.Tram, config.MinimumTramTrips, "TRAM");
             VerifyLoadedTripCount(gtfsFeedEx, trip => trip.Route.Type == GtfsModel.Enumerations.TrafficType.Bus && !trip.Route.IsRegional, config.MinimumBusTo299Trips, "BUS městský");
             VerifyLoadedTripCount(gtfsFeedEx, trip => trip.Route.Type == GtfsModel.Enumerations.TrafficType.Bus && trip.Route.IsRegional, config.MinimumBusFrom300Trips, "BUS příměstský");
             VerifyLoadedTripCount(gtfsFeedEx, trip => trip.Route.Type == GtfsModel.Enumerations.TrafficType.Rail, config.MinimumTrainTrips, "VLAK");
-
+            
             if (!string.IsNullOrEmpty(config.AdditionalTransfersFileName))
             {
                 // doplnění přestupů do transfers.txt, zatím se to moc nepoužívá
@@ -287,14 +289,25 @@ namespace GtfsProcessor
             {
                 Console.WriteLine("XX Nezadán soubor s přestupy navíc, které by měly být přidány do feedu.");
             }
-
+            
             // trip-to-trip transfers na základě návazných poznámek v ASW JŘ - vyrábíme až zde, protože jsme
             // čekali na načtení vlaků, abychom mohli dělat reference vlak-bus
             Console.WriteLine("Zpracovávám garantované přestupní poznámky...");
             var timedTransfers = new RemarksToTransfersProcessor(gtfsFeedEx.Routes.Values, stopsTransformation, db.GlobalStartDate).ParseTimedTransferRemarks(stopTimesWithTimedTransferRemarks);
             gtfsFeedEx.Transfers.AddRange(timedTransfers);
 
+            // archivované zastávky
+            Console.WriteLine("Načítám archiv zastávek...");
+            archivedStopsDb.LoadArchivedStops();
+            Console.WriteLine("Doplňuji archivní zastávky a ukládám archiv...");
+            var archivedStopsToAdd = archivedStopsDb.SelectArchivedStopsToAdd(gtfsFeedEx.Stops.Keys);
+            Console.WriteLine($" - doplněno zastávek: {archivedStopsToAdd.Count}");
+            archivedStopsDb.AddCurrentStopsToArchive();
+            archivedStopsDb.SaveArchivedStops();
+
+            Console.WriteLine("Transformuji data do finálního GTFS modelu...");
             var gtfsFeed = gtfsFeedEx.ToGtfsFeed();
+            MergeFeedStops(gtfsFeed, archivedStopsToAdd);
             if (extraStops != null)
             {
                 // nakonec ruční doplnění vstupů do metra a případných ručních zásahů do zastávek a stanic z externího zdroje
@@ -325,7 +338,7 @@ namespace GtfsProcessor
             Console.WriteLine("Sestavuji trasy linek...");
             gtfsFeed.RouteStops = new RouteStopsGenerator().Generate(gtfsFeedEx.Routes.Values).ToList();
             
-            Console.WriteLine("Ukládání souborů...");
+            Console.WriteLine("Ukládám GTFS soubory...");
             GtfsFeedSerializer.SerializeFeed(config.GtfsOutputFolder, gtfsFeed);
         }
 
