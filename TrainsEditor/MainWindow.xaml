@@ -118,8 +118,8 @@
         <Button x:Name="btnSelectFolder" Content="..." HorizontalAlignment="Right" Margin="0,9,159,0" VerticalAlignment="Top" Width="35" Height="25" Click="btnSelectFolder_Click"/>
         <TextBox x:Name="txtFilter" HorizontalAlignment="Right" Height="23" Margin="0,39,75,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="142" FontStyle="Italic" TextChanged="txtFilter_TextChanged"/>
         <Label x:Name="label" Content="Filtr:" HorizontalAlignment="Right" Margin="0,38,222,0" VerticalAlignment="Top" HorizontalContentAlignment="Right" RenderTransformOrigin="0.545,0.808"/>
-        <DatePicker x:Name="dtStartDate" HorizontalAlignment="Right" Margin="0,66,528,0" VerticalAlignment="Top" FirstDayOfWeek="Monday" Width="110" SelectedDate="2023-12-10"/>
-        <DatePicker x:Name="dtEndDate" HorizontalAlignment="Right" Margin="0,66,413,0" VerticalAlignment="Top" FirstDayOfWeek="Monday" Width="110" SelectedDate="2024-12-14"/>
+        <DatePicker x:Name="dtStartDate" HorizontalAlignment="Right" Margin="0,66,528,0" VerticalAlignment="Top" FirstDayOfWeek="Monday" Width="110" SelectedDate="2024-12-15"/>
+        <DatePicker x:Name="dtEndDate" HorizontalAlignment="Right" Margin="0,66,413,0" VerticalAlignment="Top" FirstDayOfWeek="Monday" Width="110" SelectedDate="2025-12-13"/>
         <Label x:Name="label1" Content="Rozsah časové osy platnosti:" HorizontalAlignment="Right" Margin="0,40,473,0" VerticalAlignment="Top" HorizontalContentAlignment="Right" Width="165"/>
         <Button x:Name="btnSelectAll" Content="Vše" HorizontalAlignment="Left" Margin="55,126,0,0" VerticalAlignment="Top" Width="45" IsEnabled="False" Click="btnSelectAll_Click"/>
         <Button x:Name="btnSelectNone" Content="Nic" HorizontalAlignment="Left" Margin="105,126,0,0" VerticalAlignment="Top" Width="45" IsEnabled="False" Click="btnSelectNone_Click"/>

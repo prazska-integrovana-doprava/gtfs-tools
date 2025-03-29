@@ -74,6 +74,8 @@ namespace CommonLibrary
             { new DateTime(2024, 9, 28), DayOfWeek.Sunday },
             { new DateTime(2024, 10, 28), DayOfWeek.Sunday },
             { new DateTime(2024, 11, 17), DayOfWeek.Sunday },
+            { new DateTime(2024, 12, 24), DayOfWeek.Sunday },
+            { new DateTime(2024, 12, 25), DayOfWeek.Sunday },
             { new DateTime(2024, 12, 26), DayOfWeek.Sunday },
             { new DateTime(2025, 1, 1), DayOfWeek.Sunday },
             { new DateTime(2025, 4, 18), DayOfWeek.Sunday },
@@ -85,6 +87,8 @@ namespace CommonLibrary
             { new DateTime(2025, 9, 28), DayOfWeek.Sunday },
             { new DateTime(2025, 10, 28), DayOfWeek.Sunday },
             { new DateTime(2025, 11, 17), DayOfWeek.Sunday },
+            { new DateTime(2025, 12, 24), DayOfWeek.Sunday },
+            { new DateTime(2025, 12, 25), DayOfWeek.Sunday },
             { new DateTime(2025, 12, 26), DayOfWeek.Sunday },
         };
 

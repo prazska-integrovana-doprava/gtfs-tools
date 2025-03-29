@@ -5,6 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 
 namespace CsvSerializer
 {
@@ -54,20 +55,31 @@ namespace CsvSerializer
         /// <param name="separator">Oddělovač záznamů na řádce</param>
         /// <param name="cultureInfo">V jakém formátu jsou v souboru uložena čísla a datum (výchozí hodnota null použije <see cref="CultureInfo.InvariantCulture"/>).</param>
         /// <param name="dateTimeFormat">Formát data</param>
+        /// <param name="encoding">Kódování souboru (výchozí hodnota null použije UTF8).</param>
+        /// <param name="containsHeader">True, pokud na prvním řádku souboru je hlavička s názvy sloupců (pokusí se namapovat podle atributů třídy)</param>
         /// <returns>Kolekce záznamů načtená ze souboru</returns>
-        public static List<T> DeserializeFile<T>(string inputFileName, char separator = DefaultSeparator, CultureInfo cultureInfo = null, string dateTimeFormat = DefaultDateTimeFormat) where T : new()
+        public static List<T> DeserializeFile<T>(string inputFileName, char separator = DefaultSeparator, CultureInfo cultureInfo = null, string dateTimeFormat = DefaultDateTimeFormat, Encoding encoding = null, bool containsHeader = true) where T : new()
         {
             var members = GetFieldAttributes<T>().ToArray();
             if (!File.Exists(inputFileName))
                 return new List<T>();
 
-            var reader = new StreamReader(inputFileName);
+            var reader = new StreamReader(inputFileName, encoding ?? Encoding.UTF8);
 
             var result = new List<T>();
             T current;
-            var gtfsReader = new CsvRecordDeserializer<T>(reader, separator, cultureInfo != null ? cultureInfo : CultureInfo.InvariantCulture, dateTimeFormat);
-            gtfsReader.ReadHeader(members);
-            while ((current = gtfsReader.ReadRecord()) != null)
+            var csvReader = new CsvRecordDeserializer<T>(reader, separator, cultureInfo ?? CultureInfo.InvariantCulture, dateTimeFormat);
+
+            if (containsHeader)
+            {
+                csvReader.ReadHeader(members);
+            }
+            else
+            {
+                csvReader.InferHeader(members);
+            }
+
+            while ((current = csvReader.ReadRecord()) != null)
             {
                 result.Add(current);
             }
