@@ -202,6 +202,20 @@ namespace GtfsModel.Extended
         }
 
         /// <summary>
+        /// Přidá výjimku do kalendáře. Pokud už s tímto datem existuje jiný záznam, přepíše ho
+        /// </summary>
+        /// <param name="date">Datum</param>
+        /// <param name="exceptionType">Typ výjimky (jede/nejede)</param>
+        public void AddExceptionIgnoreOlder(DateTime date, CalendarExceptionType exceptionType)
+        {
+            Exceptions[date] = new CalendarExceptionRecord()
+            {
+                Date = date,
+                ExceptionType = exceptionType,
+            };
+        }
+
+        /// <summary>
         /// Vrátí bitmapu, kdy spoj jede
         /// </summary>
         public ServiceDaysBitmap AsServiceBitmap()

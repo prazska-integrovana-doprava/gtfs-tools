@@ -59,6 +59,15 @@ namespace CsvSerializer
         }
 
         /// <summary>
+        /// Odvodí si hlavičku podle prvků (předpokládá se, že v souboru není hlavička)
+        /// </summary>
+        /// <param name="members">Seřazený seznam položek (odpovídá sloupcům v souboru)</param>
+        public void InferHeader(MemberAndAttribute[] members)
+        {
+            membersOrdered = members.ToList();
+        }
+
+        /// <summary>
         /// Přečte řádek a načte ho do instance za použití předem načtené identifikace sloupců.
         /// Je-li zavoláno před voláním <see cref="ReadHeader(MemberAndAttribute[])"/>, vyhazuje <see cref="InvalidOperationException"/>.
         /// </summary>
@@ -155,6 +164,10 @@ namespace CsvSerializer
             else if (fieldType.Equals(typeof(string)))
             {
                 return str;
+            }
+            else if (fieldType.Equals(typeof(char)))
+            {
+                return str.FirstOrDefault();
             }
             else if (fieldType.Equals(typeof(bool)))
             {

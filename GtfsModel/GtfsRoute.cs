@@ -19,7 +19,7 @@ namespace GtfsModel
         /// ID dopravce
         /// </summary>
         [CsvField("agency_id", 2)]
-        public int AgencyId { get; set; }
+        public string AgencyId { get; set; }
 
         /// <summary>
         /// Alias linky

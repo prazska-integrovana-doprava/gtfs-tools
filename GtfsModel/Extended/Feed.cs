@@ -22,7 +22,7 @@ namespace GtfsModel.Extended
             DisallowDuplicity,
         }
 
-        public Dictionary<int, GtfsAgency> Agency { get; set; }
+        public Dictionary<string, GtfsAgency> Agency { get; set; }
 
         public Dictionary<string, BaseStop> Stops { get; set; }
 
@@ -40,7 +40,7 @@ namespace GtfsModel.Extended
 
         public Feed()
         {
-            Agency = new Dictionary<int, GtfsAgency>();
+            Agency = new Dictionary<string, GtfsAgency>();
             Stops = new Dictionary<string, BaseStop>();
             Routes = new Dictionary<string, Route>();
             Trips = new Dictionary<string, Trip>();
@@ -62,7 +62,7 @@ namespace GtfsModel.Extended
             // dopravci
             foreach (var agency in gtfsFeed.Agency)
             {
-                result.Agency.Add(agency.Id, agency);
+                result.Agency.Add(agency.Id.ToString(), agency);
             }
 
             // nejdříve stanice, protože na ně pak odkazují ostatní body
@@ -230,8 +230,8 @@ namespace GtfsModel.Extended
                 Agency = Agency.Values.ToList(),
                 Calendar = Calendar.Values.Select(cal => cal.ToGtfsCalendar()).ToList(),
                 CalendarDates = Calendar.Values.SelectMany(cal => cal.Exceptions.Values.Select(ex => ex.ToGtfsCalendarDate(cal.GtfsId))).ToList(),
-                FeedInfo = new List<GtfsFeedInfo>() { FeedInfo },
-                Routes = Routes.Values.Select(r => r.ToGtfsRoute(Agency.Values.First().Id)).ToList(), // TODO to ruční specifikování agency je dost hnus
+                FeedInfo = FeedInfo != null ? new List<GtfsFeedInfo>() { FeedInfo } : new List<GtfsFeedInfo>(),
+                Routes = Routes.Values.Select(r => r.ToGtfsRoute(Agency.Values.First().Id)).ToList(),
                 RouteSubAgencies = Routes.Values.SelectMany(r => r.SubAgencies).Distinct().ToList(),
                 Shapes = Shapes.Values.SelectMany(s => s.ToGtfsShape()).ToList(),
                 Stops = Stops.Values.Select(s => s.ToGtfsStop()).ToList(),

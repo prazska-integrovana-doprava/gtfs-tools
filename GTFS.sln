@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.31205.134
+# Visual Studio 15
+VisualStudioVersion = 15.0.27703.2035
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GtfsLogging", "GtfsLogging\GtfsLogging.csproj", "{6E305575-DB41-4BAF-9112-BAF5ED6EF863}"
 EndProject
@@ -24,6 +24,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AswModel.Extended", "AswModel.Extended\AswModel.Extended.csproj", "{CA33F0ED-D624-4212-83A9-21E237784C44}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TrainsEditor", "TrainsEditor\TrainsEditor.csproj", "{3EE631F2-8EF6-43CA-AA02-EC5BAF8DD9D2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JdfModel", "JdfModel\JdfModel.csproj", "{267F13AB-5376-4C7A-A1E9-FC24F57D243A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JdfToGtfsProcessor", "JdfToGtfsProcessor\JdfToGtfsProcessor.csproj", "{E4698958-868B-440F-BECD-0016C851B338}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -98,6 +102,18 @@ Global
 		{3EE631F2-8EF6-43CA-AA02-EC5BAF8DD9D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3EE631F2-8EF6-43CA-AA02-EC5BAF8DD9D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3EE631F2-8EF6-43CA-AA02-EC5BAF8DD9D2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{267F13AB-5376-4C7A-A1E9-FC24F57D243A}.Debug - db vlaky|Any CPU.ActiveCfg = Debug|Any CPU
+		{267F13AB-5376-4C7A-A1E9-FC24F57D243A}.Debug - db vlaky|Any CPU.Build.0 = Debug|Any CPU
+		{267F13AB-5376-4C7A-A1E9-FC24F57D243A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{267F13AB-5376-4C7A-A1E9-FC24F57D243A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{267F13AB-5376-4C7A-A1E9-FC24F57D243A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{267F13AB-5376-4C7A-A1E9-FC24F57D243A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E4698958-868B-440F-BECD-0016C851B338}.Debug - db vlaky|Any CPU.ActiveCfg = Debug|Any CPU
+		{E4698958-868B-440F-BECD-0016C851B338}.Debug - db vlaky|Any CPU.Build.0 = Debug|Any CPU
+		{E4698958-868B-440F-BECD-0016C851B338}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E4698958-868B-440F-BECD-0016C851B338}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E4698958-868B-440F-BECD-0016C851B338}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E4698958-868B-440F-BECD-0016C851B338}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

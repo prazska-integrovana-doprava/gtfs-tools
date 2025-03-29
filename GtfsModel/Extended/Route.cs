@@ -13,6 +13,11 @@ namespace GtfsModel.Extended
     public class Route
     {
         /// <summary>
+        /// Název dopravce (v PID feedu používáme jen jednoho "PID")
+        /// </summary>
+        public GtfsAgency Agency { get; set; }
+
+        /// <summary>
         /// Pokud jde o linku z ASW JŘ, tato položka obsahuje číslo linky v číselníku, jinak 0.
         /// </summary>
         public int AswId { get; set; }
@@ -116,12 +121,12 @@ namespace GtfsModel.Extended
         /// Vrátí GTFS záznam linky
         /// </summary>
         /// <returns>GTFS záznam linky</returns>
-        public GtfsRoute ToGtfsRoute(int agencyId)
+        public GtfsRoute ToGtfsRoute(string defaultAgencyId)
         {
             return new GtfsRoute()
             {
                 Id = GtfsId,
-                AgencyId = agencyId,
+                AgencyId = Agency != null ? Agency.Id : defaultAgencyId,
                 ShortName = ShortName,
                 LongName = LongName,
                 Type = Type,

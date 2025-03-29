@@ -17,7 +17,7 @@ namespace GtfsProcessor
 {
     class Program
     {
-        public const int PidAgencyId = 99;
+        public const string PidAgencyId = "99";
 
         private static ICommonLogger log;
 
@@ -153,7 +153,7 @@ namespace GtfsProcessor
             
             // jeden GTFS dopravce PID, to je trivka, použijí ho pak všechny linky
             Console.WriteLine("Sestavuji agency...");
-            gtfsFeedEx.Agency = new Dictionary<int, GtfsAgency>() { { PidAgencyId, CreateAgencyInstance() } };
+            gtfsFeedEx.Agency = new Dictionary<string, GtfsAgency>() { { PidAgencyId, CreateAgencyInstance() } };
 
             // GTFS zastávky si jednak vyrobíme podle číselníku zastávek a spojů, které projíždějí - zastávky, kde nic nejede, ignorujeme,
             // zastávky v Praze, kde jezdí město i příměsto budou mít dva záznamy kvůli rozdílným pásmům (viz StopVariantsMapping);
