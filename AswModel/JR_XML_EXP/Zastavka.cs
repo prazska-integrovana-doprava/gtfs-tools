@@ -205,6 +205,10 @@ namespace JR_XML_EXP
         [DefaultValue(false)]
         public bool PrestupLanovka;
 
+        [XmlAttribute("nad")]
+        [DefaultValue(false)]
+        public bool NAD;
+
         [XmlAttribute("kidos")]
         [DefaultValue(0)]
         public int kIDOS;

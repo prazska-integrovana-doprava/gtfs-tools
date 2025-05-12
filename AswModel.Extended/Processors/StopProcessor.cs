@@ -56,6 +56,7 @@ namespace AswModel.Extended.Processors
                 RegionCode = xmlStop.Kraj,
                 IsPublic = xmlStop.Verejna,
                 IsTemporary = xmlStop.Docasna,
+                IsForSubstituteTransport = xmlStop.NAD,
                 Zones = zoneIds.ToArray(),
             };
 

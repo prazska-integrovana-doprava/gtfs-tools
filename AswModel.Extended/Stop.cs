@@ -109,6 +109,11 @@ namespace AswModel.Extended
         public bool IsTemporary { get; set; }
 
         /// <summary>
+        /// Zastávka pro náhradní dopravu (takže asi taky dočasná)
+        /// </summary>
+        public bool IsForSubstituteTransport { get; set; }
+
+        /// <summary>
         /// Vrací true, pokud jde o stanici metra (pozná se podle čísla sloupku)
         /// </summary>
         public bool IsMetro { get { return StopId >= 100 && StopId < 200; } }

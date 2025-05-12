@@ -12,6 +12,8 @@ namespace GtfsProcessor
 {
     class ArchivedStopsDb
     {
+        private const int NumDaysToArchive = 30;
+
         private DateTime _globalStartDate;
         private string _stopsDbFolder;
         private ISimpleLogger _log;
@@ -65,6 +67,7 @@ namespace GtfsProcessor
                 if (File.Exists(fileName) && new FileInfo(fileName).Length > 0)
                 {
                     ArchivedStops = CsvFileSerializer.DeserializeFile<ArchivedGtfsStop>(fileName);
+                    break;
                 }
             }
 
@@ -89,7 +92,7 @@ namespace GtfsProcessor
             {
                 if (!idset.Contains(stop.Id))
                 {
-                    _log.Log($"Zastávka {stop} přidána z archivu do stops.txt");
+                    _log.Log($"Zastávka {stop} přidána z archivu do stops.txt (do {stop.ArchivedUntil:dd.MM.yyyy})");
                     result.Add(stop);
                 }
             }
@@ -103,7 +106,7 @@ namespace GtfsProcessor
             var archiveDictionary = ArchivedStops.ToDictionary(s => s.Id);
             foreach (var stopToArchive in NonTemporaryStopsToBeArchived)
             {
-                var archiveUntil = _globalStartDate.AddDays(30);
+                var archiveUntil = _globalStartDate.AddDays(NumDaysToArchive);
                 var stopToArchiveIdBase = GetGtfsIdBase(stopToArchive);
                 if (archiveDictionary.ContainsKey(stopToArchiveIdBase) && archiveDictionary[stopToArchiveIdBase].ArchivedUntil > archiveUntil)
                 {

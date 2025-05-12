@@ -110,7 +110,7 @@ namespace GtfsProcessor
                 }
 
                 stops.AddRange(gtfsStops);
-                if (!stop.IsTemporary)
+                if (!stop.IsTemporary && !stop.IsForSubstituteTransport)
                 {
                     archivedStopsDb.AddMultipleStopsToBeArchived(gtfsStops);
                 }
