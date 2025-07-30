@@ -75,7 +75,7 @@ namespace GtfsProcessor
                         RouteLicenceNumber = tripAndNumber.RouteLicenceNumber,
                         TripNumber = tripAndNumber.TripData.TrafficType != AswTrafficType.Metro 
                             ? tripAndNumber.TripNumber
-                            : tripAndNumber.TripNumber % 1000, //u metra chceme jen číslo vlaku (bez čísla grafikonu)
+                            : tripAndNumber.TripNumber, //u metra chceme jen číslo vlaku (bez čísla grafikonu)
                     };
                 }
             }
