@@ -286,6 +286,11 @@ namespace TrainsEditor.ViewModel
                 integratedSystems |= IntegratedSystemsEnum.ODIS;
             }
 
+            if (lineInfo.LineType == TrainLineType.IdsJmk)
+            {
+                integratedSystems |= IntegratedSystemsEnum.IDSJMK;
+            }
+
             return new TrainLocation(locationData, prevLocationData, additionalData, integratedSystems, isFirstOrLastStation, networkSpecificParams);
         }
 

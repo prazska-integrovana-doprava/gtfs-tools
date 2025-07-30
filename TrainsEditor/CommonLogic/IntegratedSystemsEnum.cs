@@ -13,5 +13,7 @@ namespace TrainsEditor.CommonLogic
         PID = 1,
 
         ODIS = 2,
+
+        IDSJMK = 4,
     }
 }

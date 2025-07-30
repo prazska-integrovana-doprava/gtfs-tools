@@ -37,6 +37,7 @@
                                 <StackPanel>
                                     <TextBlock Text="pid" FontWeight="Bold" Foreground="Red" Visibility="{Binding IsPid, Converter={StaticResource BoolToVis}}" />
                                     <TextBlock Text="odis" FontWeight="Bold" Foreground="DarkBlue" Visibility="{Binding IsOdis, Converter={StaticResource BoolToVis}}" />
+                                    <TextBlock Text="jmk" FontWeight="Bold" Foreground="Green" Visibility="{Binding IsJmk, Converter={StaticResource BoolToVis}}" />
                                 </StackPanel>
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
@@ -133,7 +134,7 @@
         <Button x:Name="btnReloadFile" Content="Obnovit" HorizontalAlignment="Left" Margin="482,102,0,0" VerticalAlignment="Top" Width="78" IsEnabled="False" Click="btnReloadFile_Click"/>
         <ProgressBar x:Name="progressBar" HorizontalAlignment="Left" Height="23" Margin="10,66,0,0" VerticalAlignment="Top" Width="208" Visibility="Hidden"/>
         <Button x:Name="btnStop" Content="stop" HorizontalAlignment="Left" Margin="223,67,0,0" VerticalAlignment="Top" Width="58" Click="btnStop_Click" Visibility="Hidden"/>
-        <Button x:Name="btnGenerateGtfs" Content="Generovat GTFS PID" HorizontalAlignment="Right" Margin="0,9,10,0" VerticalAlignment="Top" Width="144" Height="25" Click="btnGenerateGtfs_Click"/>
+        <Button x:Name="btnGenerateGtfs" IsEnabled="False" Content="Generovat GTFS PID" HorizontalAlignment="Right" Margin="0,9,10,0" VerticalAlignment="Top" Width="144" Height="25" Click="btnGenerateGtfs_Click"/>
         <Label x:Name="label4" Content="IDS:" HorizontalAlignment="Right" Margin="0,99,224,0" VerticalAlignment="Top"/>
         <ComboBox x:Name="cbFilterIntegratedSystem" HorizontalAlignment="Right" Margin="0,99,75,0" VerticalAlignment="Top" Width="142" SelectionChanged="cbFilterIntegratedSystem_SelectionChanged">
             <ComboBoxItem x:Name="cbFilterSelectAll" Content="(zobrazit vše)" HorizontalAlignment="Left" Width="205" IsSelected="True"/>

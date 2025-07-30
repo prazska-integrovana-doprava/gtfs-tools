@@ -112,6 +112,21 @@ namespace TrainsEditor.CommonLogic
             {
                 return new TrainLineInfo(TrainLineType.Iredo, $"V{trainLineNumberCode % 100}", trainLineNumberCode);
             }
+            else if (trainLineNumberCode > 6000 && trainLineNumberCode < 6099)
+            {
+                if (trainLineNumberCode == 6012 || trainLineNumberCode == 6013 || trainLineNumberCode == 6019 || trainLineNumberCode == 6050 || trainLineNumberCode == 6054 || trainLineNumberCode == 6056)
+                {
+                    return new TrainLineInfo(TrainLineType.IdsJmk, $"R{trainLineNumberCode % 100}", trainLineNumberCode);
+                }
+                else if (trainLineNumberCode == 6099)
+                {
+                    return new TrainLineInfo(TrainLineType.IdsJmk, "ExP", trainLineNumberCode);
+                }
+                else
+                {
+                    return new TrainLineInfo(TrainLineType.IdsJmk, $"S{trainLineNumberCode % 100}", trainLineNumberCode);
+                }
+            }
             else if (trainLineNumberCode > 8000 && trainLineNumberCode < 8100)
             {
                 return new TrainLineInfo(TrainLineType.Odis, $"S{trainLineNumberCode % 100}", trainLineNumberCode);

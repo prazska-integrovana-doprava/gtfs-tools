@@ -36,7 +36,7 @@ namespace TrainsEditor.GtfsExport
         /// <summary>
         /// ID dopravce "PID" v GTFS
         /// </summary>
-        public const int PidAgencyId = 99;
+        public const string PidAgencyId = "99";
 
         private TrainGroupLoader _trainGroupLoader;
 

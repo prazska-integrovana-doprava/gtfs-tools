@@ -29,6 +29,9 @@
         // S1 až S99 ODIS
         Odis,
 
+        // S a R linky IDS JMK
+        IdsJmk,
+
         // Ostatní
         Unknown,
 
