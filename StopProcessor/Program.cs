@@ -137,8 +137,9 @@ namespace StopProcessor
             var gtfsFeed = GtfsFeedSerializer.DeserializeFeed(config.GtfsFolder);
             foreach (var gtfsStop in gtfsFeed.Stops)
             {
-                if (gtfsStop.LocationType != LocationType.Stop || gtfsStop.Id.StartsWith("T"))
-                    continue; // není zastávka, anebo je vlaková, kterou ale nemáme v ASW
+                if (gtfsStop.LocationType != LocationType.Stop || gtfsStop.Id.StartsWith("T") 
+                    || (gtfsStop.Id.StartsWith("U") && gtfsStop.Id.Contains("V") && !string.IsNullOrEmpty(gtfsStop.ParentStationId)))
+                    continue; // není zastávka, anebo je vlaková, kterou ale nemáme v ASW, anebo je to vlakové nástupiště
 
                 int nodeId = gtfsStop.AswNodeId;
                 int stopId = gtfsStop.AswStopId;
@@ -167,7 +168,7 @@ namespace StopProcessor
                 }
                 else
                 {
-                    stopLog.Log(LogMessageType.ERROR_STOP_WRONG_GTFS_ID, $"Zastávka {gtfsStop.Id} - chyba parsování ID");
+                    stopLog.Log(LogMessageType.ERROR_STOP_WRONG_GTFS_ID, $"Zastávka {gtfsStop.Id} - špatné ASW ID");
                 }
             }
         
