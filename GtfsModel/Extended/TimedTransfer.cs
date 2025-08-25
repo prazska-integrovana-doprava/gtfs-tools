@@ -36,18 +36,24 @@ namespace GtfsModel.Extended
             };
         }
 
+        /// <summary>
+        /// Vrací true, pokud jde o shodný přestup. Při porovnávání nezáleží na <see cref="MaxWaitingTimeSeconds"/>.
+        /// </summary>
         public override bool Equals(object obj)
         {
             var other = obj as TimedTransfer;
             if (other == null)
                 return false;
 
-            return Equals(FromStop, other.FromStop) && Equals(ToStop, other.ToStop) && Equals(FromTrip, other.FromTrip) && Equals(ToTrip, other.ToTrip) && Equals(MaxWaitingTimeSeconds, other.MaxWaitingTimeSeconds);
+            return Equals(FromStop, other.FromStop) && Equals(ToStop, other.ToStop) && Equals(FromTrip, other.FromTrip) && Equals(ToTrip, other.ToTrip);
         }
 
+        /// <summary>
+        /// Nebere v potaz <see cref="MaxWaitingTimeSeconds"/>.
+        /// </summary>
         public override int GetHashCode()
         {
-            return FromStop.GetHashCode() ^ ToStop.GetHashCode() * 231 + FromTrip.GetHashCode() ^ ToTrip.GetHashCode() * 171 ^ MaxWaitingTimeSeconds * 6927;
+            return FromStop.GetHashCode() ^ ToStop.GetHashCode() * 231 + FromTrip.GetHashCode() ^ ToTrip.GetHashCode() * 171;
         }
 
         public override string ToString()

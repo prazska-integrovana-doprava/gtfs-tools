@@ -85,8 +85,9 @@ namespace GtfsProcessor
                     {
                         if (allTransfers.ContainsKey(transfer))
                         {
-                            // tohle možná ani nastat nemůže, těžko říct, protože dvě stejné poznámky vzniklé chybou projektanta bychom už zdetekovali dříve
-                            // a proces zastavili - ale teoreticky se asi může stát leccos a pokud by vznikla jedna vazba dvakrát, zahlásíme to
+                            // velmi výjimečné, ale může se to stát například když projektant udělá dvě poznámky a použije jinou dvojici usm+zsm
+                            // podstatné je, že za shodné považujeme poznámky i když se liší maximálním časem na přestup (tak to vyžaduje spec GTFS, jinak je to error)
+                            // (je to řešeno v Equals a GetHashCode metodě třídy TimedTransfer)
                             transferLog.Log($"   *** přestup na {transfer.ToTrip} zast. {transfer.ToStop} už byl jednou vygenerován od {allTransfers[transfer]}.");
                         }
                         else if (transfer.MaxWaitingTimeSeconds == 0)
