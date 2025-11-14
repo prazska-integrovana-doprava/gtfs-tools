@@ -74,6 +74,18 @@ namespace JR_XML_EXP
         [DefaultValue(false)]
         public bool Nacestna;
 
+        [XmlAttribute("px")]
+        [DefaultValue(false)]
+        public bool Prestup;
+
+        [XmlAttribute("pdisp")]
+        [DefaultValue(false)]
+        public bool PrestupDisp;
+
+        [XmlAttribute("pNAD")]
+        [DefaultValue(false)]
+        public bool PrestupNAD;
+
         [XmlAttribute("kh1")]
         [DefaultValue(0)]
         public short KH1;

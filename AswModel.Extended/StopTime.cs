@@ -89,6 +89,12 @@ namespace AswModel.Extended
         public Remark[] Remarks { get; set; }
 
         /// <summary>
+        /// Jeden ze způsobů, jak určit, že v zastávce je garantovaný přestup (používá se u tramvají).
+        /// Reálně se mapuje ze tří různých atributů, v případě potřeby lze rozdělit.
+        /// </summary>
+        public bool HasGuaranteedTransferAttribute { get; set; }
+
+        /// <summary>
         /// Typ výkonu na odjezdu ze zastávky
         /// </summary>
         public TripOperationType TripOperationType { get; set; }

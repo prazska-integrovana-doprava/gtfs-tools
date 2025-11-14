@@ -223,8 +223,9 @@ namespace GtfsProcessor
             // zároveň si vyžádáme mapování GTFS stoptimes na ASW přestupní poznámky pro generování trip-to-trip transfers
             Console.WriteLine("Sestavuji trips...");
             Dictionary<GtfsModel.Extended.StopTime, List<Remark>> stopTimesWithTimedTransferRemarks;
+            List<GtfsModel.Extended.StopTime> stopTimesWithGuaranteedTransferAttribute;
             var tripsTransformation = new TripsTransformation(routesTransformation, stopsTransformation, shapeToTripAssignment, calendarToTripAssignment, tripPersistentIdDb)
-                .TransformTripsToGtfs(mergedTripGroups, out stopTimesWithTimedTransferRemarks);
+                .TransformTripsToGtfs(mergedTripGroups, out stopTimesWithTimedTransferRemarks, out stopTimesWithGuaranteedTransferAttribute);
             gtfsFeedEx.Trips = tripsTransformation.Values.ToDictionary(t => t.GtfsId);
             new CalendarDebugLogger(gtfsFeedEx.Calendar.Values).LogCalendars();
 
@@ -293,7 +294,7 @@ namespace GtfsProcessor
             // trip-to-trip transfers na základě návazných poznámek v ASW JŘ - vyrábíme až zde, protože jsme
             // čekali na načtení vlaků, abychom mohli dělat reference vlak-bus
             Console.WriteLine("Zpracovávám garantované přestupní poznámky...");
-            var timedTransfers = new RemarksToTransfersProcessor(gtfsFeedEx.Routes.Values, stopsTransformation, db.GlobalStartDate).ParseTimedTransferRemarks(stopTimesWithTimedTransferRemarks);
+            var timedTransfers = new RemarksToTransfersProcessor(gtfsFeedEx.Routes.Values, stopsTransformation, db.GlobalStartDate).ParseTimedTransferRemarks(stopTimesWithTimedTransferRemarks, stopTimesWithGuaranteedTransferAttribute);
             gtfsFeedEx.Transfers.AddRange(timedTransfers);
 
             // archivované zastávky

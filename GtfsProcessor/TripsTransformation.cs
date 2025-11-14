@@ -49,14 +49,16 @@ namespace GtfsProcessor
         /// Vygeneruje GTFS Tripy a vrací mapování GTFS stop times na ASW návazné poznámky (kvůli pozdějšímu generování návazností)
         /// </summary>
         /// <param name="trips">ASW skupiny tripů (sloučených po identických)</param>
-        /// <param name="stopTimesWithTimedTransferRemarks">Sem se uloží mapování návazných poznámek na GTFS stop times</param>
-        public IDictionary<MergedTripGroup, GtfsModel.Extended.Trip> TransformTripsToGtfs(IEnumerable<MergedTripGroup> trips, out Dictionary<GtfsModel.Extended.StopTime, List<Remark>> stopTimesWithTimedTransferRemarks)
+        /// <param name="stopTimesWithTimedTransferRemarks">Sem se uloží mapování návazných datových poznámek na GTFS stop times</param>
+        /// <param name="stopTimesWithGuaranteedTransferAttribute">Sem se uloží zastavení, které mají atribut garantovanému přestupu (zjednodušená varianta, kterou používá DPP, buď poznámka € u autobusů, nebo některá z přestupních poznámek u tramvají)</param>
+        public IDictionary<MergedTripGroup, GtfsModel.Extended.Trip> TransformTripsToGtfs(IEnumerable<MergedTripGroup> trips, out Dictionary<GtfsModel.Extended.StopTime, List<Remark>> stopTimesWithTimedTransferRemarks, out List<GtfsModel.Extended.StopTime> stopTimesWithGuaranteedTransferAttribute)
         {
             transformedTrips = new Dictionary<MergedTripGroup, GtfsModel.Extended.Trip>();
             stopTimesWithTimedTransferRemarks = new Dictionary<GtfsModel.Extended.StopTime, List<Remark>>();
+            stopTimesWithGuaranteedTransferAttribute = new List<GtfsModel.Extended.StopTime>();
             foreach (var trip in trips)
             {
-                TransformAndAddGtfsTrip(trip, stopTimesWithTimedTransferRemarks);
+                TransformAndAddGtfsTrip(trip, stopTimesWithTimedTransferRemarks, stopTimesWithGuaranteedTransferAttribute);
             }
 
             return transformedTrips;
@@ -65,7 +67,7 @@ namespace GtfsProcessor
         // Převede trip do GTFS, přidá ho do 'transformedTrips' a do 'stopTimesWithTimedTransferRemarks'.
         // Může se volat i rekurzivně kvůli prev/next spojům v blocích, validní je i trip = null (pak vrací null).
         // Každý trip se generuje jen jednou, pokud už byl vygenerován dříve, vrací se výsledek z cache 'transformedTrips'
-        private GtfsModel.Extended.Trip TransformAndAddGtfsTrip(MergedTripGroup trip, Dictionary<GtfsModel.Extended.StopTime, List<Remark>> stopTimesWithTimedTransferRemarks)
+        private GtfsModel.Extended.Trip TransformAndAddGtfsTrip(MergedTripGroup trip, Dictionary<GtfsModel.Extended.StopTime, List<Remark>> stopTimesWithTimedTransferRemarks, List<GtfsModel.Extended.StopTime> stopTimesWithGuaranteedTransferAttribute)
         {
             if (trip == null)
                 return null;
@@ -77,7 +79,7 @@ namespace GtfsProcessor
             var blockId = "";
             if (trip.PreviousPublicTripInBlock != null)
             {
-                var firstTripInGtfs = TransformAndAddGtfsTrip(trip.FirstTripInBlock, stopTimesWithTimedTransferRemarks);
+                var firstTripInGtfs = TransformAndAddGtfsTrip(trip.FirstTripInBlock, stopTimesWithTimedTransferRemarks, stopTimesWithGuaranteedTransferAttribute);
                 blockId = firstTripInGtfs.GtfsId;
             }
             else if (trip.NextPublicTripInBlock != null)
@@ -96,7 +98,7 @@ namespace GtfsProcessor
                 GtfsId = gtfsId,
                 Headsign = GetHeadsign(trip, trip.PublicStopTimes.Last().Stop),
                 IsExceptional = trip.IsExceptional,
-                PreviousTripInBlock = TransformAndAddGtfsTrip(trip.PreviousPublicTripInBlock, stopTimesWithTimedTransferRemarks),
+                PreviousTripInBlock = TransformAndAddGtfsTrip(trip.PreviousPublicTripInBlock, stopTimesWithTimedTransferRemarks, stopTimesWithGuaranteedTransferAttribute),
                 Route = route,
                 Shape = shapeAssignment[trip],
                 ShortName = "",
@@ -112,7 +114,7 @@ namespace GtfsProcessor
             }
 
             // TODO co kdybychom ten první arrival a poslední departure nechali nevyplněné? bude to fungovat i s blocky?
-            resultGtfsTrip.StopTimes = GenerateStopTimes(trip, resultGtfsTrip, stopTimesWithTimedTransferRemarks).ToList();
+            resultGtfsTrip.StopTimes = GenerateStopTimes(trip, resultGtfsTrip, stopTimesWithTimedTransferRemarks, stopTimesWithGuaranteedTransferAttribute).ToList();
             resultGtfsTrip.StopTimes.First().ArrivalTime = resultGtfsTrip.StopTimes.First().DepartureTime;
             resultGtfsTrip.StopTimes.Last().DepartureTime = resultGtfsTrip.StopTimes.Last().ArrivalTime;
             resultGtfsTrip.BikesAllowed = bikeAllowanceDefinition.SetBikesAllowedForTrip(resultGtfsTrip.PublicStopTimes.Select(st => st.BikesAllowed));
@@ -125,7 +127,8 @@ namespace GtfsProcessor
 
         // generuje stoptimes, při tom jim doplňuje kilometráž ze vzorového shape a hlídá stop headsigns podle změn směrových orientací
         private IEnumerable<GtfsModel.Extended.StopTime> GenerateStopTimes(MergedTripGroup ownerTrip, GtfsModel.Extended.Trip gtfsTrip, 
-            Dictionary<GtfsModel.Extended.StopTime, List<Remark>> stopTimesWithTimedTransferRemarks)
+            Dictionary<GtfsModel.Extended.StopTime, List<Remark>> stopTimesWithTimedTransferRemarks,
+            List<GtfsModel.Extended.StopTime> stopTimesWithGuaranteedTransferAttribute)
         {
             var gtfsStopTimeList = new List<GtfsModel.Extended.StopTime>();
             int sequenceNumber = 1;
@@ -177,6 +180,13 @@ namespace GtfsProcessor
                     if (stopTime.Remarks.Any(st => st.IsTimedTransfer))
                     {
                         stopTimesWithTimedTransferRemarks.Add(gtfsStopTime, stopTime.Remarks.Where(st => st.IsTimedTransfer).ToList());
+                    }
+
+                    // u tramvají se používají vlajky spojů, u autobusů pak obecná poznámka € (podmínka by se dala zpřísnit na autobusy pouze DPP)
+                    if (stopTime.HasGuaranteedTransferAttribute 
+                        || (ownerTrip.TrafficType == AswTrafficType.Bus && stopTime.Remarks.Any(st => st.Symbol1 == "€")))
+                    {
+                        stopTimesWithGuaranteedTransferAttribute.Add(gtfsStopTime);
                     }
                 }
             }

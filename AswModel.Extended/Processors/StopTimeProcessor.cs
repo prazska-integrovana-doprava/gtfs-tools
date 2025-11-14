@@ -80,6 +80,7 @@ namespace AswModel.Extended.Processors
                 BoardingOnly = xmlStopTime.JenProNastup,
                 ExitOnly = xmlStopTime.JenProVystup,
                 IsOnPhoneRequest = xmlStopTime.NaObjednani,
+                HasGuaranteedTransferAttribute = xmlStopTime.Prestup || xmlStopTime.PrestupDisp || xmlStopTime.PrestupNAD,
             };
         }
 

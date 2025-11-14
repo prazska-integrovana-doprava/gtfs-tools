@@ -53,8 +53,9 @@ namespace GtfsProcessor
         /// Přijme všechna zastavení, která mají přiřazené nějaké poznámky a návazné poznámky zpracuje do instancí <see cref="TimedTransfer"/>.
         /// </summary>
         /// <param name="stopTimesWithTimedTransferRemarks">Zastavení s návaznými poznámkami</param>
+        /// <param name="stopTimesWithGuaranteedTransferAttribute">Zastavení s příznakem garantovaného přestupu (varianta DPP)</param>
         /// <returns></returns>
-        public IEnumerable<TimedTransfer> ParseTimedTransferRemarks(Dictionary<StopTime, List<AswModel.Extended.Remark>> stopTimesWithTimedTransferRemarks)
+        public IEnumerable<TimedTransfer> ParseTimedTransferRemarks(Dictionary<StopTime, List<AswModel.Extended.Remark>> stopTimesWithTimedTransferRemarks, List<StopTime> stopTimesWithGuaranteedTransferAttribute)
         {
             // pro detekci shodných přestupů
             var allTransfers = new Dictionary<TimedTransfer, StopTime>();
@@ -67,7 +68,7 @@ namespace GtfsProcessor
                 // pro detekci shodných poznámek (občas tam projektant má dvě totožné návazné poznámky, to reportujeme jako chybu)
                 var processedRemarks = new Dictionary<AswModel.Extended.Remark, AswModel.Extended.Remark>(new RemarkComparer()); // pro detekci duplicitních poznámek
 
-                foreach (var remark in timedTransferRemarks)
+                foreach (var remark in timedTransferRemarks.Where(r => r.IsTimedTransfer)) // ty, co nejsou datové, zpracujeme později
                 {
                     if (processedRemarks.ContainsKey(remark))
                     { 
@@ -97,6 +98,32 @@ namespace GtfsProcessor
                         else
                         {
                             allTransfers.Add(transfer, stopTime);
+                        }
+                    }
+                }
+            }
+
+            var stopTimesByNode = stopTimesWithGuaranteedTransferAttribute.GroupBy(st => st.Stop.AswNodeId + " " + st.Stop.Name).ToDictionary(g => g.Key);
+
+            foreach (var n in stopTimesByNode.Keys)
+            {
+                foreach (var st1 in stopTimesByNode[n])
+                {
+                    foreach (var st2 in stopTimesByNode[n])
+                    {
+                        var cal1 = st1.Trip.CalendarRecord.AsServiceBitmap(globalStartDate);
+                        var cal2 = st2.Trip.CalendarRecord.AsServiceBitmap(globalStartDate);
+                        if (st1 != st2 && st1.DepartureTime == st2.DepartureTime && st1.Trip.StopTimes.First() != st1 && !cal1.Intersect(cal2).IsEmpty)
+                        {
+                            allTransfers.Add(new TimedTransfer()
+                            {
+                                FromStop = st1.Stop,
+                                ToStop = st2.Stop,
+                                FromTrip = st1.Trip,
+                                ToTrip = st2.Trip,
+                                MaxWaitingTimeSeconds = 600
+                            }, null);
+                            transferLog.Log($"DPP {st1} cal {cal1} má přestup na {st2} cal {cal2}.");
                         }
                     }
                 }
