@@ -90,12 +90,25 @@ namespace CommonLibrary
             { new DateTime(2025, 12, 24), DayOfWeek.Sunday },
             { new DateTime(2025, 12, 25), DayOfWeek.Sunday },
             { new DateTime(2025, 12, 26), DayOfWeek.Sunday },
+            { new DateTime(2026, 1, 1), DayOfWeek.Sunday },
+            { new DateTime(2026, 4, 3), DayOfWeek.Sunday },
+            { new DateTime(2026, 4, 6), DayOfWeek.Sunday },
+            { new DateTime(2026, 5, 1), DayOfWeek.Sunday },
+            { new DateTime(2026, 5, 8), DayOfWeek.Sunday },
+            { new DateTime(2026, 7, 5), DayOfWeek.Sunday },
+            { new DateTime(2026, 7, 6), DayOfWeek.Sunday },
+            { new DateTime(2026, 9, 28), DayOfWeek.Sunday },
+            { new DateTime(2026, 10, 28), DayOfWeek.Sunday },
+            { new DateTime(2026, 11, 17), DayOfWeek.Sunday },
+            { new DateTime(2026, 12, 24), DayOfWeek.Sunday },
+            { new DateTime(2026, 12, 25), DayOfWeek.Sunday },
+            { new DateTime(2026, 12, 26), DayOfWeek.Sunday },
         };
 
         /// <summary>
         /// Po aktualizaci na nová data je potřeba posunout tuto konstantu
         /// </summary>
-        private static DateTime MaxDate = new DateTime(2025, 12, 31);
+        private static DateTime MaxDate = new DateTime(2026, 12, 31);
 
         ///// <summary>
         ///// Instance pro MHD + příměstské busy

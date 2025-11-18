@@ -12,7 +12,7 @@ namespace TrainsEditor.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "16.8.1.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.14.0.0")]
     internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -104,7 +104,34 @@ namespace TrainsEditor.Properties {
 							<LineName>S2</LineName>
 							<TrainNumber>5805</TrainNumber>
 						</TripDirectionSpec>
-					</ArrayOfTripDirectionSpec>")]
+					</ArrayOfTripDirectionSpec>
+					
+						
+							S33
+							8515
+						
+						
+							S33
+							8518
+						
+						
+							S9
+							2540
+						
+						
+							S9
+							2509
+						
+						
+							S2
+							5802
+						
+						
+							S2
+							5805
+						
+					
+				")]
         public global::System.Collections.Generic.List<TrainsEditor.GtfsExport.TripDirectionSpec> RepresentativeTrips {
             get {
                 return ((global::System.Collections.Generic.List<TrainsEditor.GtfsExport.TripDirectionSpec>)(this["RepresentativeTrips"]));

@@ -569,7 +569,7 @@ namespace TrainsEditor
         private void btnDownload_Click(object sender, RoutedEventArgs e)
         {
             var startYear = 2025;
-            var endYear = 2025;
+            var endYear = 2026;
 
             var filesDownloaders = new List<FilesDownloader>();
             for (int year = startYear; year <= endYear; year++)
