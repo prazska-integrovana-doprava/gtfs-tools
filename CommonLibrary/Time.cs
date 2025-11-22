@@ -83,12 +83,12 @@ namespace CommonLibrary
 
         public override string ToString()
         {
-            return $"{Hours}:{Minutes:00}:{Seconds:00}";
+            return $"{Hours:00}:{Minutes:00}:{Seconds:00}";
         }
 
         public string ToStringWithoutSeconds()
         {
-            return $"{Hours}:{Minutes:00}";
+            return $"{Hours:00}:{Minutes:00}";
         }
 
         // musí být kvůli implementaci ICsvSerializable
