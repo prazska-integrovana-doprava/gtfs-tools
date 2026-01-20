@@ -114,6 +114,11 @@ namespace AswModel.Extended
         public bool IsForSubstituteTransport { get; set; }
 
         /// <summary>
+        /// Přestupní ikonky
+        /// </summary>
+        public TransferAttributes TransferAttributes { get; set; }
+
+        /// <summary>
         /// Vrací true, pokud jde o stanici metra (pozná se podle čísla sloupku)
         /// </summary>
         public bool IsMetro { get { return StopId >= 100 && StopId < 200; } }

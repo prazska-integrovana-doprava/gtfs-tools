@@ -2,6 +2,7 @@
 using CzpttModel;
 using GtfsLogging;
 using GtfsModel.Enumerations;
+using System.Collections.Generic;
 using System.Linq;
 using TrainsEditor.CommonLogic;
 
@@ -145,13 +146,56 @@ namespace TrainsEditor.ExportModel
             //    result.StationCode = rewrStationCode;
             //}
 
-            result.Stop = stopDb.FindInAswOrCis(location.Location.CountryCodeISO, result.StationCode, location.Location.PrimaryLocationName);
-            if (result.Stop.GtfsId == null && location.Location.CountryCodeISO == LocationIdent.CountryCodeCZ)
+            var trainStop = stopDb.FindInAswOrCis(location.Location.CountryCodeISO, result.StationCode, location.Location.PrimaryLocationName);
+            if (trainStop.GtfsId == null && location.Location.CountryCodeISO == LocationIdent.CountryCodeCZ)
             {
                 loaderLog.Log(LogMessageType.WARNING_TRAIN_MISSING_STOP, $"Dopravní bod {result.StationCode} ({result.StationName}) nebyl nalezen v žádném číselníku.");
             }
 
+            if (trainStop.AllTransferIcons != null)
+            {
+                result.StopIcons = FilterIconsByTime(trainStop.AllTransferIcons, result.ArrivalTime).ToArray();
+            }
+
+            result.Stop = trainStop;
             return result;
+        }
+
+        private static IEnumerable<TransferIcons> FilterIconsByTime(IEnumerable<TransferIcons> icons, Time time)
+        {
+            foreach (var icon in icons)
+            {
+                switch (icon)
+                {
+                    case TransferIcons.MetroA:
+                    case TransferIcons.MetroB:
+                    case TransferIcons.MetroC:
+                    case TransferIcons.MetroD:
+                        if (time.ModuloDay() >= new Time(4, 45, 0))
+                        {
+                            yield return icon;
+                        }
+
+                        break;
+
+                    case TransferIcons.Train:
+                    case TransferIcons.Sbahn:
+                        break; // přestupy vlaků na vlaky nezobrazujeme
+
+                    case TransferIcons.Ferry:
+                        if (time.ModuloDay() >= new Time(5, 15, 0) && time.ModuloDay() < new Time(22, 0, 0))
+                        {
+                            yield return icon;
+                        }
+
+                        break;
+
+                    default:
+                        yield return icon;
+                        break;
+
+                }
+            }
         }
 
         public override string ToString()

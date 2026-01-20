@@ -75,6 +75,18 @@ namespace GtfsModel
         [CsvField("bikes_allowed", 62)]
         public BikeAccessibility BikesAllowed { get; set; }
 
+        /// <summary>
+        /// Ikonky přestupů k této zastávce a tomuto spoji ve formátu dvoupísmenných zkratek
+        /// </summary>
+        [CsvField("stop_icons", 63)]
+        public string StopIcons { get; set; }
+
+        /// <summary>
+        /// Ikonky přestupů k zastávce <see cref="StopHeadsign"/> (pokud je zadaná) ve formátu dvoupísmenných zkratek
+        /// </summary>
+        [CsvField("headsign_icons", 64)]
+        public string HeadsignIcons { get; set; }
+
         public override string ToString()
         {
             return $"{TripId} at {StopId} at {DepartureTime}";

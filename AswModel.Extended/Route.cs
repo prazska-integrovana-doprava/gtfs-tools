@@ -16,6 +16,7 @@ namespace AswModel.Extended
         public const int LineANumber = 991;
         public const int LineBNumber = 992;
         public const int LineCNumber = 993;
+        public const int LineDNumber = 994;
 
         /// <summary>
         /// Číslo linky dle ASW JŘ.

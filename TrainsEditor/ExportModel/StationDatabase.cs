@@ -3,6 +3,7 @@ using CsvSerializer;
 using CsvSerializer.Attributes;
 using CzpttModel;
 using GtfsLogging;
+using GtfsModel.Enumerations;
 using GtfsModel.Extended;
 using System.Collections.Generic;
 using System.Globalization;
@@ -122,7 +123,8 @@ namespace TrainsEditor.ExportModel
                     ZoneId = aswStopFirstVersion.PidZoneId,
                     ZoneRegionType = aswStopFirstVersion.ZoneRegionType,
                     WheelchairBoarding = FromAswWheelchairAccessibility(aswStopFirstVersion.WheelchairAccessibility),
-                    PrimaryLocationCode = cis
+                    PrimaryLocationCode = cis,
+                    AllTransferIcons = GetTransferIcons(aswStopFirstVersion.TransferAttributes).ToArray()
                 };
 
                 var stopAlreadyPresent = trainStopsFromAsw.GetValueOrDefault(LocationIdent.CountryCodeCZ + cis);
@@ -228,6 +230,23 @@ namespace TrainsEditor.ExportModel
             return wheelchairAccessibility == AswModel.Extended.WheelchairAccessibility.Accessible ? GtfsModel.Enumerations.WheelchairBoarding.Possible
                 : wheelchairAccessibility == AswModel.Extended.WheelchairAccessibility.Undefined ? GtfsModel.Enumerations.WheelchairBoarding.Unknown
                 : GtfsModel.Enumerations.WheelchairBoarding.NotPossible;
+        }
+
+        // převod přestupních ikonek z ASW do GTFS modelu
+        private static IEnumerable<TransferIcons> GetTransferIcons(AswModel.Extended.TransferAttributes aswTransferAttributes)
+        {
+            if (aswTransferAttributes.IsTransferToMetroA) yield return TransferIcons.MetroA;
+            if (aswTransferAttributes.IsTransferToMetroB) yield return TransferIcons.MetroB;
+            if (aswTransferAttributes.IsTransferToMetroC) yield return TransferIcons.MetroC;
+            if (aswTransferAttributes.IsTransferToMetroD) yield return TransferIcons.MetroD;
+            if (aswTransferAttributes.IsTransferToTrain) yield return TransferIcons.Train;
+            if (aswTransferAttributes.IsTransferToSbahn) yield return TransferIcons.Sbahn;
+            if (aswTransferAttributes.IsTransferToFunicular) yield return TransferIcons.Funicular;
+            if (aswTransferAttributes.IsTransferToFerry) yield return TransferIcons.Ferry;
+            if (aswTransferAttributes.IsTransferToAirport) yield return TransferIcons.Airport;
+            if (aswTransferAttributes.IsTransferToTram) yield return TransferIcons.Tramway;
+            if (aswTransferAttributes.IsTransferToTrolleybus) yield return TransferIcons.Trolleybus;
+            if (aswTransferAttributes.IsTransferToBus) yield return TransferIcons.Bus;
         }
     }
 }

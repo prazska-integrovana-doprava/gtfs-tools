@@ -81,6 +81,21 @@ namespace AswModel.Extended.Processors
                 ExitOnly = xmlStopTime.JenProVystup,
                 IsOnPhoneRequest = xmlStopTime.NaObjednani,
                 HasGuaranteedTransferAttribute = xmlStopTime.Prestup || xmlStopTime.PrestupDisp || xmlStopTime.PrestupNAD,
+                TransferAttributes = new TransferAttributes()
+                {
+                    IsTransferToMetroA = xmlStopTime.PrestupA,
+                    IsTransferToMetroB = xmlStopTime.PrestupB,
+                    IsTransferToMetroC = xmlStopTime.PrestupC,
+                    IsTransferToMetroD = xmlStopTime.PrestupD,
+                    IsTransferToSbahn = xmlStopTime.PrestupS,
+                    IsTransferToTram = xmlStopTime.PrestupTramvaj,
+                    IsTransferToBus = xmlStopTime.PrestupAutobus,
+                    IsTransferToTrolleybus = xmlStopTime.PrestupTrolejbus,
+                    IsTransferToTrain = xmlStopTime.PrestupVlak,
+                    IsTransferToFerry = xmlStopTime.PrestupLod,
+                    IsTransferToAirport = xmlStopTime.PrestupLetadlo,
+                    IsTransferToFunicular = xmlStopTime.PrestupLanovka
+                }
             };
         }
 

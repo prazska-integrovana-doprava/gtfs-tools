@@ -188,6 +188,7 @@ namespace TrainsEditor.ExportModel
             {
                 lineTrip.SetPublicPartOfStationTimes(loaderLog);
                 lineTrip.Headsign = resultTrain.StopTimes.LastOrDefault()?.StationName;
+                lineTrip.HeadsignIcons = resultTrain.StopTimes.LastOrDefault()?.StopIcons;
             }
 
             return resultTrain;

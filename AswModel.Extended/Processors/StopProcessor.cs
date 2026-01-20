@@ -58,6 +58,21 @@ namespace AswModel.Extended.Processors
                 IsTemporary = xmlStop.Docasna,
                 IsForSubstituteTransport = xmlStop.NAD,
                 Zones = zoneIds.ToArray(),
+                TransferAttributes = new TransferAttributes()
+                {
+                    IsTransferToMetroA = xmlStop.PrestupA,
+                    IsTransferToMetroB = xmlStop.PrestupB,
+                    IsTransferToMetroC = xmlStop.PrestupC,
+                    IsTransferToMetroD = xmlStop.PrestupD,
+                    IsTransferToSbahn = xmlStop.PrestupS,
+                    IsTransferToTram = xmlStop.PrestupTramvaj,
+                    IsTransferToBus = xmlStop.PrestupAutobus,
+                    IsTransferToTrolleybus = xmlStop.PrestupTrolejbus,
+                    IsTransferToTrain = xmlStop.PrestupVlak,
+                    IsTransferToFerry = xmlStop.PrestupLod,
+                    IsTransferToAirport = xmlStop.PrestupLetadlo,
+                    IsTransferToFunicular = xmlStop.PrestupLanovka
+                }
             };
 
             stopRecord.ZoneRegionType = GetZoneRegionType(stopRecord);

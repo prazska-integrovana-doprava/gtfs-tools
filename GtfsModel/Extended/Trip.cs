@@ -126,6 +126,11 @@ namespace GtfsModel.Extended
             }
         }
 
+        /// <summary>
+        /// Přestupní ikonky konečné zastávky <see cref="Headsign"/>
+        /// </summary>
+        public TransferIcons[] HeadsignIcons { get; set; }
+
 
         public Trip()
         {
@@ -152,6 +157,7 @@ namespace GtfsModel.Extended
                 ShortName = gtfsTrip.ShortName,
                 WheelchairAccessible = gtfsTrip.WheelchairAccessible,
                 SubAgency = routes[gtfsTrip.RouteId].SubAgencies.FirstOrDefault(a => a.SubAgencyId == gtfsTrip.SubAgencyId),
+                HeadsignIcons = TransferIconCodes.ReverseTransform(gtfsTrip.HeadsignIcons).ToArray(),
             };
         }
 
@@ -175,6 +181,7 @@ namespace GtfsModel.Extended
                 BikesAllowed = BikesAllowed,
                 IsExceptional = IsExceptional ? 1 : 0,
                 SubAgencyId = SubAgency?.SubAgencyId ?? 0,
+                HeadsignIcons = TransferIconCodes.Transform(HeadsignIcons),
             };
         }
 

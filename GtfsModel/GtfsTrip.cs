@@ -81,6 +81,12 @@ namespace GtfsModel
         /// </summary>
         [CsvField("sub_agency_id", 52, CsvFieldPostProcess.None, 0)]
         public int SubAgencyId { get; set; }
+
+        /// <summary>
+        /// Přestupní ikonky u konečné spoje ve formátu dvoupísmenných zkratek
+        /// </summary>
+        [CsvField("headsign_icons", 53)]
+        public string HeadsignIcons { get; set; }
                 
         public override string ToString()
         {

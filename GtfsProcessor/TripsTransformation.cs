@@ -97,6 +97,7 @@ namespace GtfsProcessor
                 DirectionId = trip.DirectionId == 0 ? Direction.Outbound : Direction.Inbound,
                 GtfsId = gtfsId,
                 Headsign = GetHeadsign(trip, trip.PublicStopTimes.Last().Stop),
+                HeadsignIcons = GetTransferIcons(trip.PublicStopTimes.Last()).ToArray(),
                 IsExceptional = trip.IsExceptional,
                 PreviousTripInBlock = TransformAndAddGtfsTrip(trip.PreviousPublicTripInBlock, stopTimesWithTimedTransferRemarks, stopTimesWithGuaranteedTransferAttribute),
                 Route = route,
@@ -156,6 +157,8 @@ namespace GtfsProcessor
                         StopHeadsign = null, // pokud bude potřeba ho přepsat, přepisujeme až zpětně, viz níž
                         ShapeDistanceTraveledMeters = shape.PointsForStopTimes[i].DistanceTraveledMeters,
                         TripOperationType = stopTime.TripOperationType,
+                        StopIcons = GetTransferIcons(stopTime).ToArray(),
+                        HeadsignIcons = null, // pokud bude potřeba, přepisujeme společně se stop headsign
                     };
 
                     if (stopTime.DirectionChange)
@@ -164,6 +167,7 @@ namespace GtfsProcessor
                         // postupujeme směrem k první zastávce a zarazíme se, pokud už mají zastávky definovaný jiný stop headsign
                         // (tj. pokud bychom byli druhá či další změna směrové orientace)
                         var headsign = GetHeadsign(ownerTrip, stopTime.Stop);
+                        var headsignIcons = GetTransferIcons(stopTime).ToArray();
                         foreach (var prevStopTime in Enumerable.Reverse(gtfsStopTimeList))
                         {
                             if (!string.IsNullOrEmpty(prevStopTime.StopHeadsign))
@@ -172,6 +176,7 @@ namespace GtfsProcessor
                             }
 
                             prevStopTime.StopHeadsign = headsign;
+                            prevStopTime.HeadsignIcons = headsignIcons;
                         }
                     }
 
@@ -211,6 +216,22 @@ namespace GtfsProcessor
             {
                 return headsignStop.CommonName;
             }
+        }
+
+        private IEnumerable<TransferIcons> GetTransferIcons(StopTime stopTime)
+        {
+            if (stopTime.TransferAttributes.IsTransferToMetroA && stopTime.Trip.Route.LineNumber != Route.LineANumber) yield return TransferIcons.MetroA;
+            if (stopTime.TransferAttributes.IsTransferToMetroB && stopTime.Trip.Route.LineNumber != Route.LineBNumber) yield return TransferIcons.MetroB;
+            if (stopTime.TransferAttributes.IsTransferToMetroC && stopTime.Trip.Route.LineNumber != Route.LineCNumber) yield return TransferIcons.MetroC;
+            if (stopTime.TransferAttributes.IsTransferToMetroD && stopTime.Trip.Route.LineNumber != Route.LineDNumber) yield return TransferIcons.MetroD;
+            if (stopTime.TransferAttributes.IsTransferToTrain) yield return TransferIcons.Train;
+            if (stopTime.TransferAttributes.IsTransferToSbahn) yield return TransferIcons.Sbahn;
+            if (stopTime.TransferAttributes.IsTransferToFunicular) yield return TransferIcons.Funicular;
+            if (stopTime.TransferAttributes.IsTransferToFerry) yield return TransferIcons.Ferry;
+            if (stopTime.TransferAttributes.IsTransferToAirport) yield return TransferIcons.Airport;
+            if (stopTime.TransferAttributes.IsTransferToTram) yield return TransferIcons.Tramway;
+            if (stopTime.TransferAttributes.IsTransferToTrolleybus) yield return TransferIcons.Trolleybus;
+            if (stopTime.TransferAttributes.IsTransferToBus) yield return TransferIcons.Bus;
         }
     }
 }

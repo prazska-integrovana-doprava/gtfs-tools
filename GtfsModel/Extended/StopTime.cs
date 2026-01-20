@@ -76,6 +76,16 @@ namespace GtfsModel.Extended
         public BikeAccessibility BikesAllowed { get; set; }
 
         /// <summary>
+        /// Přestupní ikonky zastávky na tomto spoji
+        /// </summary>
+        public TransferIcons[] StopIcons { get; set; }
+
+        /// <summary>
+        /// Přestupní ikonky konečné zastávky ve <see cref="StopHeadsign"/> (je-li vyplněn)
+        /// </summary>
+        public TransferIcons[] HeadsignIcons { get; set; }
+
+        /// <summary>
         /// Vrací true, pokud jde o konečnou zastávku
         /// </summary>
         public bool IsLastPublicStop
@@ -121,6 +131,8 @@ namespace GtfsModel.Extended
                 Trip = trips[gtfsStopTime.TripId],
                 TripOperationType = gtfsStopTime.TripOperationType,
                 BikesAllowed = gtfsStopTime.BikesAllowed,
+                StopIcons = TransferIconCodes.ReverseTransform(gtfsStopTime.StopIcons).ToArray(),
+                HeadsignIcons = TransferIconCodes.ReverseTransform(gtfsStopTime.HeadsignIcons).ToArray(),
             };
         }
 
@@ -139,6 +151,8 @@ namespace GtfsModel.Extended
                 ShapeDistanceTraveled = ShapeDistanceTraveledMeters / 1000.0,
                 TripOperationType = TripOperationType,
                 BikesAllowed = BikesAllowed,
+                StopIcons = TransferIconCodes.Transform(StopIcons),
+                HeadsignIcons = TransferIconCodes.Transform(HeadsignIcons),
             };
         }
 

@@ -83,6 +83,7 @@
     <Compile Include="StopTime.cs" />
     <Compile Include="AswSingleFileFeed.cs" />
     <Compile Include="TheAswDatabase.cs" />
+    <Compile Include="TransferAttributes.cs" />
     <Compile Include="Trip.cs" />
     <Compile Include="TripDatabase.cs" />
     <Compile Include="RunDescriptor.cs" />

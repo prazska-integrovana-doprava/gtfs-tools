@@ -100,6 +100,11 @@ namespace AswModel.Extended
         public TripOperationType TripOperationType { get; set; }
 
         /// <summary>
+        /// Přestupní ikonky
+        /// </summary>
+        public TransferAttributes TransferAttributes { get; set; }
+
+        /// <summary>
         /// Návazné poznámky k odjezdu
         /// </summary>
         public IEnumerable<Remark> TimedTransferRemarks

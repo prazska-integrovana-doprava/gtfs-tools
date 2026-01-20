@@ -43,6 +43,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Enumerations\TransferIcons.cs" />
     <Compile Include="Extended\BaseTransfer.cs" />
     <Compile Include="Extended\BoardingArea.cs" />
     <Compile Include="Extended\CalendarExceptionRecord.cs" />

@@ -146,6 +146,10 @@ namespace JR_XML_EXP
         [DefaultValue(false)]
         public bool PrestupC;
 
+        [XmlAttribute("xD")]
+        [DefaultValue(false)]
+        public bool PrestupD;
+
         [XmlAttribute("xS")]
         [DefaultValue(false)]
         public bool PrestupS;
