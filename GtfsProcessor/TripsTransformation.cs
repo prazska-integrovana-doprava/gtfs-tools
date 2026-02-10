@@ -227,7 +227,7 @@ namespace GtfsProcessor
             if (stopTime.TransferAttributes.IsTransferToTrain) yield return TransferIcons.Train;
             if (stopTime.TransferAttributes.IsTransferToSbahn) yield return TransferIcons.Sbahn;
             if (stopTime.TransferAttributes.IsTransferToFunicular) yield return TransferIcons.Funicular;
-            if (stopTime.TransferAttributes.IsTransferToFerry) yield return TransferIcons.Ferry;
+            if (stopTime.TransferAttributes.IsTransferToFerry && stopTime.Trip.Route.TrafficType != AswTrafficType.Ferry) yield return TransferIcons.Ferry;
             if (stopTime.TransferAttributes.IsTransferToAirport) yield return TransferIcons.Airport;
             if (stopTime.TransferAttributes.IsTransferToTram) yield return TransferIcons.Tramway;
             if (stopTime.TransferAttributes.IsTransferToTrolleybus) yield return TransferIcons.Trolleybus;
