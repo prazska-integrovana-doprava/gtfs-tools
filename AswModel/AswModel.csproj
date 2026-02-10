@@ -57,6 +57,7 @@
     <Compile Include="JR_XML_EXP\Poznamka.cs" />
     <Compile Include="JR_XML_EXP\Preference.cs" />
     <Compile Include="JR_XML_EXP\Tablo.cs" />
+    <Compile Include="JR_XML_EXP\Wgs.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="JR_XML_EXP\Spoj.cs" />
     <Compile Include="JR_XML_EXP\Trajektorie.cs" />

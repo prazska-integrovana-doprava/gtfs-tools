@@ -3,6 +3,7 @@ using CommonLibrary;
 using GtfsLogging;
 using JR_XML_EXP;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace AswModel.Extended.Processors
 {
@@ -42,12 +43,28 @@ namespace AswModel.Extended.Processors
                 return;
             }
 
-            foreach (var point in xmlShape.Traj.Bod)
+            if (xmlShape.Traj.Wgs != null && xmlShape.Traj.Wgs.Any())
             {
-                var coordinate = ProcessPoint(point);
-                if (coordinate.HasValue)
+                foreach (var point in xmlShape.Traj.Wgs)
                 {
-                    fragment.Coordinates.Add(coordinate.Value);
+                    var coordinate = new Coordinates()
+                    {
+                        GpsLatitude = point.Lat,
+                        GpsLongitude = point.Lon
+                    };
+
+                    fragment.Coordinates.Add(coordinate);
+                }
+            }
+            else
+            {
+                foreach (var point in xmlShape.Traj.Bod)
+                {
+                    var coordinate = ProcessPoint(point);
+                    if (coordinate.HasValue)
+                    {
+                        fragment.Coordinates.Add(coordinate.Value);
+                    }
                 }
             }
 

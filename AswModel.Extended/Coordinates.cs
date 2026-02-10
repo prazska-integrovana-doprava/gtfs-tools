@@ -1,4 +1,5 @@
 ﻿using System;
+using CommonLibrary;
 
 namespace AswModel.Extended
 {
@@ -37,14 +38,21 @@ namespace AswModel.Extended
 
         public double DistanceTo(Coordinates other)
         {
-            var dx = JtskX - other.JtskX;
-            var dy = JtskY - other.JtskY;
-            return Math.Sqrt(dx * dx + dy * dy);
+            if (JtskX != 0 && JtskY != 0)
+            {
+                var dx = JtskX - other.JtskX;
+                var dy = JtskY - other.JtskY;
+                return Math.Sqrt(dx * dx + dy * dy);
+            }
+            else
+            {
+                return MapFunctions.DistanceMeters(GpsLatitude, GpsLongitude, other.GpsLatitude, other.GpsLongitude);
+            }
         }
 
         public bool Equals(Coordinates other)
         {
-            return Math.Abs(GpsLatitude - other.GpsLatitude) < 0.0001 && Math.Abs(GpsLongitude - other.GpsLongitude) < 0.00019;
+            return Math.Abs(GpsLatitude - other.GpsLatitude) < 0.000001 && Math.Abs(GpsLongitude - other.GpsLongitude) < 0.000001;
         }
 
         public override int GetHashCode()

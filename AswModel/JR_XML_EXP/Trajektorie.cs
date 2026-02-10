@@ -10,5 +10,8 @@ namespace JR_XML_EXP
 
         [XmlElement("bod")]
         public List<Bod> Bod;
+
+        [XmlElement("wgs")]
+        public List<Wgs> Wgs;
     }
 }
