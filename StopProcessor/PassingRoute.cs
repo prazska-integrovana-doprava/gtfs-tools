@@ -58,17 +58,26 @@ namespace StopProcessor
 
         // pro každý směr si uložíme, jak často se používá
         private Dictionary<string, int> headsignFrequencies;
+        private Dictionary<string, int> exitOnlyHeadsignFrequencies;
 
         /// <summary>
         /// Nejčastější směr (headsign), který mají spoje této linky na této zastávce
         /// </summary>
         [XmlAttribute(AttributeName = "direction")]
         [JsonProperty(PropertyName = "direction")]
+        [DefaultValue("")]
         public string Headsign
         {
             get
             {
-                return GetHeadsignsOrdered().First().Key;
+                if (headsignFrequencies.Any())
+                {
+                    return headsignFrequencies.OrderByDescending(h => h.Value).First().Key;
+                }
+                else
+                {
+                    return exitOnlyHeadsignFrequencies.OrderByDescending(h => h.Value).First().Key;
+                }
             }
             set { throw new InvalidOperationException(); }
         }
@@ -86,21 +95,29 @@ namespace StopProcessor
                 if (headsignFrequencies.Count < 2)
                     return "";
 
-                var secondBest = GetHeadsignsOrdered().Skip(1).First();
-                if (secondBest.Value <= TotalTripCount / 5)
+                var secondBest = headsignFrequencies.OrderByDescending(h => h.Value).Skip(1).First();
+                var totalTripCount = headsignFrequencies.Sum(h => h.Value);
+                if (secondBest.Value <= totalTripCount / 5)
                     return ""; // není dost významný headsign
 
                 return secondBest.Key;
             }
             set { throw new InvalidOperationException(); }
         }
+        /// <summary>
+        /// True, pokud linka v zastávce končí, anebo je zastávka jen pro výstup
+        /// </summary>
+        [XmlAttribute(AttributeName = "exitOnly")]
+        [JsonProperty(PropertyName = "exitOnly", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(false)]
+        public bool ExitOnly { get; set; }
 
         // kvůli serializaci
         public PassingRoute()
         {
         }
 
-        public PassingRoute(int routeNumber, int direction, GtfsRoute route)
+        public PassingRoute(int routeNumber, int direction, GtfsRoute route, bool exitOnly)
         {
             LineNumber = routeNumber;
             Direction = direction;
@@ -108,21 +125,25 @@ namespace StopProcessor
             Type = route.Type;
             IsNight = route.IsNight;
             headsignFrequencies = new Dictionary<string, int>();
+            exitOnlyHeadsignFrequencies = new Dictionary<string, int>();
+            ExitOnly = exitOnly;
         }
 
         /// <summary>
         /// Přidá směr jednoho spoje
         /// </summary>
         /// <param name="headsign">Směr</param>
-        public void AddHeadsign(string headsign)
+        /// <param name="exitOnly">Indikace, zda spoj má zastávku jen pro výstup, anebo je konečná</param>
+        public void AddHeadsign(string headsign, bool exitOnly)
         {
-            if (headsignFrequencies.ContainsKey(headsign))
+            var hq = exitOnly ? exitOnlyHeadsignFrequencies : headsignFrequencies;
+            if (hq.ContainsKey(headsign))
             {
-                headsignFrequencies[headsign]++;
+                hq[headsign]++;
             }
             else
             {
-                headsignFrequencies.Add(headsign, 1);
+                hq.Add(headsign, 1);
             }
         }
         
@@ -135,20 +156,6 @@ namespace StopProcessor
         public override int GetHashCode()
         {
             return LineNumber.GetHashCode() + Direction.GetHashCode() * 25713;
-        }
-
-        /// <summary>
-        /// Vrátí cíle spojů seřazené podle četnosti
-        /// </summary>
-        /// <returns>Cíle</returns>
-        private IEnumerable<KeyValuePair<string, int>> GetHeadsignsOrdered()
-        {
-            return headsignFrequencies.OrderByDescending(h => h.Value);
-        }
-
-        private int TotalTripCount
-        {
-            get { return headsignFrequencies.Sum(h => h.Value); }
         }
     }
 

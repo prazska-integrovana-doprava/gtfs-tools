@@ -179,8 +179,8 @@ namespace StopProcessor
             foreach (var gtfsTripStopTimes in gtfsFeed.StopTimes.GroupBy(st => st.TripId))
             {
                 var gtfsTripStopTimesArray = gtfsTripStopTimes.ToArray();
-                foreach (var gtfsStopTime in gtfsTripStopTimesArray.Take(gtfsTripStopTimesArray.Length - 1).Where(
-                    st => st.DropOffType != DropOffType.None))
+                foreach (var gtfsStopTime in gtfsTripStopTimesArray.Where(
+                    st => st.PickupType != PickupType.None || st.DropOffType != DropOffType.None))
                 {
                     Stop stop;
                     if (!stopDb.StopsByGtfsId.TryGetValue(gtfsStopTime.StopId, out stop))
@@ -206,21 +206,27 @@ namespace StopProcessor
                         continue;
                     }
 
+                    bool exitOnly = gtfsStopTime.PickupType == PickupType.None || gtfsStopTime == gtfsTripStopTimesArray.Last();
                     var passingRouteRecord = stop.PassingRoutes.GetValueOrDefault(lineNumber)?.GetValueOrDefault((int)gtfsTrip.DirectionId);
                     if (passingRouteRecord == null)
-                    {
-                        passingRouteRecord = new PassingRoute(lineNumber, (int) gtfsTrip.DirectionId, gtfsRoute);
+                    {                        
+                        passingRouteRecord = new PassingRoute(lineNumber, (int) gtfsTrip.DirectionId, gtfsRoute, exitOnly);
                         stop.PassingRoutes.GetValueAndAddIfMissing(passingRouteRecord.LineNumber, new Dictionary<int, PassingRoute>())
                             .Add((int)gtfsTrip.DirectionId, passingRouteRecord);
+                    }
+                    else
+                    {
+                        // aby linka měla příznak exit only, musí projíždět/končit všechny spoje
+                        passingRouteRecord.ExitOnly &= exitOnly;
                     }
 
                     if (!string.IsNullOrEmpty(gtfsStopTime.StopHeadsign))
                     {
-                        passingRouteRecord.AddHeadsign(gtfsStopTime.StopHeadsign);
+                        passingRouteRecord.AddHeadsign(gtfsStopTime.StopHeadsign, exitOnly);
                     }
                     else
                     {
-                        passingRouteRecord.AddHeadsign(gtfsTrip.Headsign);
+                        passingRouteRecord.AddHeadsign(gtfsTrip.Headsign, exitOnly);
                     }
                 }
             }
