@@ -1,12 +1,12 @@
-﻿using CommonLibrary;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using CommonLibrary;
 using CsvSerializer;
 using GtfsLogging;
 using GtfsModel.Extended;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
-namespace TrainsEditor.ExportModel
+namespace ShapeManager
 {
     /// <summary>
     /// Databáze tras. Uchovává a generuje trasy pro vlakové spoje na základě souřadnic zastávek/dopravních bodů a sítě vlakových kolejí.
@@ -37,17 +37,37 @@ namespace TrainsEditor.ExportModel
 
         private Dictionary<Route, int> lastRouteShapeIndex = new Dictionary<Route, int>();
 
-        /// <summary>
-        /// Vytvoří instanci shape databáze a inicializuje konstruktor tras.
-        /// </summary>
-        /// <param name="shapeConstructor">Instance, která má načtenou síť</param>
-        /// <param name="stops">Všechny použité zastávky a dopravní body a jejich mapování na síť v <paramref name="shapeConstructor"/>.</param>
-        public ShapeDatabase(ShapeConstructor shapeConstructor, IEnumerable<Stop> stops, ICommonLogger log)
+        protected ShapeDatabase(ICommonLogger log)
         {
             Shapes = new List<Shape>();
-            this.shapeConstructor = shapeConstructor;
-            this.stopsToPointsMapping = MapStationsOnNetwork(stops, log);
+            this.shapeConstructor = new ShapeConstructor();
             this.log = log;
+        }
+
+        /// <summary>
+        /// Načte data sítě a namapuje zastávky na síť
+        /// </summary>
+        /// <param name="networkFileName">Soubor popisující síť (viz <see cref="ShapeConstructor"/>)</param>
+        /// <param name="stops">Zastávky nad sítí</param>
+        /// <param name="log">Objekt pro logování</param>
+        public static ShapeDatabase Create(string networkFileName, IEnumerable<Stop> stops, ICommonLogger log)
+        {
+            var result = new ShapeDatabase(log);
+            result.shapeConstructor.LoadPointData(networkFileName);
+            result.stopsToPointsMapping = result.MapStationsOnNetwork(stops, log);
+            return result;
+        }
+
+        /// <summary>
+        /// Vygeneruje a nastaví všem spojům trasu a nastaví jim do stop times hodnoty shape_dist_traveled.
+        /// </summary>
+        /// <param name="trips">Všechny spoje</param>
+        public void ProcessTrips(IEnumerable<Trip> trips)
+        {
+            foreach (var trip in trips)
+            {
+                SetShapeAndDistTraveled(trip);
+            }
         }
 
         public Shape SetShapeAndDistTraveled(Trip trip)

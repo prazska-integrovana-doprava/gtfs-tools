@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CommonLibrary\CommonLibrary.csproj" />
+    <ProjectReference Include="..\CsvSerializer\CsvSerializer.csproj" />
+    <ProjectReference Include="..\GtfsLogging\GtfsLogging.csproj" />
+    <ProjectReference Include="..\GtfsModel\GtfsModel.csproj" />
+  </ItemGroup>
+
+</Project>

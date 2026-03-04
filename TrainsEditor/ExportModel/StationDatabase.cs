@@ -19,17 +19,20 @@ namespace TrainsEditor.ExportModel
     {
         private class SR70StationRaw
         {
-            [CsvField("SR70", 1)]
+            //[CsvField("SR70", 1)]
+            [CsvField("Evidenční číslo", 1)]
             public int Number { get; set; }
 
             [CsvField("Název 20", 2)]
             public string Name { get; set; }
 
-            [CsvField("GPS X", 16)]
-            public string GpsX { get; set; }
+            //[CsvField("GPS X", 16)]
+            [CsvField("GPS E (DMS)", 25)]
+            public string GpsE { get; set; }
 
-            [CsvField("GPS Y", 17)]
-            public string GpsY { get; set; }
+            //[CsvField("GPS Y", 17)]
+            [CsvField("GPS N (DMS)", 24)]
+            public string GpsN { get; set; }
         }
 
         /// <summary>
@@ -171,7 +174,7 @@ namespace TrainsEditor.ExportModel
                 {
                     GtfsId = $"T{cisId}",
                     Name = trainStopRec.Name,
-                    Position = PositionFromString(trainStopRec.GpsX, trainStopRec.GpsY),
+                    Position = PositionFromString(trainStopRec.GpsE, trainStopRec.GpsN),
                     PrimaryLocationCode = cisId
                 };
 

@@ -5,6 +5,7 @@ using GtfsModel;
 using GtfsModel.Enumerations;
 using GtfsModel.Extended;
 using GtfsModel.Functions;
+using ShapeManager;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -131,13 +132,8 @@ namespace TrainsEditor.GtfsExport
             }
 
             console.WriteLine("Tvorba tras...");
-            var shapeConstructor = new ShapeConstructor();
-            shapeConstructor.LoadPointData(mapNetworkFileName);
-            var shapeDatabase = new ShapeDatabase(shapeConstructor, _stopDatabase.UsedStops, loaderLog);
-            foreach (var trainTrip in trainTrips)
-            {
-                shapeDatabase.SetShapeAndDistTraveled(trainTrip);
-            }
+            var shapeDatabase = ShapeDatabase.Create(mapNetworkFileName, _stopDatabase.UsedStops, loaderLog);
+            shapeDatabase.ProcessTrips(trainTrips);
 
             var calendars = calendarConstructor.GetAllCalendars();
 

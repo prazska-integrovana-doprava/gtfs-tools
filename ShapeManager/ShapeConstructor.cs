@@ -1,16 +1,17 @@
-﻿using CommonLibrary;
-using CsvSerializer.Attributes;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using CommonLibrary;
+using CsvSerializer;
+using CsvSerializer.Attributes;
 
-namespace CsvSerializer
+namespace ShapeManager
 {
     /// <summary>
     /// Konstruuje trasy nad sítí na základě souřadnic stanic a dopravních bodů na trase.
     /// Vychází se tedy z toho, že jízdní řád vlaku jednoznačně určuje trasu (což díky slušné hustotě dopravních bodů vesměs platí)
     /// </summary>
-    public class ShapeConstructor
+    internal class ShapeConstructor
     {
         // Jeden bod sítě (transformuje se z CsvPoint) a jeho sousedé
         public class Point

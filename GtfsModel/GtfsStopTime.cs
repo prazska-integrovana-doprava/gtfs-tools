@@ -61,7 +61,7 @@ namespace GtfsModel
         /// Ujetá vzdálenost z trasy spoje (v kilometrech, pro GTFS)
         /// </summary>
         [CsvField("shape_dist_traveled", 9)]
-        public double ShapeDistanceTraveled { get; set; }
+        public double? ShapeDistanceTraveled { get; set; }
 
         /// <summary>
         /// Typ výkonu na odjezdu ze zastávky

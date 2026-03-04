@@ -104,34 +104,8 @@ namespace TrainsEditor.Properties {
 							<LineName>S2</LineName>
 							<TrainNumber>5805</TrainNumber>
 						</TripDirectionSpec>
-					</ArrayOfTripDirectionSpec>
-					
-						
-							S33
-							8515
-						
-						
-							S33
-							8518
-						
-						
-							S9
-							2540
-						
-						
-							S9
-							2509
-						
-						
-							S2
-							5802
-						
-						
-							S2
-							5805
-						
-					
-				")]
+					</ArrayOfTripDirectionSpec>")]
+
         public global::System.Collections.Generic.List<TrainsEditor.GtfsExport.TripDirectionSpec> RepresentativeTrips {
             get {
                 return ((global::System.Collections.Generic.List<TrainsEditor.GtfsExport.TripDirectionSpec>)(this["RepresentativeTrips"]));

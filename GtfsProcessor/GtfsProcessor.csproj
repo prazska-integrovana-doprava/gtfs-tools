@@ -62,7 +62,6 @@
     <Compile Include="CalendarDebugLogger.cs" />
     <Compile Include="Logging\TrajectoryConnectorLogger.cs" />
     <Compile Include="Logging\TripEqualityResult.cs" />
-    <Compile Include="MetroShapeConstructor.cs" />
     <Compile Include="RemarksToTransfersProcessor.cs" />
     <Compile Include="DataClasses\ShapeEx.cs" />
     <Compile Include="RouteStopsGenerator.cs" />
@@ -112,6 +111,10 @@
     <ProjectReference Include="..\GtfsModel\GtfsModel.csproj">
       <Project>{efa7bf8a-d351-4e97-8562-4dea7767a377}</Project>
       <Name>GtfsModel</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ShapeManager\ShapeManager.csproj">
+      <Project>{EB59BA74-1BE8-4645-989E-2871B3FFE226}</Project>
+      <Name>ShapeManager</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup />

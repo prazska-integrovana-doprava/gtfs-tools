@@ -92,7 +92,6 @@
     <Compile Include="EditorLogic\FtpFileInfo.cs" />
     <Compile Include="EditorLogic\XmlSerializeToObjectHelper.cs" />
     <Compile Include="EditorLogic\TimeConverter.cs" />
-    <Compile Include="ExportModel\ShapeDatabase.cs" />
     <Compile Include="GtfsExport\CalendarConstructor.cs" />
     <Compile Include="GtfsExport\GtfsExportModule.cs" />
     <Compile Include="GtfsExport\TrainVariantMerge.cs" />
@@ -214,6 +213,10 @@
     <ProjectReference Include="..\GtfsModel\GtfsModel.csproj">
       <Project>{efa7bf8a-d351-4e97-8562-4dea7767a377}</Project>
       <Name>GtfsModel</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ShapeManager\ShapeManager.csproj">
+      <Project>{eb59ba74-1be8-4645-989e-2871b3ffe226}</Project>
+      <Name>ShapeManager</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

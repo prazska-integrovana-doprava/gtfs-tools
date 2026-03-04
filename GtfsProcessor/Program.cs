@@ -12,6 +12,7 @@ using JR_XML_EXP;
 using CommonLibrary;
 using GtfsProcessor.DataClasses;
 using GtfsProcessor.Logging;
+using ShapeManager;
 
 namespace GtfsProcessor
 {
@@ -150,7 +151,7 @@ namespace GtfsProcessor
             // sem budeme postupně skládat výsledná GTFS data
             var gtfsFeedEx = new GtfsModel.Extended.Feed();
             gtfsFeedEx.FeedInfo = CreateFeedInfoInstance(db.GlobalStartDate, db.GlobalStartDate.AddDays(db.GlobalLastDay));
-            
+
             // jeden GTFS dopravce PID, to je trivka, použijí ho pak všechny linky
             Console.WriteLine("Sestavuji agency...");
             gtfsFeedEx.Agency = new Dictionary<string, GtfsAgency>() { { PidAgencyId, CreateAgencyInstance() } };
@@ -175,7 +176,7 @@ namespace GtfsProcessor
             var mergedTripGroups = new TripMergeOperation(db.Lines.SelectMany(l => l.AllVersions())).Perform().ToList(); // ten ToList je hodně důležitý, jinak bychom kvůli lazy vyhodnocování to zbytečně spouštěli vícekrát a ještě k tomu bychom si tím vyráběli různé instance stejného tripu
             // TODO dokud porovnáváme s původním feedem, abychom udrželi stejné pořadí spojů; pak lze smazat
             mergedTripGroups = mergedTripGroups.OrderBy(t => t.TripIds.Min()).ToList();
-            
+
             // tady trochu opravujeme data v případě přejezdů v síti tramvají, více viz TramTripBlockHeadsignProcessor, upravuje přímo data v 'mergedTripGroups'
             Console.WriteLine("Provádím opravy headsign a čísel linek tramvají...");
             mergedTripGroups = new TramTripBlockHeadsignProcessor(log).ProcessTripsBlocks(mergedTripGroups); // tohle vždy musíme provést před formací tripů, protože zde měníme owner routes a to má vliv na GTFS ID tripu
@@ -205,10 +206,9 @@ namespace GtfsProcessor
             // zároveň si uložíme mapování spojů na trasy a použijeme ho při konstrukci GTFS tripů
             Console.WriteLine("Generuji trasy...");
             Dictionary<MergedTripGroup, ShapeEx> shapeToTripAssignment;
-            var shapeConstructor = new ShapeConstructor();
-            shapeConstructor.LoadPointData(config.MetroNetworkFile);
-            var metroStationPlatforms = db.Stops.Select(s => s.FirstVersion()).Where(s => s.IsMetro && s.IsPublic);
-            gtfsFeedEx.Shapes = new ShapeGenerator().GenerateAndAssignShapes(mergedTripGroups, out shapeToTripAssignment, shapeConstructor, metroStationPlatforms, log).ToDictionary(sh => sh.Id);
+            gtfsFeedEx.Shapes = new ShapeGenerator().GenerateAndAssignShapes(
+                mergedTripGroups.Where(t => t.TrafficType != AswTrafficType.Metro && t.TrafficType != AswTrafficType.Tram),
+                out shapeToTripAssignment, log).ToDictionary(sh => sh.Id);
 
             // protože spoje mají IDčka v ASW víceméně náhodná (každý den jiná) a protože chceme, aby byly IDčka spojů pokud možno
             // stále stejná a stabilní mezi feedy, máme databázi, která IDčka určuje podle jízdního řádu, databázi si tedy inicializujeme
@@ -240,6 +240,11 @@ namespace GtfsProcessor
             {
                 throw new Exception($"Podezřele příliš mnoho nově přidělených trip IDs, reuse je pouze {reusedIdsPercentage} %, ale limit {config.MinimumTripDatabaseHitPercentage} %");
             }
+
+            // dodělání shapů metru
+            Console.WriteLine("Konstruuji trasy metra a tramvají...");
+            ConstructShapesFromNetwork(config.MetroNetworkFile, GtfsModel.Enumerations.TrafficType.Metro, gtfsFeedEx);
+            ConstructShapesFromNetwork(config.MetroNetworkFile.Replace("metro", "tram"), GtfsModel.Enumerations.TrafficType.Tram, gtfsFeedEx);
 
             if (!config.TripDbAsReadOnly)
             {
@@ -278,7 +283,7 @@ namespace GtfsProcessor
             VerifyLoadedTripCount(gtfsFeedEx, trip => trip.Route.Type == GtfsModel.Enumerations.TrafficType.Bus && !trip.Route.IsRegional, config.MinimumBusTo299Trips, "BUS městský");
             VerifyLoadedTripCount(gtfsFeedEx, trip => trip.Route.Type == GtfsModel.Enumerations.TrafficType.Bus && trip.Route.IsRegional, config.MinimumBusFrom300Trips, "BUS příměstský");
             VerifyLoadedTripCount(gtfsFeedEx, trip => trip.Route.Type == GtfsModel.Enumerations.TrafficType.Rail, config.MinimumTrainTrips, "VLAK");
-            
+
             if (!string.IsNullOrEmpty(config.AdditionalTransfersFileName))
             {
                 // doplnění přestupů do transfers.txt, zatím se to moc nepoužívá
@@ -290,7 +295,7 @@ namespace GtfsProcessor
             {
                 Console.WriteLine("XX Nezadán soubor s přestupy navíc, které by měly být přidány do feedu.");
             }
-            
+
             // trip-to-trip transfers na základě návazných poznámek v ASW JŘ - vyrábíme až zde, protože jsme
             // čekali na načtení vlaků, abychom mohli dělat reference vlak-bus
             Console.WriteLine("Zpracovávám garantované přestupní poznámky...");
@@ -338,9 +343,21 @@ namespace GtfsProcessor
 
             Console.WriteLine("Sestavuji trasy linek...");
             gtfsFeed.RouteStops = new RouteStopsGenerator().Generate(gtfsFeedEx.Routes.Values).ToList();
-            
+
             Console.WriteLine("Ukládám GTFS soubory...");
             GtfsFeedSerializer.SerializeFeed(config.GtfsOutputFolder, gtfsFeed);
+        }
+
+        private static void ConstructShapesFromNetwork(string networkFileName, GtfsModel.Enumerations.TrafficType trafficType, GtfsModel.Extended.Feed gtfsFeedEx)
+        {
+            var trips = gtfsFeedEx.Trips.Values.Where(t => t.Route.Type == trafficType).ToList();
+            var stops = trips.SelectMany(t => t.StopTimes).Select(st => st.Stop).Distinct().ToList();
+            var shapeDb = ShapeDatabase.Create(networkFileName, stops, log);
+            shapeDb.ProcessTrips(trips);
+            foreach (var shape in shapeDb.Shapes)
+            {
+                gtfsFeedEx.Shapes.Add(shape.Id, shape);
+            }
         }
 
         static void VerifyLoadedTripCount(GtfsModel.Extended.Feed gtfsFeedEx, Func<GtfsModel.Extended.Trip, bool> tripSelector, int minCount, string description)

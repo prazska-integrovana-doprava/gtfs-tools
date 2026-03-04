@@ -47,7 +47,6 @@
     <Compile Include="CsvFileSerializer.cs" />
     <Compile Include="MemberAndAttribute.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ShapeConstructor.cs" />
     <Compile Include="StopData.cs" />
     <Compile Include="StringExtensions.cs" />
   </ItemGroup>

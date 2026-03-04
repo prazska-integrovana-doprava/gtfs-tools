@@ -135,35 +135,39 @@ namespace CsvSerializer
                 }
             }
 
-            var underlyingTypeIfNullable = Nullable.GetUnderlyingType(member.FieldType);
-
-            if (member.FieldType.IsEnum)
+            if (value != null)
             {
-                return ((int)value).ToString();
-            }
-            else if (value != null && (underlyingTypeIfNullable?.IsEnum).GetValueOrDefault())
-            {
-                return ((int)value).ToString();
-            }
-            else if (member.FieldType.Equals(typeof(bool)))
-            {
-                return ((bool)value) ? "1" : "0";
-            }
-            else if (member.FieldType.Equals(typeof(float)))
-            {
-                return ((float)value).ToString(decimalNumberFormat, CultureInfo.InvariantCulture);
-            }
-            else if (member.FieldType.Equals(typeof(double)))
-            {
-                return ((double)value).ToString(decimalNumberFormat, CultureInfo.InvariantCulture);
-            }
-            else if (member.FieldType.Equals(typeof(DateTime)))
-            {
-                return ((DateTime)value).ToString(dateTimeFormat);
+                var underlyingTypeIfNullable = Nullable.GetUnderlyingType(member.FieldType);
+                var fieldType = underlyingTypeIfNullable ?? member.FieldType;
+                
+                if (fieldType.IsEnum)
+                {
+                    return ((int)value).ToString();
+                }
+                else if (fieldType.Equals(typeof(bool)))
+                {
+                    return ((bool)value) ? "1" : "0";
+                }
+                else if (fieldType.Equals(typeof(float)))
+                {
+                    return ((float)value).ToString(decimalNumberFormat, CultureInfo.InvariantCulture);
+                }
+                else if (fieldType.Equals(typeof(double)))
+                {
+                    return ((double)value).ToString(decimalNumberFormat, CultureInfo.InvariantCulture);
+                }
+                else if (fieldType.Equals(typeof(DateTime)))
+                {
+                    return ((DateTime)value).ToString(dateTimeFormat);
+                }
+                else
+                {
+                    return value.ToString();
+                }
             }
             else
             {
-                return value != null ? value.ToString() : "";
+                return "";
             }
         }
     }

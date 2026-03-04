@@ -193,7 +193,7 @@ namespace JdfToGtfsProcessor
                     DropOffType = isRequestStop ? GtfsModel.Enumerations.DropOffType.DriverRequest : GtfsModel.Enumerations.DropOffType.Regular,
                     PickupType = isRequestStop ? GtfsModel.Enumerations.PickupType.DriverRequest : GtfsModel.Enumerations.PickupType.Regular,
                     SequenceNumber = (previousStopTime?.SequenceNumber ?? 0) + 1,
-                    ShapeDistanceTraveledMeters = stopTime.DistanceFromStartKm * 1000 ?? previousStopTime?.ShapeDistanceTraveledMeters ?? 0,
+                    ShapeDistanceTraveledMeters = stopTime.DistanceFromStartKm * 1000 ?? previousStopTime?.ShapeDistanceTraveledMeters,
                     Trip = resultFeed.Trips[tripId],
                     Stop = (GtfsModel.Extended.Stop) resultFeed.Stops[stopTime.StopId.ToString()],
                 });

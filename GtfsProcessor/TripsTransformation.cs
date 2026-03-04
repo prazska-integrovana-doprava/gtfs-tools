@@ -1,4 +1,5 @@
 ﻿using AswModel.Extended;
+using CommonLibrary;
 using GtfsModel.Enumerations;
 using GtfsProcessor.DataClasses;
 using System.Collections.Generic;
@@ -101,7 +102,7 @@ namespace GtfsProcessor
                 IsExceptional = trip.IsExceptional,
                 PreviousTripInBlock = TransformAndAddGtfsTrip(trip.PreviousPublicTripInBlock, stopTimesWithTimedTransferRemarks, stopTimesWithGuaranteedTransferAttribute),
                 Route = route,
-                Shape = shapeAssignment[trip],
+                Shape = shapeAssignment.GetValueOrDefault(trip),
                 ShortName = "",
                 SubAgency = trip.Agency != null ? route.SubAgencies.FirstOrDefault(a => a.SubAgencyId == trip.Agency.Id) : null, // může se stát, že dopravce není zadán, anebo jde o dopravce, který není na lince uveden v číselníku, pak ho nebudeme uvádět ani u spoje (ale teoreticky bychom mohli, jen nenalezneme příslušnou sub agency, museli bychom předávat rovnou číslo dopravce)
                 WheelchairAccessible = trip.IsWheelchairAccessible ? GtfsModel.Enumerations.WheelchairAccessibility.Possible : GtfsModel.Enumerations.WheelchairAccessibility.NotPossible,
@@ -133,7 +134,7 @@ namespace GtfsProcessor
         {
             var gtfsStopTimeList = new List<GtfsModel.Extended.StopTime>();
             int sequenceNumber = 1;
-            var shape = shapeAssignment[ownerTrip];
+            var shape = shapeAssignment.GetValueOrDefault(ownerTrip);
             for (int i = 0; i < ownerTrip.StopTimes.Length; i++)
             {
                 // jdeme to for cyklem, protože potřebujeme číst z Shape.PointsForStopTimes a kdybychom něco (neveřejného) přeskočili, přestanou štimovat indexy...
@@ -155,7 +156,7 @@ namespace GtfsProcessor
                         Stop = stopsTransformation[stopTime.Stop].GetGtfsStop(ownerTrip.LineType),
                         Trip = gtfsTrip,
                         StopHeadsign = null, // pokud bude potřeba ho přepsat, přepisujeme až zpětně, viz níž
-                        ShapeDistanceTraveledMeters = shape.PointsForStopTimes[i].DistanceTraveledMeters,
+                        ShapeDistanceTraveledMeters = shape?.PointsForStopTimes[i].DistanceTraveledMeters,
                         TripOperationType = stopTime.TripOperationType,
                         StopIcons = GetTransferIcons(stopTime).ToArray(),
                         HeadsignIcons = null, // pokud bude potřeba, přepisujeme společně se stop headsign

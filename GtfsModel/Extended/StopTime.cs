@@ -63,7 +63,7 @@ namespace GtfsModel.Extended
         /// <summary>
         /// Ujetá vzdálenost z trasy spoje (v metrech).
         /// </summary>
-        public double ShapeDistanceTraveledMeters { get; set; }
+        public double? ShapeDistanceTraveledMeters { get; set; }
 
         /// <summary>
         /// Typ výkonu na odjezdu ze zastávky

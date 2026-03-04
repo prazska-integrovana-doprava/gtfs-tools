@@ -83,10 +83,9 @@ namespace GtfsProcessor
         /// <param name="shapeToTripAssignment">Parametr, do kterého se ukládá mapování tras na spoje</param>
         /// <returns>Všechny vygenerované trasy</returns>
         public IEnumerable<GtfsModel.Extended.Shape> GenerateAndAssignShapes(IEnumerable<MergedTripGroup> trips, out Dictionary<MergedTripGroup, ShapeEx> shapeToTripAssignment,
-            ShapeConstructor shapeConstructor, IEnumerable<AswModel.Extended.Stop> metroStations, ICommonLogger log)
+            ICommonLogger log)
         {
             var shapeFragmentConnector = new ShapeFragmentConnector();
-            var metroShapeConstructor = new MetroShapeConstructor(shapeConstructor, metroStations, log);
             shapeToTripAssignment = new Dictionary<MergedTripGroup, ShapeEx>(new TripStopSequenceComparer());
             foreach (var trip in trips)
             {
@@ -95,14 +94,7 @@ namespace GtfsProcessor
                 if (shape == null)
                 {
                     // nenalezena správná verze, zkusíme si nechat vyrobit novou
-                    if (trip.TrafficType != AswModel.Extended.AswTrafficType.Metro)
-                    {
-                        shape = shapeFragmentConnector.CreateShapeForTrip(trip);
-                    }
-                    else
-                    {
-                        shape = metroShapeConstructor.CreateShapeForTrip(trip);
-                    }
+                    shape = shapeFragmentConnector.CreateShapeForTrip(trip);
 
                     shapeToTripAssignment.Add(trip, shape);
                     SetShapeId(trip.Route.LineNumber, shape);
