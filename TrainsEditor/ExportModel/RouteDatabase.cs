@@ -3,6 +3,7 @@ using GtfsModel;
 using System.Collections.Generic;
 using System.Linq;
 using TrainsEditor.GtfsExport;
+using TrainsEditor.SystemDescriptionModel;
 
 namespace TrainsEditor.ExportModel
 {
@@ -21,16 +22,19 @@ namespace TrainsEditor.ExportModel
         /// </summary>
         public IEnumerable<TrainRoute> UsedLines { get { return Lines.Values.Where(l => l.IsUsed); } }
                 
-        private static ICommonLogger log = Loggers.AswDataLoaderLoggerInstance;
+        private static ICommonLogger log = Loggers.SystemDataLoaderLoggerInstance;
         
         protected RouteDatabase(Dictionary<string, TrainRoute> lines)
         {
             Lines = lines;
         }
 
+        /// <summary>
+        /// Načte data z ASW
+        /// </summary>
+        /// <param name="aswLines">Linky z ASW JŘ</param>
         public static RouteDatabase CreateRouteDb(AswModel.Extended.LineDatabase aswLines)
         {
-            // II. linky
             var lines = new Dictionary<string, TrainRoute>();
             foreach (var aswLine in aswLines)
             {
@@ -38,6 +42,7 @@ namespace TrainsEditor.ExportModel
                 var line = new TrainRoute()
                 {
                     AswId = aswLineFirstVersion.LineNumber,
+                    RouteId = aswLineFirstVersion.LineNumber.ToString(),
                     GtfsId = $"L{aswLineFirstVersion.LineNumber}",
                     LongName = aswLineFirstVersion.RouteDescription,
                     ShortName = aswLineFirstVersion.LineName,
@@ -48,8 +53,50 @@ namespace TrainsEditor.ExportModel
                     line.SubAgencies.Add(new RouteSubAgency()
                     {
                         RouteId = line.GtfsId,
-                        SubAgencyId = agency.Agency.Id,
+                        SubAgencyId = agency.Agency.Id.ToString(),
                         SubAgencyName = agency.Agency.Name,
+                    });
+                }
+
+                if (!lines.ContainsKey(line.ShortName))
+                {
+                    lines.Add(line.ShortName, line);
+                }
+                else
+                {
+                    log.Log(LogMessageType.WARNING_TRAIN_LINE_DUPLICATE, $"Linka {line.ShortName} je v číselníku vícekrát (rozdílné kalendáře?). Beru jen první výskyt, ID {line.AswId}.");
+                }
+            }
+
+            return new RouteDatabase(lines);
+        }
+
+        /// <summary>
+        /// Načte data z konfiguračního souboru
+        /// </summary>
+        /// <param name="routeData">Data linek</param>
+        /// <param name="agencyData">Data dopravců</param>
+        /// <returns></returns>
+        public static RouteDatabase CreateRouteDb(IEnumerable<Route> routeData, IEnumerable<Agency> agencyData)
+        {
+            var lines = new Dictionary<string, TrainRoute>();
+            foreach (var route in routeData)
+            {
+                var line = new TrainRoute()
+                {
+                    RouteId = route.ShortName,
+                    GtfsId = route.ShortName,
+                    LongName = route.LongName,
+                    ShortName = route.ShortName,
+                };
+
+                foreach (var agency in agencyData)
+                {
+                    line.SubAgencies.Add(new RouteSubAgency()
+                    {
+                        RouteId = line.GtfsId,
+                        SubAgencyId = agency.Id.ToString(),
+                        SubAgencyName = agency.Name,
                     });
                 }
 

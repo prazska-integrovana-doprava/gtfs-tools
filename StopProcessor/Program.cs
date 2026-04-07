@@ -1,5 +1,6 @@
 ﻿using AswModel;
 using CommonLibrary;
+using CommonLibrary.DotNet48;
 using GtfsLogging;
 using GtfsModel.Enumerations;
 using GtfsModel.Functions;

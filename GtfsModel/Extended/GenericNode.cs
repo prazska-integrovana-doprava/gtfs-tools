@@ -24,15 +24,15 @@ namespace GtfsModel.Extended
             return new GtfsStop()
             {
                 Id = GtfsId,
-                Name = "",
+                Name = null,
                 Latitude = Position.GpsLatitude,
                 Longitude = Position.GpsLongitude,
-                ZoneId = "",
-                Url = "",
+                ZoneId = null,
+                Url = null,
                 LocationType = LocationType,
                 ParentStationId = ParentStation.GtfsId,
                 WheelchairBoarding = WheelchairBoarding.Unknown,
-                PlatformCode = "",
+                PlatformCode = null,
             };
         }
 

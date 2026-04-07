@@ -23,6 +23,9 @@ namespace TrainsEditor.ViewModel
         // ukládáme si všechny poznámky vlaku, bez ohledu na to, zda jsou relevantní pro tuto stanici (abychom to dokázali snadno upravovat)
         private TrainNetworkSpecificParamsProvider _networkSpecificParameters;
 
+        // IDS, který se používá jako výchozí a bude se preferovat při nastavování linky
+        private IntegratedSystemsEnum _primaryIntegratedSystem;
+
         // Data ze SR70 a případně i ASW JŘ
         private TrainStop _additionalStationData;
         public TrainStop AdditionalStationData
@@ -154,7 +157,7 @@ namespace TrainsEditor.ViewModel
             set
             {
                 // TODO pokud to chceme umožnit i pro nePID, musí uživatel zadávat i IDS, do kterého chce vlak zařadit
-                var lineNumber = TrainLineInfo.TrainLineNameToNumberPid(value);
+                var lineNumber = TrainLineInfo.TrainLineNameToNumber(value, _primaryIntegratedSystem);
                 if (lineNumber != 0)
                 {
                     LocationData.SetLineName(lineNumber.ToString());
@@ -244,13 +247,14 @@ namespace TrainsEditor.ViewModel
         }
 
         protected TrainLocation(CZPTTLocation locationData, CZPTTLocation prevLocationData, TrainStop additionalStationData, IntegratedSystemsEnum integratedSystems, bool isFirstOrLastStation,
-            TrainNetworkSpecificParamsProvider networkSpecificParams)
+            TrainNetworkSpecificParamsProvider networkSpecificParams, IntegratedSystemsEnum primaryIntegratedSystem)
         {
             LocationData = locationData;
             _networkSpecificParameters = networkSpecificParams;
             AdditionalStationData = additionalStationData;
             IntegratedSystems = integratedSystems;
             _isFirstOrLastStation = isFirstOrLastStation;
+            _primaryIntegratedSystem = primaryIntegratedSystem;
             PrevLocationData = prevLocationData;
             TrainActivity = new TrainActivityViewModel(LocationData.TrainActivity);
             TrainActivity.PropertyChanged += TrainActivity_PropertyChanged;
@@ -267,18 +271,15 @@ namespace TrainsEditor.ViewModel
         /// <param name="networkSpecificParams">Všechny poznámky vlaku (i ty, které neplatí v dané stanici)</param>
         /// <returns></returns>
         public static TrainLocation Construct(CZPTTLocation locationData, CZPTTLocation prevLocationData, bool isFirstOrLastStation, StationDatabase stationDb, RouteDatabase routeDb,
-            TrainNetworkSpecificParamsProvider networkSpecificParams)
+            TrainNetworkSpecificParamsProvider networkSpecificParams, IntegratedSystemsEnum currentIntegratedSystem)
         {
             var additionalData = locationData.GetAdditionalData(stationDb);
             var lineInfo = locationData.GetLineInfo();
 
             var integratedSystems = IntegratedSystemsEnum.None;
-            if ((additionalData?.IsFromAsw).GetValueOrDefault())
-            {                
-                if (!lineInfo.IsNonPidLine && routeDb.Lines.ContainsKey(lineInfo.LineName))
-                {
-                    integratedSystems |= IntegratedSystemsEnum.PID;
-                }
+            if (lineInfo.LineType == TrainLineType.Pid || lineInfo.LineType == TrainLineType.PidFastTrain)
+            {
+                integratedSystems |= IntegratedSystemsEnum.PID;
             }
 
             if (lineInfo.LineType == TrainLineType.Odis)
@@ -291,7 +292,19 @@ namespace TrainsEditor.ViewModel
                 integratedSystems |= IntegratedSystemsEnum.IDSJMK;
             }
 
-            return new TrainLocation(locationData, prevLocationData, additionalData, integratedSystems, isFirstOrLastStation, networkSpecificParams);
+            if ((additionalData?.IsIntegrated).GetValueOrDefault())
+            {
+                if (lineInfo.IsPossibleFor(currentIntegratedSystem) && routeDb.Lines.ContainsKey(lineInfo.LineName))
+                {
+                    integratedSystems |= currentIntegratedSystem;
+                }
+                else
+                {
+                    integratedSystems = integratedSystems & ~currentIntegratedSystem;
+                }
+            }
+
+            return new TrainLocation(locationData, prevLocationData, additionalData, integratedSystems, isFirstOrLastStation, networkSpecificParams, currentIntegratedSystem);
         }
 
         /// <summary>

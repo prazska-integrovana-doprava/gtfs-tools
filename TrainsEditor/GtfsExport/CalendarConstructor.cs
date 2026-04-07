@@ -52,11 +52,15 @@ namespace TrainsEditor.GtfsExport
         // pro generování identifikátorů
         private CalendarIdManager calendarIdManager;
 
-        public CalendarConstructor(DateTime referenceStartDate)
+        // pro určování svátečních dnů
+        private PublicHolidaysCalendar holidaysCalendar;
+
+        public CalendarConstructor(DateTime referenceStartDate, PublicHolidaysCalendar holidaysCalendar)
         {
             _referenceStartDate = referenceStartDate;
             calendars = new Dictionary<StartDateAndBitmap, CalendarRecord>();
             calendarIdManager = new CalendarIdManager();
+            this.holidaysCalendar = holidaysCalendar;
         }
 
         /// <summary>
@@ -117,7 +121,7 @@ namespace TrainsEditor.GtfsExport
             for (int i = 0; i < bitmap.Length; i++)
             {
                 var date = calendarRecord.StartDate.AddDays(i);
-                if (DaysOfWeekCalendars.TrainsInstance.GetDayOfWeekFor(date) == dayOfWeek 
+                if (holidaysCalendar.GetDayOfWeekFor(date) == dayOfWeek 
                     && date >= _referenceStartDate) // TODO hack, aby mi to dávalo dny v týdnu jak potřebuju když se objeví všednodenní vlaky,
                                             // které jedou stejně jako víkendové, ale už jen kratší část roku
                 {

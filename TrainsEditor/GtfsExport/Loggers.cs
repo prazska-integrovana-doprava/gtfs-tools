@@ -4,7 +4,7 @@ namespace TrainsEditor.GtfsExport
 {
     static class Loggers
     {
-        public static ICommonLogger AswDataLoaderLoggerInstance;
+        public static ICommonLogger SystemDataLoaderLoggerInstance;
 
         public static ICommonLogger TrainsLoaderLoggerInstance;
 
@@ -15,12 +15,12 @@ namespace TrainsEditor.GtfsExport
         public static void InitAswDataLoggers(string logFolder)
         {
             var logFactory = new LogWriterFactory(logFolder);
-            AswDataLoaderLoggerInstance = new CommonLogger(logFactory.CreateWriterToFile("TrainsEditor_AswData"));
+            SystemDataLoaderLoggerInstance = new CommonLogger(logFactory.CreateWriterToFile("TrainsEditor_SystemData"));
         }
 
-        public static void ClLoseAswDataLoggers()
+        public static void CloseAswDataLoggers()
         {
-            AswDataLoaderLoggerInstance.Close();
+            SystemDataLoaderLoggerInstance.Close();
         }
 
         public static void InitExportModuleLoggers(string logFolder)

@@ -1,5 +1,6 @@
 ﻿using AswModel.Extended.Logging;
 using CommonLibrary;
+using CommonLibrary.DotNet48;
 using GtfsLogging;
 using JR_XML_EXP;
 using System.Collections.Generic;

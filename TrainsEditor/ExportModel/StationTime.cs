@@ -1,4 +1,5 @@
 ﻿using CommonLibrary;
+using CommonLibrary.DotNet48;
 using CzpttModel;
 using GtfsLogging;
 using GtfsModel.Enumerations;
@@ -62,7 +63,7 @@ namespace TrainsEditor.ExportModel
         /// <summary>
         /// Jde o veřejné zastavení (spoj zde obsluhuje cestující) a zároveň jde o zastávku známou v ASW JŘ
         /// </summary>
-        public bool IsInIntegratedArea => ((TrainStop)Stop).IsFromAsw; // && ((TrainStop)Stop).ZoneId != "-"; 
+        public bool IsInIntegratedArea => ((TrainStop)Stop).IsIntegrated; // && ((TrainStop)Stop).ZoneId != "-"; 
 
         /// <summary>
         /// Vytvoří záznam o průjezdu stanicí. Pokud je neveřejný, nebo jinak divný, vrací null
@@ -115,7 +116,7 @@ namespace TrainsEditor.ExportModel
                                     || act.TrainActivityType == TrainActivity.DepartsASAPActivityCode),
                 TrainNumberOnDeparture = location.OperationalTrainNumber % 100000,
                 TrainTypeOnDeparture = CommercialTrafficType.CommercialTrafficTypes.GetValueOrDefault(location.CommercialTrafficType),
-                TripOperationType = TripOperationType.Regular,
+                TripOperationType = CommonLibrary.TripOperationType.Regular,
                 BikesAllowed = BikeAccessibility.Possible,
                 IsPublicOnDeparture = location.IsPublicOnDeparture(),
                 IsSubstituteTransportOnDeparture = location.IsAlternativeTransportOnDeparture(),

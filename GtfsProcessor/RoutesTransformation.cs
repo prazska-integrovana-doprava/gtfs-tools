@@ -84,7 +84,7 @@ namespace GtfsProcessor
                 {
                     LicenceNumber = a.CisLineNumber,
                     RouteId = gtfsId,
-                    SubAgencyId = a.Agency.Id,
+                    SubAgencyId = a.Agency.Id.ToString(),
                     SubAgencyName = a.Agency.Name
                 }).ToList(),
                 // Trips vyplníme v TripsTransformation (teď ještě nejsou hotové)

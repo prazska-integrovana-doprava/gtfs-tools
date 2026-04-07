@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using CommonLibrary;
-using CsvSerializer;
+using CommonLibrary.DotNet48;
 using GtfsLogging;
 using GtfsModel.Extended;
 

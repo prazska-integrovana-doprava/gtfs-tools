@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using CommonLibrary;
+using CommonLibrary.DotNet48;
 using CsvSerializer;
 using CsvSerializer.Attributes;
 

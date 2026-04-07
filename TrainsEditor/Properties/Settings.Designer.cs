@@ -25,16 +25,16 @@ namespace TrainsEditor.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("..\\..\\ZastavkyLinkyDopravci.xml")]
-        public string StopsAndLinesFileName {
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string StopsAndLinesFileNameAsw {
             get {
-                return ((string)(this["StopsAndLinesFileName"]));
+                return ((string)(this["StopsAndLinesFileNameAsw"]));
             }
         }
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("..\\..\\SR70_2021.csv")]
+        [global::System.Configuration.DefaultSettingValueAttribute("c:\\temp\\jrspoje\\GVD\\SR70.csv")]
         public string SR70Stops {
             get {
                 return ((string)(this["SR70Stops"]));
@@ -43,7 +43,7 @@ namespace TrainsEditor.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("c:\\temp\\jrspoje\\GVD2023+KADR")]
+        [global::System.Configuration.DefaultSettingValueAttribute("c:\\temp\\jrspoje\\GVD")]
         public string RepositoryFolder {
             get {
                 return ((string)(this["RepositoryFolder"]));
@@ -52,7 +52,7 @@ namespace TrainsEditor.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("..\\..\\sit_vlak.csv")]
+        [global::System.Configuration.DefaultSettingValueAttribute("c:\\temp\\jrspoje\\GVD\\sit_vlak_odis.csv")]
         public string TrackNetworkFile {
             get {
                 return ((string)(this["TrackNetworkFile"]));
@@ -105,10 +105,18 @@ namespace TrainsEditor.Properties {
 							<TrainNumber>5805</TrainNumber>
 						</TripDirectionSpec>
 					</ArrayOfTripDirectionSpec>")]
-
         public global::System.Collections.Generic.List<TrainsEditor.GtfsExport.TripDirectionSpec> RepresentativeTrips {
             get {
                 return ((global::System.Collections.Generic.List<TrainsEditor.GtfsExport.TripDirectionSpec>)(this["RepresentativeTrips"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("c:\\temp\\jrspoje\\GVD\\VlakyOdis.xml")]
+        public string StopsAndLinesFileName {
+            get {
+                return ((string)(this["StopsAndLinesFileName"]));
             }
         }
     }

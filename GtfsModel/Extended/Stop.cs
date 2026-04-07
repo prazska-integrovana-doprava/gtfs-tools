@@ -21,6 +21,11 @@ namespace GtfsModel.Extended
         public int AswStopId { get; set; }
 
         /// <summary>
+        /// ID zastávky v celostátním informačním systému
+        /// </summary>
+        public int CisId { get; set; }
+
+        /// <summary>
         /// Název zastávky dle ASW JŘ (nemusí být unikátní)
         /// </summary>
         public string Name { get; set; }
@@ -65,13 +70,14 @@ namespace GtfsModel.Extended
                 Latitude = Position.GpsLatitude,
                 Longitude = Position.GpsLongitude,
                 ZoneId = ZoneId,
-                Url = "",
+                Url = null,
                 LocationType = LocationType,
-                ParentStationId = ParentStation != null ? ParentStation.GtfsId : "",
+                ParentStationId = ParentStation != null ? ParentStation.GtfsId : null,
                 WheelchairBoarding = WheelchairBoarding,
                 PlatformCode = PlatformCode,
                 AswNodeId = AswNodeId,
                 AswStopId = AswStopId,
+                CisId = CisId,
                 ZoneRegionType = ZoneRegionType,
             };
         }

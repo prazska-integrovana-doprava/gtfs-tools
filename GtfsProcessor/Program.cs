@@ -186,13 +186,13 @@ namespace GtfsProcessor
             Console.WriteLine("Sestavuji kalendáře spojů...");
             Dictionary<MergedTripGroup, GtfsModel.Extended.CalendarRecord> calendarToTripAssignment;
             var calendarGenerator = new CalendarGenerator(db.GlobalStartDate);
-            gtfsFeedEx.Calendar = calendarGenerator.GenerateCalendarsForTrips(mergedTripGroups, out calendarToTripAssignment).ToDictionary(cal => cal.GtfsId);
+            gtfsFeedEx.Calendar = calendarGenerator.GenerateCalendarsForTrips(mergedTripGroups, out calendarToTripAssignment).ToDictionary(cal => cal.GtfsId, cal => (GtfsModel.Extended.BaseCalendarRecord)cal);
 
             // může se stát, že oběhy mají ještě nějaké kalendáře, které neznáme, tak si je dovygenerujeme a zároveň přiřadíme
             Console.WriteLine("Sestavuji kalendáře oběhů...");
             var runsProcessor = new RunsTransformation(mergedTripGroups);
             Dictionary<MergedRun, GtfsModel.Extended.CalendarRecord> calendarToRunAssignment;
-            gtfsFeedEx.Calendar.AddRange(calendarGenerator.GenerateCalendarsForRuns(runsProcessor.Runs, out calendarToRunAssignment).ToDictionary(cal => cal.GtfsId));
+            gtfsFeedEx.Calendar.AddRange(calendarGenerator.GenerateCalendarsForRuns(runsProcessor.Runs, out calendarToRunAssignment).ToDictionary(cal => cal.GtfsId, cal => (GtfsModel.Extended.BaseCalendarRecord)cal));
 
             // ještě než půjdeme generovat trasy, musíme zkorigovat polohy nástupišť metra (možná je totiž opravuje dodatečný list zastávek)
             List<GtfsStop> extraStops = null;
@@ -227,7 +227,7 @@ namespace GtfsProcessor
             var tripsTransformation = new TripsTransformation(routesTransformation, stopsTransformation, shapeToTripAssignment, calendarToTripAssignment, tripPersistentIdDb)
                 .TransformTripsToGtfs(mergedTripGroups, out stopTimesWithTimedTransferRemarks, out stopTimesWithGuaranteedTransferAttribute);
             gtfsFeedEx.Trips = tripsTransformation.Values.ToDictionary(t => t.GtfsId);
-            new CalendarDebugLogger(gtfsFeedEx.Calendar.Values).LogCalendars();
+            new CalendarDebugLogger(gtfsFeedEx.Calendar.Values.Select(cal => (GtfsModel.Extended.CalendarRecord)cal)).LogCalendars(); // zatím pracujeme jen s klasickými kalendáři v calendar.txt, takže to přetypování by nemělo nikdy failnout
 
             var reusedIdsPercentage = 0;
             if (tripPersistentIdDb.TripsWithReusedId + tripPersistentIdDb.TripsWithNewId > 0)
@@ -280,8 +280,8 @@ namespace GtfsProcessor
             Console.WriteLine("Verifikuji počty vygenerovaných spojů...");
             VerifyLoadedTripCount(gtfsFeedEx, trip => trip.Route.Type == GtfsModel.Enumerations.TrafficType.Metro, config.MinimumMetroTrips, "METRO");
             VerifyLoadedTripCount(gtfsFeedEx, trip => trip.Route.Type == GtfsModel.Enumerations.TrafficType.Tram, config.MinimumTramTrips, "TRAM");
-            VerifyLoadedTripCount(gtfsFeedEx, trip => trip.Route.Type == GtfsModel.Enumerations.TrafficType.Bus && !trip.Route.IsRegional, config.MinimumBusTo299Trips, "BUS městský");
-            VerifyLoadedTripCount(gtfsFeedEx, trip => trip.Route.Type == GtfsModel.Enumerations.TrafficType.Bus && trip.Route.IsRegional, config.MinimumBusFrom300Trips, "BUS příměstský");
+            VerifyLoadedTripCount(gtfsFeedEx, trip => trip.Route.Type == GtfsModel.Enumerations.TrafficType.Bus && !trip.Route.IsRegional.GetValueOrDefault(), config.MinimumBusTo299Trips, "BUS městský");
+            VerifyLoadedTripCount(gtfsFeedEx, trip => trip.Route.Type == GtfsModel.Enumerations.TrafficType.Bus && trip.Route.IsRegional.GetValueOrDefault(), config.MinimumBusFrom300Trips, "BUS příměstský");
             VerifyLoadedTripCount(gtfsFeedEx, trip => trip.Route.Type == GtfsModel.Enumerations.TrafficType.Rail, config.MinimumTrainTrips, "VLAK");
 
             if (!string.IsNullOrEmpty(config.AdditionalTransfersFileName))
@@ -380,6 +380,7 @@ namespace GtfsProcessor
                 Phone = "+420234704560",
                 Timezone = "Europe/Prague",
                 Url = "https://pid.cz",
+                Email = "info@pid.cz"
             };
         }
 

@@ -105,7 +105,7 @@ namespace CsvSerializer
         }
 
         // přečte pomocí reflection daný field/property z instance
-        private object ReadFieldValue(MemberAndAttribute member, T record)
+        public static object ReadFieldValue(MemberAndAttribute member, T record)
         {
             object value;
             if (member.MemberInfo.MemberType == MemberTypes.Field)

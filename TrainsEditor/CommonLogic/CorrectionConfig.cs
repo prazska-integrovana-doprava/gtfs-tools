@@ -21,7 +21,7 @@ namespace TrainsEditor.CommonLogic
             TrafficTypeEnum.Os,
             TrafficTypeEnum.Ex,
             TrafficTypeEnum.R,
-            TrafficTypeEnum.Sp
+            TrafficTypeEnum.Sp,
         };
 
         // někdy SŽDC používá jiné označení stanic, než my, takže jim to přepíšeme na ty naše

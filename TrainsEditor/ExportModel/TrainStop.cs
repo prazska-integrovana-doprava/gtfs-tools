@@ -16,7 +16,7 @@ namespace TrainsEditor.ExportModel
         /// <summary>
         /// True, pokud se zastávka nachází i v číselníku ASW JŘ (tj. má pásmo a ASW ID)
         /// </summary>
-        public bool IsFromAsw { get { return AswNodeId != 0; } }
+        public bool IsIntegrated { get; set; }
 
         /// <summary>
         /// Všechna pásma všech tarifních systémů
@@ -35,7 +35,7 @@ namespace TrainsEditor.ExportModel
 
         public override string ToString()
         {
-            if (IsFromAsw)
+            if (IsIntegrated)
                 return $"{Name} [{ZoneId}]";
             else
                 return $"{Name}";

@@ -73,19 +73,19 @@ namespace GtfsModel
         /// <summary>
         /// Jednička pro divné spoje, které se nemají zobrazovat v mapách
         /// </summary>
-        [CsvField("exceptional", 51)]
+        [CsvField("exceptional", 51, CsvFieldPostProcess.None, 0, CsvColumnPresence.OmitColumntIfEmpty)]
         public int IsExceptional { get; set; }
 
         /// <summary>
         /// Interní ID dopravce (index do route_sub_agencies.txt)
         /// </summary>
         [CsvField("sub_agency_id", 52, CsvFieldPostProcess.None, 0)]
-        public int SubAgencyId { get; set; }
+        public string SubAgencyId { get; set; }
 
         /// <summary>
         /// Přestupní ikonky u konečné spoje ve formátu dvoupísmenných zkratek
         /// </summary>
-        [CsvField("headsign_icons", 53)]
+        [CsvField("headsign_icons", 53, CsvFieldPostProcess.None, null, CsvColumnPresence.OmitColumntIfEmpty)]
         public string HeadsignIcons { get; set; }
                 
         public override string ToString()

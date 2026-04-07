@@ -34,10 +34,35 @@ namespace CsvSerializer
         /// <param name="dateTimeFormat">Formát data</param>
         public static void SerializeFile<T>(string outputFileName, IEnumerable<T> collection, char separator = DefaultSeparator, string dateTimeFormat = DefaultDateTimeFormat, string decimalNumberFormat = DefaultDecimalNumberFormat)
         {
-            var membersOrdered = GetFieldAttributes<T>().OrderBy(ma => ma.Attribute.Order).ToArray();
+            var membersOrdered = GetFieldAttributes<T>().OrderBy(ma => ma.Attribute.Order).ToList();
+            if (membersOrdered.Any(m => m.Attribute.ColumnPresence == CsvColumnPresence.OmitColumntIfEmpty))
+            {
+                // musí předem naenumerovat data
+                var collectionAsArray = collection.ToArray();
+                foreach (var member in membersOrdered.Where(m => m.Attribute.ColumnPresence == CsvColumnPresence.OmitColumntIfEmpty).ToArray()) // to array tam je, abychom si udělali kopii, protože budeme mazat z původní kolekce
+                {
+                    bool allEmpty = true;
+                    foreach (var row in collectionAsArray)
+                    {
+                        object value = CsvRecordSerializer<T>.ReadFieldValue(member, row);
+                        if (value != null && (member.Attribute.DefaultValue == null || !member.Attribute.DefaultValue.Equals(value)))
+                        {
+                            // neprázdná hodnota
+                            allEmpty = false;
+                            break;
+                        }
+                    }
+
+                    if (allEmpty)
+                    {
+                        membersOrdered.Remove(member);
+                    }
+                }
+            }
+
             var writer = new StreamWriter(outputFileName);
 
-            var gtfsWriter = new CsvRecordSerializer<T>(writer, membersOrdered, separator, dateTimeFormat, decimalNumberFormat);
+            var gtfsWriter = new CsvRecordSerializer<T>(writer, membersOrdered.ToArray(), separator, dateTimeFormat, decimalNumberFormat);
             gtfsWriter.WriteHeader();
             foreach (var record in collection)
             {
@@ -58,17 +83,32 @@ namespace CsvSerializer
         /// <param name="encoding">Kódování souboru (výchozí hodnota null použije UTF8).</param>
         /// <param name="containsHeader">True, pokud na prvním řádku souboru je hlavička s názvy sloupců (pokusí se namapovat podle atributů třídy)</param>
         /// <returns>Kolekce záznamů načtená ze souboru</returns>
-        public static List<T> DeserializeFile<T>(string inputFileName, char separator = DefaultSeparator, CultureInfo cultureInfo = null, string dateTimeFormat = DefaultDateTimeFormat, Encoding encoding = null, bool containsHeader = true) where T : new()
+        public static List<T> DeserializeFile<T>(string inputFileName, char separator = DefaultSeparator, CultureInfo cultureInfo = null, string dateTimeFormat = DefaultDateTimeFormat, Encoding encoding = null, bool containsHeader = true, string lineSeparator = "") where T : new()
         {
-            var members = GetFieldAttributes<T>().ToArray();
             if (!File.Exists(inputFileName))
                 return new List<T>();
 
             var reader = new StreamReader(inputFileName, encoding ?? Encoding.UTF8);
+            return Deserialize<T>(reader, separator, cultureInfo, dateTimeFormat, containsHeader, lineSeparator);
+        }
+
+        /// <summary>
+        /// Načte kolekci záznamů ze souboru. Pokud soubor neexistuje, vrací prázdnou kolekci. Pokud je soubor chybný, nebo nejde přečíst, vyhazuje výjimku
+        /// </summary>
+        /// <typeparam name="T">Typ záznamu</typeparam>
+        /// <param name="reader">Soubor (stream), který má být načten</param>
+        /// <param name="separator">Oddělovač záznamů na řádce</param>
+        /// <param name="cultureInfo">V jakém formátu jsou v souboru uložena čísla a datum (výchozí hodnota null použije <see cref="CultureInfo.InvariantCulture"/>).</param>
+        /// <param name="dateTimeFormat">Formát data</param>
+        /// <param name="containsHeader">True, pokud na prvním řádku souboru je hlavička s názvy sloupců (pokusí se namapovat podle atributů třídy)</param>
+        /// <returns>Kolekce záznamů načtená ze souboru</returns>
+        public static List<T> Deserialize<T>(TextReader reader, char separator = DefaultSeparator, CultureInfo cultureInfo = null, string dateTimeFormat = DefaultDateTimeFormat, bool containsHeader = true, string lineSeparator = "") where T : new()
+        {
+            var members = GetFieldAttributes<T>().ToArray();
 
             var result = new List<T>();
             T current;
-            var csvReader = new CsvRecordDeserializer<T>(reader, separator, cultureInfo ?? CultureInfo.InvariantCulture, dateTimeFormat);
+            var csvReader = new CsvRecordDeserializer<T>(reader, separator, cultureInfo ?? CultureInfo.InvariantCulture, dateTimeFormat, lineSeparator);
 
             if (containsHeader)
             {

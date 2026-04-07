@@ -16,9 +16,14 @@ namespace GtfsModel.Functions
         /// <param name="calendarRecord">Kalendář, kterému chceme vygenerovat ID</param>
         /// <param name="suffix">Připojí se k pořadovému číslu</param>
         /// <returns>ID pro kalendář</returns>
-        public string CreateCalendarId(CalendarRecord calendarRecord, string suffix = "")
+        public string CreateCalendarId(BaseCalendarRecord calendar, string suffix = "")
         {
-            var idBase = calendarRecord.ServiceAsBinaryString.ToString("0000000");
+            var idBase = "X";
+            if (calendar is CalendarRecord)
+            {
+                idBase = ((CalendarRecord)calendar).ServiceAsBinaryString.ToString("0000000");
+            }
+
             int numOfExisting;
             if (idCounts.TryGetValue(idBase, out numOfExisting))
             {

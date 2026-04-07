@@ -95,8 +95,9 @@ namespace TrainsEditor.ExportModel
         /// <param name="loaderLog">Logování načítání dat</param>
         /// <param name="processLog">Logování zpracování</param>
         /// <param name="emptyLineHandler">Procedura, která se zavolá, když se narazí na vlak s nevyplněnou linkou</param>
+        /// <param name="currentIntegratedSystem">IDS, pro který generujeme data</param>
         public static Train Create(SingleTrainFile trainFile, StationDatabase stopDb, RouteDatabase lineDb, ICommonLogger loaderLog, ISimpleLogger processLog,
-            TrainWithEmptyLineHandler emptyLineHandler)
+            TrainWithEmptyLineHandler emptyLineHandler, IntegratedSystemsEnum currentIntegratedSystem)
         {
             var czpttMessage = trainFile.TrainData;
             var paId = czpttMessage.Identifiers.First(i => i.ObjectType == CompositeIdentifierPlannedType.ObjectTypeEnum.PA);
@@ -145,7 +146,7 @@ namespace TrainsEditor.ExportModel
                     stationTime = StationTime.Create(location, czpttMessage, isWheelchairAccessible, prevLocation, stopDb, isLocationFirst || isLocationLast, loaderLog);
                     if (stationTime.IsValid && stationTime.IsPublic)
                     {
-                        var lineTrain = TrainTrip.Construct(resultTrain, stationTimes, lineDb, loaderLog, processLog, emptyLineHandler);
+                        var lineTrain = TrainTrip.Construct(resultTrain, stationTimes, lineDb, loaderLog, processLog, emptyLineHandler, currentIntegratedSystem);
                         if (lineTrain != null)
                             resultTrain.LineTrips.Add(lineTrain);
 
@@ -167,7 +168,7 @@ namespace TrainsEditor.ExportModel
 
             if (stationTimes.Any2())
             {
-                var lineTrain = TrainTrip.Construct(resultTrain, stationTimes, lineDb, loaderLog, processLog, emptyLineHandler);
+                var lineTrain = TrainTrip.Construct(resultTrain, stationTimes, lineDb, loaderLog, processLog, emptyLineHandler, currentIntegratedSystem);
                 if (lineTrain != null)
                     resultTrain.LineTrips.Add(lineTrain);
             }

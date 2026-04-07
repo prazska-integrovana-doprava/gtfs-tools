@@ -1,14 +1,15 @@
 ﻿using CommonLibrary;
+using CommonLibrary.DotNet48;
 using CsvSerializer;
 using CsvSerializer.Attributes;
 using CzpttModel;
 using GtfsLogging;
 using GtfsModel.Enumerations;
-using GtfsModel.Extended;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using TrainsEditor.GtfsExport;
+using TrainsEditor.SystemDescriptionModel;
 
 namespace TrainsEditor.ExportModel
 {
@@ -38,7 +39,7 @@ namespace TrainsEditor.ExportModel
         /// <summary>
         /// Stanice a zastávky, které jsou v číselníku PID v ASW JŘ. Indexováno dvoumístným kódem státu + pětimístným CIS číslem (bez kontrolní číslice).
         /// </summary>
-        public Dictionary<string, TrainStop> StopsFromAsw { get; private set; }
+        public Dictionary<string, TrainStop> StopsFromSystem { get; private set; }
 
         /// <summary>
         /// Všechny stanice a zastávky z číselníku SR 70 SŽDC. Indexováno dvoumístným kódem státu + pětimístným CIS číslem (bez kontrolní číslice).
@@ -54,21 +55,21 @@ namespace TrainsEditor.ExportModel
             {
                 // ten Distinct() tam musí být, protože některé zastávky referencujeme z více IDček
                 // nepoužívá se AllStops, protože takhle je budeme mít správně seřazené (nejdřív ASW, pak ostatní)
-                return StopsFromAsw.Values.Where(s => s.IsUsed).Concat(AllStops.Values.Where(s => s.IsUsed)).Distinct();
+                return StopsFromSystem.Values.Where(s => s.IsUsed).Concat(AllStops.Values.Where(s => s.IsUsed)).Distinct();
             }
         }
 
 
-        private static ICommonLogger log = Loggers.AswDataLoaderLoggerInstance;
+        private static ICommonLogger log = Loggers.SystemDataLoaderLoggerInstance;
 
         protected StationDatabase(Dictionary<string, TrainStop> stops, Dictionary<string, TrainStop> allStops)
         {
-            StopsFromAsw = stops;
+            StopsFromSystem = stops;
             AllStops = allStops;
         }
 
         /// <summary>
-        /// Hledá zastávku primárně v <see cref="StopsFromAsw"/> a pokud tam není, vrací z <see cref="AllStops"/>. Pokud ani tam není, vytvoří záznam pouze s názvem.
+        /// Hledá zastávku primárně v <see cref="StopsFromSystem"/> a pokud tam není, vrací z <see cref="AllStops"/>. Pokud ani tam není, vytvoří záznam pouze s názvem.
         /// </summary>
         /// <param name="countryCode">Kód státu (pro CZ použít <see cref="LocationIdent.CountryCodeCZ"/>)</param>
         /// <param name="cisId">Pětimístné číslo CIS (bez kontrolky)</param>
@@ -99,7 +100,10 @@ namespace TrainsEditor.ExportModel
         /// <returns>Databáze s načtenými stanicemi</returns>
         public static StationDatabase CreateStationDb(AswModel.Extended.StopDatabase aswStops, string sr70fileName, IDictionary<int, int> rewriteRules)
         {
-            // I. stanice a zastávky z číselníku ASW
+            // I. číselník SR 70
+            var allTrainStopsDictionary = LoadSR70Data(sr70fileName);
+
+            // II. stanice a zastávky z číselníku ASW
             var trainStopsFromAsw = new Dictionary<string, TrainStop>();
             foreach (var aswStop in aswStops)
             {
@@ -127,7 +131,8 @@ namespace TrainsEditor.ExportModel
                     ZoneRegionType = aswStopFirstVersion.ZoneRegionType,
                     WheelchairBoarding = FromAswWheelchairAccessibility(aswStopFirstVersion.WheelchairAccessibility),
                     PrimaryLocationCode = cis,
-                    AllTransferIcons = GetTransferIcons(aswStopFirstVersion.TransferAttributes).ToArray()
+                    AllTransferIcons = GetTransferIcons(aswStopFirstVersion.TransferAttributes).ToArray(),
+                    IsIntegrated = true
                 };
 
                 var stopAlreadyPresent = trainStopsFromAsw.GetValueOrDefault(LocationIdent.CountryCodeCZ + cis);
@@ -145,7 +150,7 @@ namespace TrainsEditor.ExportModel
                 }
             }
 
-            // Ia. rewrite pravidla (kde máme jiná CIS čísla)
+            // IIa. rewrite pravidla (kde máme jiná CIS čísla)
             foreach (var rewriteRule in rewriteRules)
             {
                 var knownStop = trainStopsFromAsw.GetValueOrDefault(LocationIdent.CountryCodeCZ + rewriteRule.Value);
@@ -164,7 +169,83 @@ namespace TrainsEditor.ExportModel
                 trainStopsFromAsw.Add(LocationIdent.CountryCodeCZ + rewriteRule.Key, knownStop);
             }
 
-            // II. číselník SR 70
+            // data načtená z ASW přebíjí data ze SR70
+            foreach (var aswStopRecord in trainStopsFromAsw)
+            {
+                if (allTrainStopsDictionary.ContainsKey(aswStopRecord.Key))
+                {
+                    allTrainStopsDictionary[aswStopRecord.Key] = aswStopRecord.Value;
+                }
+
+            }
+
+            return new StationDatabase(trainStopsFromAsw, allTrainStopsDictionary);
+        }
+
+
+        /// <summary>
+        /// Sestaví databázi. Načte zastávky z konfiguračního souboru i z číselníku SŽDC.
+        /// </summary>
+        /// <param name="aswStops">Data zastávek</param>
+        /// <param name="sr70fileName">Soubor CSV obsahující číselník SR 70 SŽDC</param>
+        /// <returns>Databáze s načtenými stanicemi</returns>
+        public static StationDatabase CreateStationDb(IEnumerable<Station> stationData, string sr70fileName)
+        {
+            // I. číselník SR 70
+            var allTrainStopsDictionary = LoadSR70Data(sr70fileName);
+
+            // II. stanice a zastávky z číselníku ASW
+            var trainStopsFromStationData = new Dictionary<string, TrainStop>();
+            foreach (var station in stationData)
+            {
+                var cis = station.CisNumber % 100000; // odstranit "úvodní" 54
+                var recordFromSR70 = allTrainStopsDictionary.GetValueOrDefault(LocationIdent.CountryCodeCZ + cis);
+                var hasPosition = station.GpsLatitude != 0 && station.GpsLongitude != 0;
+                if (recordFromSR70 == null && (!hasPosition || string.IsNullOrEmpty(station.Name)))
+                {
+                    log.Log(LogMessageType.WARNING_TRAIN_STOP_MISSING_DATA, $"Záznam o zastávce {cis} nemá název nebo pozici a nelze je doplnit ze SR70, protože tam zastávka není");
+                    continue;
+                }
+
+                var trainStop = new TrainStop()
+                {
+                    GtfsId = station.CisNumber.ToString(),
+                    Name = station.Name ?? recordFromSR70.Name,
+                    Position = hasPosition ? new GpsCoordinates()
+                    {
+                        GpsLatitude = station.GpsLatitude,
+                        GpsLongitude = station.GpsLongitude,
+                    } : recordFromSR70.Position,
+                    ZoneId = station.Zones,
+                    WheelchairBoarding = station.WheelchairAccessible ? WheelchairBoarding.Possible : station.WheelchairAccessibilityNotSet ? WheelchairBoarding.Unknown : WheelchairBoarding.Unknown,
+                    PrimaryLocationCode = cis,
+                    IsIntegrated = true
+                };
+
+                var stopAlreadyPresent = trainStopsFromStationData.GetValueOrDefault(LocationIdent.CountryCodeCZ + cis);
+                if (stopAlreadyPresent == null)
+                {
+                    trainStopsFromStationData.Add(LocationIdent.CountryCodeCZ + cis, trainStop);
+                    if (recordFromSR70 != null)
+                    {
+                        allTrainStopsDictionary[LocationIdent.CountryCodeCZ + cis] = trainStop;
+                    }
+                }
+                else
+                {
+                    if (stopAlreadyPresent.PrimaryLocationCode != trainStop.PrimaryLocationCode || stopAlreadyPresent.Name != trainStop.Name || stopAlreadyPresent.ZoneId != trainStop.ZoneId
+                        || !stopAlreadyPresent.Position.Equals(trainStop.Position))
+                    {
+                        log.Log(LogMessageType.WARNING_TRAIN_STOP_CONFLICT, $"Stanice {trainStop.Name} - konfliktní záznamy (liší se název, uzel, pásmo nebo pozice)");
+                    }
+                }
+            }
+
+            return new StationDatabase(trainStopsFromStationData, allTrainStopsDictionary);
+        }
+
+        private static Dictionary<string, TrainStop> LoadSR70Data(string sr70fileName)
+        {
             var allTrainStops = CsvFileSerializer.DeserializeFile<SR70StationRaw>(sr70fileName, ';');
             var allTrainStopsDictionary = new Dictionary<string, TrainStop>();
             foreach (var trainStopRec in allTrainStops)
@@ -178,12 +259,6 @@ namespace TrainsEditor.ExportModel
                     PrimaryLocationCode = cisId
                 };
 
-                // pokud už známe z ASW, použijeme tuto verzi
-                if (trainStopsFromAsw.ContainsKey(LocationIdent.CountryCodeCZ +  cisId))
-                {
-                    stop = trainStopsFromAsw[LocationIdent.CountryCodeCZ + cisId];
-                }
-
                 if (stop.Position.GpsLatitude == 0 || stop.Position.GpsLongitude == 0)
                 {
                     log.Log(LogMessageType.WARNING_TRAIN_STOP_ZERO_COORDINATES, $"Stanice/dopravní bod {trainStopRec.Name} (ID {cisId}) má nulovou některou ze souřadnic, nebude používána");
@@ -192,7 +267,7 @@ namespace TrainsEditor.ExportModel
                 allTrainStopsDictionary.Add(LocationIdent.CountryCodeCZ + cisId, stop);
             }
 
-            return new StationDatabase(trainStopsFromAsw, allTrainStopsDictionary);
+            return allTrainStopsDictionary;
         }
 
         private static GpsCoordinates PositionFromString(string lon, string lat)

@@ -66,9 +66,14 @@ namespace GtfsModel.Extended
         public double? ShapeDistanceTraveledMeters { get; set; }
 
         /// <summary>
+        /// Tarifní vzdálenost v kilometrech
+        /// </summary>
+        public int? FareKilometerDistance { get; set; }
+
+        /// <summary>
         /// Typ výkonu na odjezdu ze zastávky
         /// </summary>
-        public TripOperationType TripOperationType { get; set; }
+        public TripOperationType? TripOperationType { get; set; }
 
         /// <summary>
         /// Možnosti přepravy kol na spoji v dané zastávce
@@ -129,6 +134,7 @@ namespace GtfsModel.Extended
                 StopHeadsign = gtfsStopTime.StopHeadsign,
                 Stop = (Stop) stops[gtfsStopTime.StopId],
                 Trip = trips[gtfsStopTime.TripId],
+                FareKilometerDistance = gtfsStopTime.FareKilometerDistance,
                 TripOperationType = gtfsStopTime.TripOperationType,
                 BikesAllowed = gtfsStopTime.BikesAllowed,
                 StopIcons = TransferIconCodes.ReverseTransform(gtfsStopTime.StopIcons).ToArray(),
@@ -145,10 +151,11 @@ namespace GtfsModel.Extended
                 DepartureTime = DepartureTime,
                 StopId = Stop.GtfsId,
                 StopSequence = SequenceNumber,
-                StopHeadsign = StopHeadsign != null ? StopHeadsign : "",
+                StopHeadsign = StopHeadsign,
                 PickupType = PickupType,
                 DropOffType = DropOffType,
                 ShapeDistanceTraveled = ShapeDistanceTraveledMeters / 1000.0,
+                FareKilometerDistance = FareKilometerDistance,
                 TripOperationType = TripOperationType,
                 BikesAllowed = BikesAllowed,
                 StopIcons = TransferIconCodes.Transform(StopIcons),

@@ -1,4 +1,5 @@
 ﻿using CommonLibrary;
+using CommonLibrary.DotNet48;
 using GtfsModel.Enumerations;
 using GtfsModel.Extended;
 using StopTimetableGen.StopTimetableModel;
@@ -27,6 +28,7 @@ namespace StopTimetableGen.Transformations
         private string[] ignoredStops;
         private bool benevolentDays;
         private bool ignoreWheelchairAccessibility;
+        private PublicHolidaysCalendar holidaysCalendar;
 
         private Dictionary<WeekdaySubset, WeekdayName> weekdaySubsetNames = new Dictionary<WeekdaySubset, WeekdayName>
         {
@@ -48,6 +50,7 @@ namespace StopTimetableGen.Transformations
             this.ignoredStops = ignoredStops;
             this.benevolentDays = benevolentDays;
             this.ignoreWheelchairAccessibility = ignoreWheelchairAccessibility;
+            this.holidaysCalendar = new PublicHolidaysCalendar(startDate.Year, endDate.Year);
         }
 
         /// <summary>
@@ -62,7 +65,7 @@ namespace StopTimetableGen.Transformations
                 LineId = selectedRoute.AswId,
                 LineNumber = selectedRoute.ShortName,
                 ValidFrom = startDate.Date,
-                OperatorId = (agency?.SubAgencyId).GetValueOrDefault(),
+                OperatorId = agency?.SubAgencyId != null ? int.Parse(agency.SubAgencyId) : 0,
                 OperatorName = agency?.SubAgencyName,
             };
 
@@ -111,7 +114,7 @@ namespace StopTimetableGen.Transformations
                 stopTimetable.Stops.Last().Flags |= StopOnLine.StopFlags.LastStop;
 
                 var remarkAssignment = new TripVariantsSort().GetTripRemarkAssignment(departureTimes, stopTimetable.Stops);
-                var timeRemarksChecker = new TimeRemarksChecker(startDate, endDate);
+                var timeRemarksChecker = new TimeRemarksChecker(startDate, endDate, holidaysCalendar);
 
                 // přes provozní dny
                 foreach (var weekdaySubset in weekdaySubsets)
@@ -165,20 +168,19 @@ namespace StopTimetableGen.Transformations
                     stopTimetable.Remarks.Insert(0, new ManualRemark("x", "Zastávka na znamení"));
                 }
 
-                if (weekdaySubsets.Contains(WeekdaySubset.Saturdays) || weekdaySubsets.Contains(WeekdaySubset.Sundays))
-                    stopTimetable.Remarks.Add(new SeparatorRemark());
-                if (weekdaySubsets.Contains(WeekdaySubset.Saturdays))
-                    stopTimetable.Remarks.Add(new ManualRemark("", StringHelper.GetSaturdayString(DaysOfWeekCalendars.TrainsInstance, startDate, endDate)));
-                if (weekdaySubsets.Contains(WeekdaySubset.Sundays))
-                    stopTimetable.Remarks.Add(new ManualRemark("", StringHelper.GetSundayString(DaysOfWeekCalendars.TrainsInstance, startDate, endDate)));
-
                 if (stopTimetable.DayColumns.Any())
                     yield return stopTimetable;
             }
         }
 
-        private bool SatisfiesPeriodLimit(CalendarRecord calendar)
+        private bool SatisfiesPeriodLimit(BaseCalendarRecord baseCalendar)
         {
+            var calendar = baseCalendar as CalendarRecord;
+            if (calendar == null)
+            {
+                return false;
+            }
+
             if (calendar.StartDate > endDate || calendar.EndDate < startDate)
                 return false;
 

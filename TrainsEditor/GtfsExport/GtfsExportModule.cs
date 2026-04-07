@@ -41,39 +41,45 @@ namespace TrainsEditor.GtfsExport
 
         private TrainGroupLoader _trainGroupLoader;
 
+        private PublicHolidaysCalendar _holidaysCalendar;
+
+        private IntegratedSystemsEnum _currentIntegratedSystem;
+
         private readonly StationDatabase _stopDatabase;
         private readonly RouteDatabase _routeDatabase;
         private readonly ICommonLogger loaderLog = Loggers.TrainsLoaderLoggerInstance;
         private readonly ISimpleLogger processLog = Loggers.TrainsProcessLoggerInstance;
         private readonly ISimpleLogger outputLog = Loggers.TrainsOutputLoggerInstance;
 
-        public GtfsExportModule(StationDatabase stationDb, RouteDatabase routeDb, List<TripDirectionSpec> representativeTrips, string trainsFilesPath, TrainGroupLoader trainGroupLoader)
+        public GtfsExportModule(StationDatabase stationDb, RouteDatabase routeDb, List<TripDirectionSpec> representativeTrips, string trainsFilesPath, TrainGroupLoader trainGroupLoader, PublicHolidaysCalendar holidaysCalendar, IntegratedSystemsEnum currentIntegratedSystem)
         {
             _stopDatabase = stationDb;
             _routeDatabase = routeDb;
             _trainFilesPath = trainsFilesPath;
             _trainGroupLoader = trainGroupLoader;
             RepresentativeTrips = representativeTrips;
+            _holidaysCalendar = holidaysCalendar;
+            _currentIntegratedSystem = currentIntegratedSystem;
         }
 
-        public GtfsExportModule(StationDatabase stationDb, RouteDatabase routeDb, List<TripDirectionSpec> representativeTrips, string trainFilesPath, TrainGroupLoader trainGroupLoader, DateTime referenceStartDate)
-            : this(stationDb, routeDb, representativeTrips, trainFilesPath, trainGroupLoader)
+        public GtfsExportModule(StationDatabase stationDb, RouteDatabase routeDb, List<TripDirectionSpec> representativeTrips, string trainFilesPath, TrainGroupLoader trainGroupLoader, PublicHolidaysCalendar holidaysCalendar, IntegratedSystemsEnum currentIntegratedSystem, DateTime referenceStartDate)
+            : this(stationDb, routeDb, representativeTrips, trainFilesPath, trainGroupLoader, holidaysCalendar, currentIntegratedSystem)
         {
             ReferenceStartDate = referenceStartDate;
         }
 
-        public GtfsExportModule(StationDatabase stationDb, RouteDatabase routeDb, List<TripDirectionSpec> representativeTrips, string trainFilesPath, TrainGroupLoader trainGroupLoader,
+        public GtfsExportModule(StationDatabase stationDb, RouteDatabase routeDb, List<TripDirectionSpec> representativeTrips, string trainFilesPath, TrainGroupLoader trainGroupLoader, PublicHolidaysCalendar holidaysCalendar, IntegratedSystemsEnum currentIntegratedSystem,
             ICommonLogger loaderLog, ISimpleLogger processLog, ISimpleLogger outputLog)
-            : this(stationDb, routeDb, representativeTrips, trainFilesPath, trainGroupLoader)
+            : this(stationDb, routeDb, representativeTrips, trainFilesPath, trainGroupLoader, holidaysCalendar, currentIntegratedSystem)
         {
             this.loaderLog = loaderLog;
             this.processLog = processLog;
             this.outputLog = outputLog;
         }
 
-        public GtfsExportModule(StationDatabase stationDb, RouteDatabase routeDb, List<TripDirectionSpec> representativeTrips, string trainFilesPath, TrainGroupLoader trainGroupLoader, DateTime referenceStartDate,
+        public GtfsExportModule(StationDatabase stationDb, RouteDatabase routeDb, List<TripDirectionSpec> representativeTrips, string trainFilesPath, TrainGroupLoader trainGroupLoader, PublicHolidaysCalendar holidaysCalendar, IntegratedSystemsEnum currentIntegratedSystem, DateTime referenceStartDate,
         ICommonLogger loaderLog, ISimpleLogger processLog, ISimpleLogger outputLog)
-            : this(stationDb, routeDb, representativeTrips, trainFilesPath, trainGroupLoader, loaderLog, processLog, outputLog)
+            : this(stationDb, routeDb, representativeTrips, trainFilesPath, trainGroupLoader, holidaysCalendar, currentIntegratedSystem, loaderLog, processLog, outputLog)
         {
             ReferenceStartDate = referenceStartDate;
         }
@@ -87,7 +93,7 @@ namespace TrainsEditor.GtfsExport
         /// <param name="reportCallback">Callback, kam se hlásí progress a může zrušit načítání dat</param>
         public bool Run(string mapNetworkFileName, string outputFolder, string logPath, TextWriter console, TrainGroupLoader.TrainsLoaderCallback reportCallback = null)
         {
-            var calendarConstructor = new CalendarConstructor(ReferenceStartDate);
+            var calendarConstructor = new CalendarConstructor(ReferenceStartDate, _holidaysCalendar);
             console.WriteLine("Načítání vlaků...");
             var trainsByTrId = LoadTrainsFromFolder(_trainFilesPath, reportCallback);
 
@@ -194,7 +200,7 @@ namespace TrainsEditor.GtfsExport
             foreach (var trainTrip in trainTrips)
             {
                 // vytvořit kalendář a označit linku a zastávky referencované tripem
-                trainTrip.GtfsId = $"{trainTrip.Route.AswId}_{trainTrip.TrainNumber}_{trainTrip.StartDate:yyMMdd}";
+                trainTrip.GtfsId = $"{((TrainRoute)trainTrip.Route).RouteId}_{trainTrip.TrainNumber}_{trainTrip.StartDate:yyMMdd}";
                 while (!tripIdSet.Add(trainTrip.GtfsId))
                 {
                     loaderLog.Log(LogMessageType.WARNING_TRAIN_DUPLICATE_ID, $"Duplicitní ID: {trainTrip.GtfsId}, nastavuji alternativní připojením 'X'. Příčinou může být, že vlak je rozdělen náhradní dopravou na dva samostatné kusy.");
@@ -226,7 +232,7 @@ namespace TrainsEditor.GtfsExport
         {
             var compareAndMerge = new TrainVariantMerge(processLog);
             var transformedGroup = group.TrainFiles.Where(tr => !tr.IsCancelation).Select(
-                tr => Train.Create(tr, _stopDatabase, _routeDatabase, loaderLog, processLog, stt => CheckTrainPrevVersionLineInfo(stt, tr.OverwrittenTrains, console))
+                tr => Train.Create(tr, _stopDatabase, _routeDatabase, loaderLog, processLog, stt => CheckTrainPrevVersionLineInfo(stt, tr.OverwrittenTrains, console), _currentIntegratedSystem)
             );
 
             // provedeme znovu filtering na datum, protože u některých vlaků jsme mohli posunout EndDate na základě přepsaného konce bitmapy

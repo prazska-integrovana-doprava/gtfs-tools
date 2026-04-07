@@ -220,8 +220,7 @@ namespace StopTimetableGen.Printers
 
                 var stopNameCell = xlWorksheet.GetCells(originCell.Move(0, ExcelTemplate.StopNameColumnDelta), 1, ExcelTemplate.StopZoneColumnDelta - ExcelTemplate.StopNameColumnDelta);
                 stopNameCell.Merge();
-                var metroTransferLine = metroTransferStations.GetValueOrDefault(stopName.ToUpper());
-                if (metroTransferLine != null)
+                if (metroTransferStations.TryGetValue(stopName.ToUpper(), out var metroTransferLine))
                 {
                     // přidání znaku přestupu na metro
                     stopNameCell.Value = $"{stopName} # {metroTransferLine}";

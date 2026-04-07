@@ -1,7 +1,6 @@
-﻿using CommonLibrary;
+﻿using CommonLibrary.DotNet48;
 using CzpttModel;
 using CzpttModel.Kango;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 

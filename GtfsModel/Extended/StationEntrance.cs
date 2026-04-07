@@ -36,12 +36,12 @@ namespace GtfsModel.Extended
                 Name = Name,
                 Latitude = Position.GpsLatitude,
                 Longitude = Position.GpsLongitude,
-                ZoneId = "",
-                Url = "",
+                ZoneId = null,
+                Url = null,
                 LocationType = LocationType,
                 ParentStationId = ParentStation.GtfsId,
                 WheelchairBoarding = WheelchairBoarding,
-                PlatformCode = "",
+                PlatformCode = null,
                 AswNodeId = ParentStation.AswNodeId,
             };
         }

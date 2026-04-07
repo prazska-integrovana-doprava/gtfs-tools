@@ -15,6 +15,8 @@ namespace StopTimetableGen.Transformations
         private DateTime startDate;
         private DateTime endDate;
 
+        private PublicHolidaysCalendar holidaysCalendar;
+
         private List<TimeRemark> pastRemarks = new List<TimeRemark>();
         private List<char> lastTimeRemarkSymbols = new List<char>() { '!', '#', '$', '*', '&', '%', '°', '§', '×', '=', '+', '@', '^', '>', '<', '?' };
 
@@ -27,10 +29,11 @@ namespace StopTimetableGen.Transformations
             { WeekdaySubset.Workdays, new [] {DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday } },
         };
 
-        public TimeRemarksChecker(DateTime startDate, DateTime endDate)
+        public TimeRemarksChecker(DateTime startDate, DateTime endDate, PublicHolidaysCalendar holidaysCalendar)
         {
             this.startDate = startDate;
             this.endDate = endDate;
+            this.holidaysCalendar = holidaysCalendar;
         }
 
         /// <summary>
@@ -89,7 +92,7 @@ namespace StopTimetableGen.Transformations
                 {
                     remark.DaysOfWeekWithService.Add(dayOfWeek);
                 }
-                else if (departure.Calendar.IsDefinedOn(dayOfWeek, DaysOfWeekCalendars.TrainsInstance))
+                else if (departure.Calendar.IsDefinedOn(dayOfWeek, holidaysCalendar))
                 {
                     remark.DaysOfWeekNoService.Add(dayOfWeek);
                 }
@@ -101,7 +104,7 @@ namespace StopTimetableGen.Transformations
             DateTime firstDayWithoutService = DateTime.MinValue;
             for (var day = startDate; day <= endDate; day = day.AddDays(1))
             {
-                var dayOfWeek = DaysOfWeekCalendars.TrainsInstance.GetDayOfWeekFor(day);
+                var dayOfWeek = holidaysCalendar.GetDayOfWeekFor(day);
                 if (remark.DaysOfWeekWithService.Contains(dayOfWeek))
                 {
                     if (!departure.Calendar.OperatesAt(day))
@@ -161,7 +164,7 @@ namespace StopTimetableGen.Transformations
                             currentWithServiceInterval.To = day;
                         }
 
-                        if (DaysOfWeekCalendars.TrainsInstance.NonredundantDayExceptions.ContainsKey(day) && remark.DaysOfWeekNoService.Any())
+                        if (holidaysCalendar.AllHolidays.Contains(day) && remark.DaysOfWeekNoService.Any())
                         {
                             // jde o výjimečné přiřazení do tohoto provozního dne, je dobré explicitně zmínit
                             remark.DaysWithExtraService.Add(day);

@@ -43,6 +43,12 @@ namespace GtfsModel
         [CsvField("agency_phone", 6, CsvFieldPostProcess.Quote)]
         public string Phone { get; set; }
 
+        /// <summary>
+        /// E-mailový kontakt
+        /// </summary>
+        [CsvField("agency_email", 7, CsvFieldPostProcess.Quote)]
+        public string Email { get; set; }
+
         public override string ToString()
         {
             return $"{Id} {Name}";

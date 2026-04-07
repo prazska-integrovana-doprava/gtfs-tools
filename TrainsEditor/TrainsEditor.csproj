@@ -113,6 +113,10 @@
     <Compile Include="ExportModel\TrainTrip.cs" />
     <Compile Include="GtfsExport\Loggers.cs" />
     <Compile Include="Settings.cs" />
+    <Compile Include="SystemDescriptionModel\Agency.cs" />
+    <Compile Include="SystemDescriptionModel\Route.cs" />
+    <Compile Include="SystemDescriptionModel\Station.cs" />
+    <Compile Include="SystemDescriptionModel\SystemData.cs" />
     <Compile Include="TextWindow.xaml.cs">
       <DependentUpon>TextWindow.xaml</DependentUpon>
     </Compile>
@@ -195,11 +199,11 @@
       <Name>AswModel</Name>
     </ProjectReference>
     <ProjectReference Include="..\CommonLibrary\CommonLibrary.csproj">
-      <Project>{0d03b588-9405-4dc4-9cef-2b6f3fd41416}</Project>
+      <Project>{43509328-ca87-4cd8-b6c7-ca80385ea0a5}</Project>
       <Name>CommonLibrary</Name>
     </ProjectReference>
     <ProjectReference Include="..\CsvSerializer\CsvSerializer.csproj">
-      <Project>{e7b3ffbc-ae55-4612-90ce-38bae11d087b}</Project>
+      <Project>{9d341936-f936-4748-956f-be13f4f88dd8}</Project>
       <Name>CsvSerializer</Name>
     </ProjectReference>
     <ProjectReference Include="..\CzpttModel\CzpttModel.csproj">
@@ -207,11 +211,11 @@
       <Name>CzpttModel</Name>
     </ProjectReference>
     <ProjectReference Include="..\GtfsLogging\GtfsLogging.csproj">
-      <Project>{6e305575-db41-4baf-9112-baf5ed6ef863}</Project>
+      <Project>{3b149374-edec-4d91-974c-828d0a58ba21}</Project>
       <Name>GtfsLogging</Name>
     </ProjectReference>
     <ProjectReference Include="..\GtfsModel\GtfsModel.csproj">
-      <Project>{efa7bf8a-d351-4e97-8562-4dea7767a377}</Project>
+      <Project>{39ac442c-2e48-4148-979e-6f8effc6a8d5}</Project>
       <Name>GtfsModel</Name>
     </ProjectReference>
     <ProjectReference Include="..\ShapeManager\ShapeManager.csproj">

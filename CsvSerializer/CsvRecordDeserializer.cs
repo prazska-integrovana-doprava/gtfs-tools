@@ -22,13 +22,15 @@ namespace CsvSerializer
         private char separator;
         private CultureInfo cultureInfo;
         private string dateTimeFormat;
+        private string lineSeparator;
 
-        public CsvRecordDeserializer(TextReader reader, char separator, CultureInfo cultureInfo, string dateTimeFormat)
+        public CsvRecordDeserializer(TextReader reader, char separator, CultureInfo cultureInfo, string dateTimeFormat, string lineSeparator)
         {
             this.reader = reader;
             this.separator = separator;
             this.cultureInfo = cultureInfo;
             this.dateTimeFormat = dateTimeFormat;
+            this.lineSeparator = lineSeparator;
         }
 
         /// <summary>
@@ -40,7 +42,7 @@ namespace CsvSerializer
             var membersDictionary = members.ToDictionary(m => m.Attribute.Name);
             membersOrdered = new List<MemberAndAttribute>();
 
-            var headers = reader.ReadLine().Split(separator);
+            var headers = ReadLine().Split(separator);
             
             foreach (var header in headers)
             {
@@ -80,7 +82,7 @@ namespace CsvSerializer
             }
 
             var result = new T();
-            var line = reader.ReadLine();
+            var line = ReadLine();
             if (string.IsNullOrWhiteSpace(line))
             {
                 return default(T);
@@ -102,6 +104,17 @@ namespace CsvSerializer
             }
 
             return result;
+        }
+
+        private string ReadLine()
+        {
+            var line = reader.ReadLine();
+            if (line != null && !string.IsNullOrEmpty(lineSeparator) && line.EndsWith(lineSeparator))
+            {
+                line = line.Substring(0, line.Length - lineSeparator.Length);
+            }
+
+            return line;
         }
 
         // zapíše hodnotu do instance

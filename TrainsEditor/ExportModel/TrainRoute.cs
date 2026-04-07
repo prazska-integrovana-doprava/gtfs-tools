@@ -10,6 +10,8 @@ namespace TrainsEditor.ExportModel
     /// </summary>
     class TrainRoute : Route
     {
+        public string RouteId { get; set; }
+
         /// <summary>
         /// Nastaveno na true, pokud existuje nějaký spoj této linky
         /// </summary>

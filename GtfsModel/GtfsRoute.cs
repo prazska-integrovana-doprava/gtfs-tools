@@ -30,8 +30,14 @@ namespace GtfsModel
         /// <summary>
         /// Trasa linky
         /// </summary>
-        [CsvField("route_long_name", 4, CsvFieldPostProcess.Quote)]
+        [CsvField("route_long_name", 4, CsvFieldPostProcess.Quote, null, CsvColumnPresence.OmitColumntIfEmpty)]
         public string LongName { get; set; }
+
+        /// <summary>
+        /// Popis linky
+        /// </summary>
+        [CsvField("route_desc", 5, CsvFieldPostProcess.Quote, null, CsvColumnPresence.OmitColumntIfEmpty)]
+        public string Description { get; set; }
 
         /// <summary>
         /// Druh dopravy dle číselníku GTFS
@@ -42,7 +48,7 @@ namespace GtfsModel
         /// <summary>
         /// URL s detailem linky
         /// </summary>
-        [CsvField("route_url", 7, CsvFieldPostProcess.Quote)]
+        [CsvField("route_url", 7, CsvFieldPostProcess.Quote, null, CsvColumnPresence.OmitColumntIfEmpty)]
         public string Url { get; set; }
 
         /// <summary>
@@ -60,20 +66,20 @@ namespace GtfsModel
         /// <summary>
         /// Indikace, zda jde o noční linku
         /// </summary>
-        [CsvField("is_night", 62)]
-        public bool IsNight { get; set; }
+        [CsvField("is_night", 62, CsvFieldPostProcess.None, null, CsvColumnPresence.OmitColumntIfEmpty)]
+        public bool? IsNight { get; set; }
 
         /// <summary>
         /// Indikace, zda jde o příměstskou nebo regionální linku
         /// </summary>
-        [CsvField("is_regional", 63)]
-        public bool IsRegional { get; set; }
+        [CsvField("is_regional", 63, CsvFieldPostProcess.None, null, CsvColumnPresence.OmitColumntIfEmpty)]
+        public bool? IsRegional { get; set; }
 
         /// <summary>
         /// Indikace, zda jde o linku náhradní dopravy
         /// </summary>
-        [CsvField("is_substitute_transport", 64)]
-        public bool IsSubstituteTransport { get; set; }
+        [CsvField("is_substitute_transport", 64, CsvFieldPostProcess.None, null, CsvColumnPresence.OmitColumntIfEmpty)]
+        public bool? IsSubstituteTransport { get; set; }
         
         public override string ToString()
         {

@@ -6,7 +6,7 @@ namespace CommonLibrary
 {
     // TODO deprekováno, používá se už jen ve StopTimeGenu pro vláčky (je to tam přesně k něčemu?)
 
-    public class DaysOfWeekCalendars
+    public class DaysOfWeekCalendars__
     {
         /// <summary>
         /// Výjimky - výhledově importovat odněkud?
@@ -119,16 +119,16 @@ namespace CommonLibrary
         /// U vlaků je trochu jiné zacházení, tam bereme jen ty výjimky, kde se z pracovního dne dělá víkend, na transformace typu
         /// čtvrtek => pátek nebo neděle => sobota se kašle, protože ty vlaky si stejně jezdí, jak chtějí, takže se to pak vyřeší konkrétními poznámkami.
         /// </summary>
-        public static DaysOfWeekCalendar TrainsInstance = new DaysOfWeekCalendar(
+        public static DaysOfWeekCalendar__ TrainsInstance = new DaysOfWeekCalendar__(
             DayExceptions.Where(
-                e => DaysOfWeekCalendar.IsWorkday(e.Key.DayOfWeek) && !DaysOfWeekCalendar.IsWorkday(e.Value)).ToDictionary(e => e.Key, e => e.Value),
+                e => DaysOfWeekCalendar__.IsWorkday(e.Key.DayOfWeek) && !DaysOfWeekCalendar__.IsWorkday(e.Value)).ToDictionary(e => e.Key, e => e.Value),
             MaxDate);
     }
 
     /// <summary>
     /// Zajišťuje převod datumu do provozního dne se započítáním svátků dle kalendáře PID
     /// </summary>
-    public class DaysOfWeekCalendar
+    public class DaysOfWeekCalendar__
     {
         /// <summary>
         /// Výjimky
@@ -148,7 +148,7 @@ namespace CommonLibrary
         /// </summary>
         public DateTime MaxDate { get; private set; }
 
-        public DaysOfWeekCalendar(IDictionary<DateTime, DayOfWeek> dayExceptions, DateTime maxDate)
+        public DaysOfWeekCalendar__(IDictionary<DateTime, DayOfWeek> dayExceptions, DateTime maxDate)
         {
             DayExceptions = dayExceptions;
             MaxDate = maxDate;

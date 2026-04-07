@@ -97,11 +97,11 @@
       <Name>AswModel</Name>
     </ProjectReference>
     <ProjectReference Include="..\CommonLibrary\CommonLibrary.csproj">
-      <Project>{0d03b588-9405-4dc4-9cef-2b6f3fd41416}</Project>
+      <Project>{43509328-ca87-4cd8-b6c7-ca80385ea0a5}</Project>
       <Name>CommonLibrary</Name>
     </ProjectReference>
     <ProjectReference Include="..\GtfsLogging\GtfsLogging.csproj">
-      <Project>{6e305575-db41-4baf-9112-baf5ed6ef863}</Project>
+      <Project>{3b149374-edec-4d91-974c-828d0a58ba21}</Project>
       <Name>GtfsLogging</Name>
     </ProjectReference>
   </ItemGroup>

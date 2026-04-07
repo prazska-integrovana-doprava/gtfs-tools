@@ -30,7 +30,7 @@ namespace GtfsModel.Extended
 
         public Dictionary<string, Trip> Trips { get; set; }
         
-        public Dictionary<string, CalendarRecord> Calendar { get; set; }
+        public Dictionary<string, BaseCalendarRecord> Calendar { get; set; }
 
         public Dictionary<string, Shape> Shapes { get; set; }
 
@@ -44,7 +44,7 @@ namespace GtfsModel.Extended
             Stops = new Dictionary<string, BaseStop>();
             Routes = new Dictionary<string, Route>();
             Trips = new Dictionary<string, Trip>();
-            Calendar = new Dictionary<string, CalendarRecord>();
+            Calendar = new Dictionary<string, BaseCalendarRecord>();
             Shapes = new Dictionary<string, Shape>();
             Transfers = new List<BaseTransfer>();
         }
@@ -228,7 +228,7 @@ namespace GtfsModel.Extended
             return new GtfsFeed()
             {
                 Agency = Agency.Values.ToList(),
-                Calendar = Calendar.Values.Select(cal => cal.ToGtfsCalendar()).ToList(),
+                Calendar = Calendar.Values.Where(cal => cal is CalendarRecord).Select(cal => ((CalendarRecord)cal).ToGtfsCalendar()).ToList(),
                 CalendarDates = Calendar.Values.SelectMany(cal => cal.Exceptions.Values.Select(ex => ex.ToGtfsCalendarDate(cal.GtfsId))).ToList(),
                 FeedInfo = FeedInfo != null ? new List<GtfsFeedInfo>() { FeedInfo } : new List<GtfsFeedInfo>(),
                 Routes = Routes.Values.Select(r => r.ToGtfsRoute(Agency.Values.First().Id)).ToList(),

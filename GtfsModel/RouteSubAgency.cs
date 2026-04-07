@@ -23,7 +23,7 @@ namespace GtfsModel
         /// ID dopravce
         /// </summary>
         [CsvField("sub_agency_id", 3)]
-        public int SubAgencyId { get; set; }
+        public string SubAgencyId { get; set; }
 
         /// <summary>
         /// Název dopravce

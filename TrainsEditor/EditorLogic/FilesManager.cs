@@ -8,6 +8,7 @@ using TrainsEditor.ExportModel;
 using TrainsEditor.ViewModel;
 using TrainsEditor.CommonLogic;
 using TrainsEditor.CommonModel;
+using CommonLibrary;
 
 namespace TrainsEditor.EditorLogic
 {
@@ -31,15 +32,15 @@ namespace TrainsEditor.EditorLogic
         /// <param name="endDateForVisualCalendar">Koncové datum pro vizuální kalendář (viz <see cref="CalendarVisualBitmap"/>)</param>
         /// <param name="reportCallback">Callback pro report stavu, který zároveň umožňuje zrušit operaci. Používáme callback <see cref="CommonLogic.TrainGroupLoader"/>u. Protože načítání dat probíhá ve dvou fázích (nejdřív načtení do <see cref="TrainGroupCollection"/> a pak transformace do ViewModelu) a první fáze probíhá uvnitř <see cref="CommonLogic.TrainGroupLoader"/>u, reportuje se navenek stav postupně od 0 do 100 v první fázi a pak znovu od 0 do 100 v druhé fázi (transformace). Zároveň fázi transformace nejde zrušit, dokončí se vždy se všemi soubory, které se načetly v první fázi.</param>
         /// <returns>ViewModely načtených vlaků</returns>
-        public static IEnumerable<AbstractTrainFile> LoadTrainFiles(string folder, DateTime? pastDataLimit, StationDatabase stationDatabase, RouteDatabase routeDatabase,
-            DateTime? startDateForVisualCalendar, DateTime? endDateForVisualCalendar, TrainGroupLoader.TrainsLoaderCallback reportCallback = null)
+        public static IEnumerable<AbstractTrainFile> LoadTrainFiles(string folder, DateTime? pastDataLimit, StationDatabase stationDatabase, RouteDatabase routeDatabase, PublicHolidaysCalendar holidaysCalendar,
+            DateTime? startDateForVisualCalendar, DateTime? endDateForVisualCalendar, IntegratedSystemsEnum currentIntegratedSystem, TrainGroupLoader.TrainsLoaderCallback reportCallback = null)
         {
             var groupsByTrId = TrainGroupLoader.LoadTrainFiles(folder, pastDataLimit, reportCallback);
             var loadedFiles = new List<AbstractTrainFile>();
             int nLoaded = 0;
             foreach (var group in groupsByTrId.OrderBy(gr => gr.MinimumNonzeroTrainNumber))
             {
-                var transformedGroup = group.TrainFiles.Select(tr => TransformFile(tr, stationDatabase, routeDatabase)).ToArray();
+                var transformedGroup = group.TrainFiles.Select(tr => TransformFile(tr, stationDatabase, routeDatabase, holidaysCalendar, currentIntegratedSystem)).ToArray();
                 ResetOverwrittingAndOriginalTrains(transformedGroup);
                 loadedFiles.AddRange(transformedGroup);
                 reportCallback?.Invoke(++nLoaded, groupsByTrId.GroupCount, out bool shouldResume);
@@ -57,7 +58,7 @@ namespace TrainsEditor.EditorLogic
         }
 
         // Transformuje soubor z CommonModelu do ViewModelu
-        private static AbstractTrainFile TransformFile(SingleTrainFile trainFile, StationDatabase stationDb, RouteDatabase routeDb)
+        private static AbstractTrainFile TransformFile(SingleTrainFile trainFile, StationDatabase stationDb, RouteDatabase routeDb, PublicHolidaysCalendar holidaysCalendar, IntegratedSystemsEnum currentIntegratedSystem)
         {
             if (trainFile.IsCancelation)
             {
@@ -65,7 +66,7 @@ namespace TrainsEditor.EditorLogic
             }
             else
             {
-                return new TrainFile(trainFile, stationDb, routeDb);
+                return new TrainFile(trainFile, stationDb, routeDb, holidaysCalendar, currentIntegratedSystem);
             }
         }
 
@@ -75,10 +76,10 @@ namespace TrainsEditor.EditorLogic
         /// <param name="trainFile">Soubor s daty vlaku (v něm je uložena i cesta na disku, ze kterého se data přenačtou)</param>
         /// <param name="stationDatabase">Databáze stanic pro určení zejména tarifních pásem a ASW ID.</param>
         /// <param name="routeDb">Databáze linek pro určení dopravců a tras</param>
-        public static void ReloadFile(AbstractTrainFile trainFile, StationDatabase stationDatabase, RouteDatabase routeDb)
+        public static void ReloadFile(AbstractTrainFile trainFile, StationDatabase stationDatabase, RouteDatabase routeDb, IntegratedSystemsEnum currentIntegratedSystem)
         {
             var reloadedFileData = TrainGroupLoader.ReloadFile(trainFile.FileData);
-            trainFile.ResetData(reloadedFileData, stationDatabase, routeDb);
+            trainFile.ResetData(reloadedFileData, stationDatabase, routeDb, currentIntegratedSystem);
 
             if (reloadedFileData.OwnerGroup != trainFile.FileData.OwnerGroup)
             {
@@ -178,13 +179,13 @@ namespace TrainsEditor.EditorLogic
         /// <param name="stationDatabase">Databáze stanic pro určení tarifních pásem a ASW ID</param>
         /// <param name="routeDatabase">Databáze linek pro určení dopravců, tras a ASW ID</param>
         /// <returns>Duplikovaný vlak</returns>
-        public static AbstractTrainFile DuplicateFile(AbstractTrainFile train, DateTime newStartDate, DateTime newEndDate, StationDatabase stationDatabase, RouteDatabase routeDatabase)
+        public static AbstractTrainFile DuplicateFile(AbstractTrainFile train, DateTime newStartDate, DateTime newEndDate, StationDatabase stationDatabase, RouteDatabase routeDatabase, PublicHolidaysCalendar holidaysCalendar, IntegratedSystemsEnum currentIntegratedSystem)
         {
             var newFileName = Path.ChangeExtension(Path.ChangeExtension(train.FullPath, null) + $"_{DateTime.Now:yyyyMMdd_HHmmss}", Path.GetExtension(train.FullPath));
             File.Copy(train.FullPath, newFileName);
             var fileData = TrainGroupLoader.LoadAnotherFile(newFileName);
             // TODO TODO TODO
-            var loadedFile = TransformFile(fileData, stationDatabase, routeDatabase);
+            var loadedFile = TransformFile(fileData, stationDatabase, routeDatabase, holidaysCalendar, currentIntegratedSystem);
             loadedFile.CreationDate = DateTime.Now;
             loadedFile.Calendar.ResizeBitmap(newStartDate, newEndDate, false);
             loadedFile.OriginalTrains = train.OriginalTrains.Union(new[] { train }).Union(train.OverwrittingTrains).ToList();

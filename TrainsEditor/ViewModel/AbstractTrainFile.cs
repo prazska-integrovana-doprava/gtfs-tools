@@ -134,7 +134,7 @@ namespace TrainsEditor.ViewModel
         /// Znovu nastaví data ze souboru (přemaže údaje v této instanci údaji ze zadaného souboru)
         /// </summary>
         /// <param name="fileData">Data souboru vlaku</param>
-        public virtual void ResetData(SingleTrainFile fileData, StationDatabase stationDb, RouteDatabase routeDb)
+        public virtual void ResetData(SingleTrainFile fileData, StationDatabase stationDb, RouteDatabase routeDb, IntegratedSystemsEnum currentIntegratedSystem)
         {
             FileData = fileData;
         }

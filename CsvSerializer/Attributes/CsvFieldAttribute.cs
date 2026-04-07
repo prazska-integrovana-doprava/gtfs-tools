@@ -19,6 +19,23 @@ namespace CsvSerializer.Attributes
     }
 
     /// <summary>
+    /// Udává, zda při vypisování dat do souboru musí být sloupeček vždy přítomen
+    /// </summary>
+    public enum CsvColumnPresence
+    {
+        /// <summary>
+        /// Sloupec bude ve výstupu vždy, i když obsahuje jen prázdné nebo default hodnoty
+        /// </summary>
+        AlwaysPrintColumn,
+
+        /// <summary>
+        /// Sloupec ve výstupním souboru nebude, pokud všechny řádky obsahují prázdnou nebo default hodnotu.
+        /// Jakmile je u alespoň jednoho sloupce uveden, při ukládání do souboru se vždy musí nejdříve enumerovat zapisovaná data.
+        /// </summary>
+        OmitColumntIfEmpty,
+    }
+
+    /// <summary>
     /// Označuje member field, který se má ukládat do CSV
     /// </summary>
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false)]
@@ -41,16 +58,22 @@ namespace CsvSerializer.Attributes
         public CsvFieldPostProcess PostProcess { get; set; }
 
         /// <summary>
+        /// Udává, zda při vypisování dat do souboru má být sloupec uváděn vždy, nebo podmínečně. Nemá vliv na čtení dat ze souboru.
+        /// </summary>
+        public CsvColumnPresence ColumnPresence { get; set; }
+
+        /// <summary>
         /// Pokud je hodnota uložená v políčku rovna této, uloží se prázdný řetězec. Naopak při načítání se prázdný řetězec interpretuje jako tato hodnota
         /// </summary>
         public object DefaultValue { get; set; }
 
-        public CsvFieldAttribute(string name, int order, CsvFieldPostProcess postProcess = CsvFieldPostProcess.None, object defaultValue = null)
+        public CsvFieldAttribute(string name, int order, CsvFieldPostProcess postProcess = CsvFieldPostProcess.None, object defaultValue = null, CsvColumnPresence csvColumnPresence = CsvColumnPresence.AlwaysPrintColumn)
         {
             Name = name;
             Order = order;
             PostProcess = postProcess;
             DefaultValue = defaultValue;
+            ColumnPresence = csvColumnPresence;
         }
     }
 }
