@@ -119,5 +119,14 @@ namespace TrainsEditor.Properties {
                 return ((string)(this["StopsAndLinesFileName"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("c:\\temp\\jrspoje\\GVD\\fare_km.csv")]
+        public string FareKmFile {
+            get {
+                return ((string)(this["FareKmFile"]));
+            }
+        }
     }
 }

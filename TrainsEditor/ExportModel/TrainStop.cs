@@ -19,11 +19,6 @@ namespace TrainsEditor.ExportModel
         public bool IsIntegrated { get; set; }
 
         /// <summary>
-        /// Všechna pásma všech tarifních systémů
-        /// </summary>
-        public AswModel.Extended.ZoneInfo[] ZoneIds { get; set; }
-
-        /// <summary>
         /// Všechny přestupní ikonky pro zastávku. Protože jde o atribut k zastávce, je potřeba je ještě profiltrovat podle času (třeba přestup na metro ve 2:00 by se neměl aplikovat).
         /// </summary>
         public TransferIcons[] AllTransferIcons { get; set; }

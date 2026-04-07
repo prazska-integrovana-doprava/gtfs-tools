@@ -87,7 +87,9 @@ namespace GtfsModel.Functions
                 times = $"{stopTime.ArrivalTime}-{stopTime.DepartureTime}";
             }
 
-            return $"{stopTime.Stop.Name} [{stopTime.Stop.ZoneId}] {times}";
+            var fareKilometers = stopTime.FareKilometerDistance.HasValue ? $", {stopTime.FareKilometerDistance} km" : "";
+
+            return $"{stopTime.Stop.Name} [{stopTime.Stop.ZoneId}] {times}{fareKilometers}";
         }
     }
 }

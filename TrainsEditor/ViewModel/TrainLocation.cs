@@ -61,14 +61,7 @@ namespace TrainsEditor.ViewModel
         {
             get
             {
-                if (AdditionalStationData?.ZoneIds != null)
-                {
-                    return string.Join<AswModel.Extended.ZoneInfo>(", ", AdditionalStationData.ZoneIds);
-                }
-                else
-                {
-                    return "";
-                }
+                return AdditionalStationData?.ZoneId;
             }
         }
 

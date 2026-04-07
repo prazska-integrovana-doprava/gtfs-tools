@@ -96,9 +96,8 @@ namespace TrainsEditor.ExportModel
         /// </summary>
         /// <param name="aswStops">Obsah číselníku zastávek z ASW</param>
         /// <param name="sr70fileName">Soubor CSV obsahující číselník SR 70 SŽDC</param>
-        /// <param name="rewriteRules">Stanice uložené v číselníku ASW jinak, než jsou použity v datech SŽDC zde mohou mít uvedeny aliasy (stanice je pak v databázi pod všemi známými identifikátory)</param>
         /// <returns>Databáze s načtenými stanicemi</returns>
-        public static StationDatabase CreateStationDb(AswModel.Extended.StopDatabase aswStops, string sr70fileName, IDictionary<int, int> rewriteRules)
+        public static StationDatabase CreateStationDb(AswModel.Extended.StopDatabase aswStops, string sr70fileName)
         {
             // I. číselník SR 70
             var allTrainStopsDictionary = LoadSR70Data(sr70fileName);
@@ -126,7 +125,6 @@ namespace TrainsEditor.ExportModel
                         GpsLatitude = aswStopFirstVersion.Position.GpsLatitude,
                         GpsLongitude = aswStopFirstVersion.Position.GpsLongitude,
                     },
-                    ZoneIds = aswStopFirstVersion.Zones,
                     ZoneId = aswStopFirstVersion.PidZoneId,
                     ZoneRegionType = aswStopFirstVersion.ZoneRegionType,
                     WheelchairBoarding = FromAswWheelchairAccessibility(aswStopFirstVersion.WheelchairAccessibility),
@@ -148,25 +146,6 @@ namespace TrainsEditor.ExportModel
                         log.Log(LogMessageType.WARNING_TRAIN_STOP_CONFLICT, $"Stanice {trainStop.Name} - konfliktní záznamy (liší se název, uzel, pásmo nebo pozice)");
                     }
                 }
-            }
-
-            // IIa. rewrite pravidla (kde máme jiná CIS čísla)
-            foreach (var rewriteRule in rewriteRules)
-            {
-                var knownStop = trainStopsFromAsw.GetValueOrDefault(LocationIdent.CountryCodeCZ + rewriteRule.Value);
-                if (knownStop == null)
-                {
-                    log.Log(LogMessageType.WARNING_TRAIN_STOP_REWRITE_NOT_APPLIED, $"Stanice s CIS kódem {rewriteRule.Value} nebyla načtena. Pravidlo přepisu na {rewriteRule.Key} nebylo použito.");
-                    continue;
-                }
-
-                if (trainStopsFromAsw.ContainsKey(LocationIdent.CountryCodeCZ + rewriteRule.Key))
-                {
-                    log.Log(LogMessageType.WARNING_TRAIN_STOP_REWRITE_NOT_APPLIED, $"Stanice s CIS kódem {rewriteRule.Key} již byla načtena. Pravidlo přepisu z {rewriteRule.Value} na {rewriteRule} nebylo použito.");
-                    continue;
-                }
-
-                trainStopsFromAsw.Add(LocationIdent.CountryCodeCZ + rewriteRule.Key, knownStop);
             }
 
             // data načtená z ASW přebíjí data ze SR70
@@ -242,6 +221,33 @@ namespace TrainsEditor.ExportModel
             }
 
             return new StationDatabase(trainStopsFromStationData, allTrainStopsDictionary);
+        }
+
+        /// <summary>
+        /// Aplikuje pravidla přepisu, když SŽ někde používá jiný čísla, než očekáváme
+        /// </summary>
+        /// <param name="rewriteRules">Stanice uložené v číselníku ASW jinak, než jsou použity v datech SŽDC zde mohou mít uvedeny aliasy (stanice je pak v databázi pod všemi známými identifikátory)</param>
+        public void ApplyRewriteRules(IDictionary<int, int> rewriteRules)
+        {
+            // IIa. rewrite pravidla (kde máme jiná CIS čísla)
+            foreach (var rewriteRule in rewriteRules)
+            {
+                var knownStop = AllStops.GetValueOrDefault(LocationIdent.CountryCodeCZ + rewriteRule.Value);
+                if (knownStop == null)
+                {
+                    log.Log(LogMessageType.WARNING_TRAIN_STOP_REWRITE_NOT_APPLIED, $"Stanice s CIS kódem {rewriteRule.Value} nebyla načtena. Pravidlo přepisu na {rewriteRule.Key} nebylo použito.");
+                    continue;
+                }
+
+                if (StopsFromSystem.ContainsKey(LocationIdent.CountryCodeCZ + rewriteRule.Key))
+                {
+                    log.Log(LogMessageType.WARNING_TRAIN_STOP_REWRITE_NOT_APPLIED, $"Stanice s CIS kódem {rewriteRule.Key} již byla načtena. Pravidlo přepisu z {rewriteRule.Value} na {rewriteRule} nebylo použito.");
+                    continue;
+                }
+
+                StopsFromSystem.Add(LocationIdent.CountryCodeCZ + rewriteRule.Key, knownStop);
+                AllStops[LocationIdent.CountryCodeCZ + rewriteRule.Key] = knownStop;
+            }
         }
 
         private static Dictionary<string, TrainStop> LoadSR70Data(string sr70fileName)

@@ -93,7 +93,7 @@ namespace TrainsEditor
             if (!string.IsNullOrEmpty(Settings.Default.StopsAndLinesFileNameAsw))
             {
                 AswXmlData = TheAswDatabase.Construct(false, Settings.Default.StopsAndLinesFileNameAsw);
-                StationDatabase = StationDatabase.CreateStationDb(AswXmlData.Stops, Settings.Default.SR70Stops, CorrectionConfig.RewriteStations);
+                StationDatabase = StationDatabase.CreateStationDb(AswXmlData.Stops, Settings.Default.SR70Stops);
                 RouteDatabase = RouteDatabase.CreateRouteDb(AswXmlData.Lines);
                 currentIntegratedSystem = IntegratedSystemsEnum.PID;
             }
@@ -106,6 +106,8 @@ namespace TrainsEditor
                 RouteDatabase = RouteDatabase.CreateRouteDb(systemData.Routes, systemData.Agencies);
                 currentIntegratedSystem = (IntegratedSystemsEnum)Enum.Parse(typeof(IntegratedSystemsEnum), systemData.SystemName);
             }
+
+            StationDatabase.ApplyRewriteRules(CorrectionConfig.RewriteStations);
 
             Loggers.CloseAswDataLoggers();
 
@@ -507,7 +509,7 @@ namespace TrainsEditor
             var writer = new StringWriter();
             try
             {
-                var finished = gtfsExportModule.Run(Settings.Default.TrackNetworkFile, Settings.Default.OutputFolder, Settings.Default.LogFolder, writer, LoadTrainFilesCallback);
+                var finished = gtfsExportModule.Run(Settings.Default.TrackNetworkFile, Settings.Default.FareKmFile, Settings.Default.OutputFolder, Settings.Default.LogFolder, writer, LoadTrainFilesCallback);
                 e.Result = new BackgroundGtfsGenerateResult()
                 {
                     Finished = finished,
@@ -794,6 +796,12 @@ namespace TrainsEditor
             var gtfsExportModule = new GtfsExportModule(StationDatabase, RouteDatabase, Settings.Default.RepresentativeTrips, null, FilesManager.TrainGroupLoader, holidaysCalendar, currentIntegratedSystem, new CommonLogger(writer), new SimpleLogger(writer), new SimpleLogger(writer));
             var calendarConstructor = new CalendarConstructor(gtfsExportModule.ReferenceStartDate, holidaysCalendar);
             var transformedTrains = gtfsExportModule.TransformTrains(trainGroupCollection, calendarConstructor, writer);
+
+            if (!string.IsNullOrEmpty(Settings.Default.FareKmFile))
+            {
+                var fareKmDb = FareKilometerDatabase.Create(Settings.Default.FareKmFile, StationDatabase, null);
+                fareKmDb.ProcessTrips(transformedTrains);
+            }
 
             var trainGtfsTexts = transformedTrains.Select(tr => VerboseDescriptor.DescribeTrip(tr));
             TextWindow.ShowTextInfo(string.Join("\n\n", trainGtfsTexts) + "\n\n------------------\n\n" + writer.ToString());

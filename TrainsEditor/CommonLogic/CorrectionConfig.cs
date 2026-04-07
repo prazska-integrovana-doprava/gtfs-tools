@@ -29,7 +29,8 @@ namespace TrainsEditor.CommonLogic
         public static readonly Dictionary<int, int> RewriteStations = new Dictionary<int, int>()
         {
             { 58117, 58486 }, // Praha-Smíchov sev.n.
-            { 58000, 54044 } // Čáslav (místní nádraží)
+            { 58000, 54044 }, // Čáslav (místní nádraží)
+            { 38034, 34364 }, // Ostrava uhelné nádraží
         };
     }
 }

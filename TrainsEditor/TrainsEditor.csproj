@@ -78,6 +78,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="CommonLogic\FareKilometerDatabase.cs" />
     <Compile Include="CommonLogic\IntegratedSystemsEnum.cs" />
     <Compile Include="CommonLogic\IntegratedSystemsExtensions.cs" />
     <Compile Include="CommonLogic\TrainNetworkSpecificParamsProvider.cs" />

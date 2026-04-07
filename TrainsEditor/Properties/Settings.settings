@@ -51,5 +51,8 @@
     <Setting Name="StopsAndLinesFileName" Type="System.String" Scope="Application">
       <Value Profile="(Default)">c:\temp\jrspoje\GVD\VlakyOdis.xml</Value>
     </Setting>
+    <Setting Name="FareKmFile" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">c:\temp\jrspoje\GVD\fare_km.csv</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

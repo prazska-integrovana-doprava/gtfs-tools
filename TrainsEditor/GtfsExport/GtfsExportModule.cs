@@ -88,10 +88,11 @@ namespace TrainsEditor.GtfsExport
         /// Spustí generování GTFS ze složky. Načte data do modelu <see cref="TrainGroupCollection"/> a následně jej transformuje do GTFS.
         /// </summary>
         /// <param name="mapNetworkFileName">Soubor se sítí vlaků (pro trasy)</param>
+        /// <param name="fareKmFileName">Soubor definující tarifní kilometráž (nemusí být zadáno, pak se km nebudou počítat)</param>
         /// <param name="outputFolder">Složka, kam mají být uloženy GTFS soubory</param>
         /// <param name="logPath">Složka, kam se budou ukládat logy</param>
         /// <param name="reportCallback">Callback, kam se hlásí progress a může zrušit načítání dat</param>
-        public bool Run(string mapNetworkFileName, string outputFolder, string logPath, TextWriter console, TrainGroupLoader.TrainsLoaderCallback reportCallback = null)
+        public bool Run(string mapNetworkFileName, string fareKmFileName, string outputFolder, string logPath, TextWriter console, TrainGroupLoader.TrainsLoaderCallback reportCallback = null)
         {
             var calendarConstructor = new CalendarConstructor(ReferenceStartDate, _holidaysCalendar);
             console.WriteLine("Načítání vlaků...");
@@ -113,6 +114,13 @@ namespace TrainsEditor.GtfsExport
             {
                 console.WriteLine("PŘERUŠENO");
                 return false;
+            }
+
+            if (!string.IsNullOrEmpty(fareKmFileName))
+            {
+                console.WriteLine("Doplnění tarifních kilometrů...");
+                var fareKmDb = FareKilometerDatabase.Create(fareKmFileName, _stopDatabase, loaderLog);
+                fareKmDb.ProcessTrips(trainTrips);
             }
 
             console.WriteLine("Výpis vlaků do logu...");
