@@ -5,6 +5,7 @@ using CommonLibrary;
 using CommonLibrary.DotNet48;
 using GtfsLogging;
 using GtfsModel.Extended;
+using static ShapeManager.ShapeConstructor;
 
 namespace ShapeManager
 {
@@ -127,27 +128,24 @@ namespace ShapeManager
         /// <param name="log">Log, kam se zapisují nestandardní události během mapování</param>
         private Dictionary<Stop, ShapeConstructor.Point> MapStationsOnNetwork(IEnumerable<Stop> stations, ICommonLogger log)
         {
-            var edgeSplit = shapeConstructor.AllEdges.ToDictionary(e => e, e => SplitEdgeToParts(e));
             var stationClosestPoints = new Dictionary<Stop, ShapeConstructor.Point>();
             foreach (var station in stations)
             {
                 // hrany s alespoň jedním krajním bodem nedaleko hledané stanice
-                var closeEdges = shapeConstructor.AllEdges.Where(e => MapFunctions.DistanceMeters(e.Item1.Gps.GpsLatitude, e.Item1.Gps.GpsLongitude, station.Position.GpsLatitude, station.Position.GpsLongitude) < MaxEdgeDistance
-                                                  || MapFunctions.DistanceMeters(e.Item2.Gps.GpsLatitude, e.Item2.Gps.GpsLongitude, station.Position.GpsLatitude, station.Position.GpsLongitude) < MaxEdgeDistance);
+                var closeEdges = shapeConstructor.AllEdges.Where(e => MapFunctions.DistanceMeters(e.From.Gps.GpsLatitude, e.From.Gps.GpsLongitude, station.Position.GpsLatitude, station.Position.GpsLongitude) < MaxEdgeDistance
+                                                  || MapFunctions.DistanceMeters(e.To.Gps.GpsLatitude, e.To.Gps.GpsLongitude, station.Position.GpsLatitude, station.Position.GpsLongitude) < MaxEdgeDistance);
                 var closestCoordinate = new GpsCoordinates();
-                Tuple<ShapeConstructor.Point, ShapeConstructor.Point> closestEdge = null;
+                ShapeConstructor.Edge closestEdge = null;
                 double minDistance = double.MaxValue;
                 foreach (var edge in closeEdges)
                 {
-                    foreach (var point in edgeSplit[edge])
+                    var point = GetClosestPointOnEdge(edge, station.Position);
+                    var dist = MapFunctions.DistanceMeters(point.GpsLatitude, point.GpsLongitude, station.Position.GpsLatitude, station.Position.GpsLongitude);
+                    if (dist < minDistance)
                     {
-                        var dist = MapFunctions.DistanceMeters(point.GpsLatitude, point.GpsLongitude, station.Position.GpsLatitude, station.Position.GpsLongitude);
-                        if (dist < minDistance)
-                        {
-                            minDistance = dist;
-                            closestCoordinate = point;
-                            closestEdge = edge;
-                        }
+                        minDistance = dist;
+                        closestCoordinate = point;
+                        closestEdge = edge;
                     }
                 }
 
@@ -162,11 +160,19 @@ namespace ShapeManager
                 }
 
                 // vytvoříme uprostřed hrany nový bod
-                var stationPoint = shapeConstructor.CreateNewPointInEdge(closestCoordinate, closestEdge, out var newEdge1, out var newEdge2);
-
-                // ještě smažeme hranu a přidáme místo ní dvě
-                edgeSplit.Add(newEdge1, SplitEdgeToParts(newEdge1));
-                edgeSplit.Add(newEdge2, SplitEdgeToParts(newEdge2));
+                ShapeConstructor.Point stationPoint;
+                if (closestCoordinate.Equals(closestEdge.From.Gps))
+                {
+                    stationPoint = closestEdge.From;
+                }
+                else if (closestCoordinate.Equals(closestEdge.To.Gps))
+                {
+                    stationPoint = closestEdge.To;
+                }
+                else
+                {
+                    stationPoint = shapeConstructor.CreateNewPointInEdge(closestCoordinate, closestEdge, out var newEdge1, out var newEdge2);
+                }
 
                 stationClosestPoints.Add(station, stationPoint);
             }
@@ -174,25 +180,48 @@ namespace ShapeManager
             return stationClosestPoints;
         }
 
-        private static List<GpsCoordinates> SplitEdgeToParts(Tuple<ShapeConstructor.Point, ShapeConstructor.Point> edge)
+        private static GpsCoordinates GetClosestPointOnEdge(Edge edge, GpsCoordinates point)
         {
-            // rozdělíme po metrech
-            var nPoints = 2 + Math.Round(MapFunctions.DistanceMeters(edge.Item1.Gps.GpsLatitude, edge.Item1.Gps.GpsLongitude, edge.Item2.Gps.GpsLatitude, edge.Item2.Gps.GpsLongitude));
-            var result = new List<GpsCoordinates>() { edge.Item1.Gps };
-            for (int i = 1; i < nPoints; i++)
+            var A = edge.From.Gps;
+            var B = edge.To.Gps;
+            var P = point;
+
+            // vektory
+            double ax = A.GpsLatitude;
+            double ay = A.GpsLongitude;
+
+            double bx = B.GpsLatitude;
+            double by = B.GpsLongitude;
+
+            double px = P.GpsLatitude;
+            double py = P.GpsLongitude;
+
+            double abx = bx - ax;
+            double aby = by - ay;
+
+            double apx = px - ax;
+            double apy = py - ay;
+
+            double abSquared = abx * abx + aby * aby;
+
+            // ochrana proti nulové délce
+            if (abSquared == 0)
+                return A;
+
+            double t = (apx * abx + apy * aby) / abSquared;
+
+            // clamp na úsečku
+            t = Math.Max(0, Math.Min(1, t));
+
+            // výsledný bod
+            double closestX = ax + t * abx;
+            double closestY = ay + t * aby;
+
+            return new GpsCoordinates
             {
-                var distancePercentage = (double)i / nPoints;
-                var intermediatePoint = new GpsCoordinates()
-                {
-                    GpsLatitude = edge.Item1.Gps.GpsLatitude * (1 - distancePercentage) + edge.Item2.Gps.GpsLatitude * distancePercentage,
-                    GpsLongitude = edge.Item1.Gps.GpsLongitude * (1 - distancePercentage) + edge.Item2.Gps.GpsLongitude * distancePercentage,
-                };
-
-                result.Add(intermediatePoint);
-            }
-
-            result.Add(edge.Item2.Gps);
-            return result;
+                GpsLatitude = closestX,
+                GpsLongitude = closestY
+            };
         }
 
         private void CopyTraveledDistances(Trip from, Trip to)
