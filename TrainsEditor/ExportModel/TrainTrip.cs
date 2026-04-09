@@ -212,8 +212,8 @@ namespace TrainsEditor.ExportModel
         {
             if (StopTimes.Any())
             {
-                var firstStopTime = WholeTrain.StopTimes.First();
-                var lastStopTime = WholeTrain.StopTimes.Last();
+                var firstStopTime = StopTimes.First();
+                var lastStopTime = StopTimes.Last();
                 return $"{ShortName} ({firstStopTime.Stop.Name} {firstStopTime.DepartureTime} - {lastStopTime.Stop.Name} {lastStopTime.ArrivalTime})";
             }
             else

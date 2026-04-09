@@ -16,6 +16,10 @@ namespace TrainsEditor.SystemDescriptionModel
         [DefaultValue("")]
         public string LongName;
 
+        [XmlAttribute("color")]
+        [DefaultValue("")]
+        public string ColorCodeHtml;
+
         public override string ToString()
         {
             return $"{ShortName} {LongName}";

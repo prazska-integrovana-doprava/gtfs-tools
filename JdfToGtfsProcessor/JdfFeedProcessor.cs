@@ -4,7 +4,6 @@ using GtfsModel;
 using JdfModel;
 using JdfToGtfsProcessor.Calendars;
 using JdfToGtfsProcessor.Stops;
-using System.Globalization;
 
 namespace JdfToGtfsProcessor
 {
@@ -217,6 +216,12 @@ namespace JdfToGtfsProcessor
                     continue;
                 }
 
+                if (jdfFeed.Stops.GetValueOrDefault(routeStop.StopId)?.NamePart3 == "CLO")
+                {
+                    // virtuální hraniční zastávka
+                    continue;
+                }
+
                 var gtfsTrip = trips.GetValueOrDefault((stopTime.RouteId, stopTime.TripNumber));
                 if (gtfsTrip == null)
                 {
@@ -251,7 +256,7 @@ namespace JdfToGtfsProcessor
                 }
 
                 var stopId = stopTime.StopId.ToString() + "_" + stopTime.PlatformCode;
-                var gtfsStop = stopDatabase.GetStopForStopTime(stopTime, routeStop.FareZone, log);
+                var gtfsStop = stopDatabase.GetStopForStopTime(stopTime, OrderZonesByNumericalValue(routeStop.FareZone), log);
                 if (gtfsStop == null)
                 {
                     if (!stopDatabase.IgnoredStopsDueToError.Contains(stopTime.StopId))
@@ -323,6 +328,36 @@ namespace JdfToGtfsProcessor
             {
                 return null;
             }
+        }
+
+        public static string OrderZonesByNumericalValue(string zones)
+        {
+            if (string.IsNullOrWhiteSpace(zones))
+                return string.Empty;
+
+            var numbers = new List<int>();
+            var nonNumbers = new List<string>();
+
+            foreach (var part in zones.Split(','))
+            {
+                var trimmed = part.Trim();
+
+                if (int.TryParse(trimmed, out int number))
+                {
+                    numbers.Add(number);
+                }
+                else if (!string.IsNullOrEmpty(trimmed))
+                {
+                    nonNumbers.Add(trimmed);
+                }
+            }
+
+            var orderedNumbers = numbers.OrderBy(n => n)
+                                        .Select(n => n.ToString());
+
+            var orderedNonNumbers = nonNumbers.OrderBy(s => s, StringComparer.Ordinal);
+
+            return string.Join(",", orderedNumbers.Concat(orderedNonNumbers));
         }
 
     }

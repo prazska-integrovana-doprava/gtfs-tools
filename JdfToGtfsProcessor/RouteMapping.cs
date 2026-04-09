@@ -12,7 +12,7 @@ namespace JdfToGtfsProcessor
         public Dictionary<int, GtfsModel.Extended.Route> JdfRoutesToGtfs { get; private set; }
 
         /// <summary>
-        /// seznam linek indexovaný označením pro cestující
+        /// seznam linek indexovaný jejich ID
         /// </summary>
         public Dictionary<string, GtfsModel.Extended.Route> GtfsRoutes { get; private set; }
 
@@ -53,7 +53,8 @@ namespace JdfToGtfsProcessor
                     log.Log($"Linka {route} nemá záznam v LinExt.txt nebo v něm nemá definovaný alias, používám automaticky poslední tři číslice z licenčního čísla: {routeShortName}");
                 }
 
-                var gtfsRoute = GtfsRoutes.GetValueOrDefault(routeShortName);
+                var gtfsRouteId = route.RouteId.ToString();
+                var gtfsRoute = GtfsRoutes.GetValueOrDefault(gtfsRouteId);
                 if (gtfsRoute != null)
                 {
                     var otherOriginalRoute = reverseMappingFromGtfsToJdf[gtfsRoute];
@@ -74,7 +75,7 @@ namespace JdfToGtfsProcessor
                 {
                     gtfsRoute = new GtfsModel.Extended.Route()
                     {
-                        GtfsId = routeShortName,
+                        GtfsId = gtfsRouteId,
                         Agency = gtfsAgency,
                         LongName = route.RouteDescription,
                         ShortName = routeShortName,
@@ -85,7 +86,7 @@ namespace JdfToGtfsProcessor
                     gtfsRoute.Color = GetRouteColorOdis(gtfsRoute);
                     gtfsRoute.TextColor = GetTextColorOdis(gtfsRoute);
 
-                    GtfsRoutes.Add(routeShortName, gtfsRoute);
+                    GtfsRoutes.Add(gtfsRouteId, gtfsRoute);
                     reverseMappingFromGtfsToJdf.Add(gtfsRoute, route);
                 }
 
@@ -137,14 +138,16 @@ namespace JdfToGtfsProcessor
             switch (route.Type)
             {
                 case GtfsModel.Enumerations.TrafficType.Bus:
-                    if (route.IsRegional!.Value) return Color.Violet; // linkám nastavujeme IsRegional vždy
-                    else return Color.Blue;
+                    if (route.IsRegional!.Value) return ColorTranslator.FromHtml("#AE4A84"); // linkám nastavujeme IsRegional vždy
+                    else return ColorTranslator.FromHtml("#0078BF");
                 case GtfsModel.Enumerations.TrafficType.Tram:
-                    return Color.Red;
+                    return ColorTranslator.FromHtml("#E31E24");
                 case GtfsModel.Enumerations.TrafficType.Trolleybus:
-                    return Color.Green;
+                    return ColorTranslator.FromHtml("#009846");
+                case GtfsModel.Enumerations.TrafficType.Ferry:
+                    return ColorTranslator.FromHtml("#FEA13B");
                 default:
-                    return Color.White;
+                    return Color.DarkGray;
             }
         }
 

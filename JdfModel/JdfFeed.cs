@@ -39,11 +39,31 @@ namespace JdfModel
                 Agencies = CsvFileSerializer.DeserializeFile<Agency>(Path.Combine(path, "dopravci.txt"), ',', null, "ddMMyyyy", encoding, false, ";").ToDictionary(a => a.Id),
                 Routes = CsvFileSerializer.DeserializeFile<Route>(Path.Combine(path, "linky.txt"), ',', null, "ddMMyyyy", encoding, false, ";").ToDictionary(r => r.RouteId),
                 RoutesExtendedData = CsvFileSerializer.DeserializeFile<RouteExt>(Path.Combine(path, "linext.txt"), ',', null, "ddMMyyyy", encoding, false, ";").GroupBy(r => r.RouteId).ToDictionary(r => r.Key, r => r.ToList()),
+                Trips = CsvFileSerializer.DeserializeFile<Trip>(Path.Combine(path, "spoje.txt"), ',', null, "ddMMyyyy", encoding, false, ";"),
                 FixedCodes = CsvFileSerializer.DeserializeFile<FixedCode>(Path.Combine(path, "pevnykod.txt"), ',', null, "ddMMyyyy", encoding, false, ";").ToDictionary(fc => fc.CodeId),
                 TimeRemarks = CsvFileSerializer.DeserializeFile<TimeRemark>(Path.Combine(path, "caskody.txt"), ',', null, "ddMMyyyy", encoding, false, ";"),
                 RouteStops = CsvFileSerializer.DeserializeFile<RouteStop>(Path.Combine(path, "zaslinky.txt"), ',', null, "ddMMyyyy", encoding, false, ";"),
                 StopTimes = CsvFileSerializer.DeserializeFile<StopTime>(Path.Combine(path, "zasspoje.txt"), ',', null, "ddMMyyyy", encoding, false, ";"),
             };
+        }
+
+        public static IEnumerable<(string path, JdfFeed feed)> LoadFromDirectoryRecursive(string path)
+        {
+            if (Directory.EnumerateFiles(path, "*.txt").Any2())
+            {
+                // musí být ve složce aspoň dva texťáky
+                yield return (path, LoadFromDirectory(path));
+            }
+
+            var subfolders = Directory.GetDirectories(path).OrderBy(d => Path.GetFileName(d));
+            foreach (var subdir in subfolders)
+            {
+                var entries = LoadFromDirectoryRecursive(subdir);
+                foreach (var entry in entries)
+                {
+                    yield return entry;
+                }
+            }
         }
 
         public static JdfFeed LoadFromZipArchive(ZipArchive zipFile, string pathInArchive)

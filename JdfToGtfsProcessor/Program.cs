@@ -11,7 +11,7 @@ namespace JdfToGtfsProcessor
     {
         static void Main(string[] args)
         {
-            var logFactory = new LogWriterFactory(@"c:\temp\jrspoje\jdf\log");
+            var logFactory = new LogWriterFactory(@"c:\temp\jrspoje\log");
             var log = new SimpleLogger(logFactory.CreateWriterToFile("JdfProcessor_Common"));
 
             StopDatabase stopDatabase;
@@ -29,18 +29,7 @@ namespace JdfToGtfsProcessor
             }
 
             Console.WriteLine("Načítám JDF...");
-            var jdfFeeds = JdfFeed.LoadFromZipArchiveRecursive(@"c:\temp\jrspoje\jdf\Změny JŘ ODIS ke 14.12.2025.zip").ToList();
-            var otherZipFiles = Directory
-                .EnumerateFiles(@"c:\temp\jrspoje\jdf", "*.zip", SearchOption.TopDirectoryOnly)
-                .Where(f => f != @"c:\temp\jrspoje\jdf\Změny JŘ ODIS ke 14.12.2025.zip")
-                .Select(path => new FileInfo(path))
-                .OrderBy(f => f.LastWriteTime)
-                .Select(f => f.FullName);
-            foreach (var file in otherZipFiles)
-            {
-                jdfFeeds.AddRange(JdfFeed.LoadFromZipArchiveRecursive(file));
-            }
-
+            var jdfFeeds = JdfFeed.LoadFromDirectoryRecursive(@"c:\temp\jrspoje\jdf\").ToList();
             var jdfFeedProcessor = new JdfFeedProcessor(stopDatabase);
             jdfFeedProcessor.InitFeed(FeedPublisher.KODIS);
 
@@ -68,7 +57,7 @@ namespace JdfToGtfsProcessor
             var gtfsFeed = gtfsFeedEx.ToGtfsFeed();
 
             Console.WriteLine("Ukládám GTFS soubory...");
-            GtfsFeedSerializer.SerializeFeed(@"c:\temp\jrspoje\jdf\gtfs_output", gtfsFeed);
+            GtfsFeedSerializer.SerializeFeed(@"c:\temp\jrspoje\gtfs_output", gtfsFeed);
 
             log.Close();
             Console.WriteLine("Hotovo.");

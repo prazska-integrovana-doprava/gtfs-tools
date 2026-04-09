@@ -37,6 +37,12 @@ namespace JdfToGtfsProcessor.Stops
         {
             foreach (var stop in stops)
             {
+                if (stop.NamePart3 == "CLO")
+                {
+                    // virtuální hraniční přechod, ignorujeme
+                    continue;
+                }
+
                 if (gtfsStops.ContainsKey(stop.StopId))
                 {
                     if (gtfsStops[stop.StopId].StopName != stop.StopName)

@@ -1,6 +1,7 @@
 ﻿using GtfsLogging;
 using GtfsModel;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using TrainsEditor.GtfsExport;
 using TrainsEditor.SystemDescriptionModel;
@@ -46,6 +47,8 @@ namespace TrainsEditor.ExportModel
                     GtfsId = $"L{aswLineFirstVersion.LineNumber}",
                     LongName = aswLineFirstVersion.RouteDescription,
                     ShortName = aswLineFirstVersion.LineName,
+                    Color = Color.FromArgb(37, 30, 98),
+                    TextColor = Color.White,
                 };
 
                 foreach (var agency in aswLineFirstVersion.RouteAgencies)
@@ -88,6 +91,8 @@ namespace TrainsEditor.ExportModel
                     GtfsId = route.ShortName,
                     LongName = route.LongName,
                     ShortName = route.ShortName,
+                    Color = string.IsNullOrEmpty(route.ColorCodeHtml) ? Color.Black : ColorTranslator.FromHtml(route.ColorCodeHtml),
+                    TextColor = Color.White,
                 };
 
                 foreach (var agency in agencyData)
