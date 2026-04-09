@@ -96,8 +96,16 @@ namespace GtfsProcessor
                 // odstraníme linky, které dle konfigurace nejsou veřejné (do XML občas proniknou, tak abychom je uměli snadno vypínat)
                 FilterData(db, config);
 
+                // ještě než půjdeme generovat trasy, musíme zkorigovat polohy nástupišť metra (možná je totiž opravuje dodatečný list zastávek)
+                List<GtfsStop> extraStops = null;
+                if (config.AdditionalStopsFileName != null)
+                {
+                    extraStops = CsvFileSerializer.DeserializeFile<GtfsStop>(config.AdditionalStopsFileName);
+                    CorrectStopPositionsInAsw(db.Stops, extraStops);
+                }
+
                 // hlavní akce, transformace AswModel.Extended do GTFS (přes GtfsModel.Extended a GtfsModel)
-                SaveGtfs(db, config);
+                SaveGtfs(db, extraStops, config);
             }
             finally
             {
@@ -144,7 +152,7 @@ namespace GtfsProcessor
         }
         
         // transformace AswModel.Extended --> GtfsModel.Extended --> GtfsModel --> GTFS soubor
-        static void SaveGtfs(TheAswDatabase db, Configuration config)
+        static void SaveGtfs(TheAswDatabase db, List<GtfsStop> extraStops, Configuration config)
         {
             TravelTimeAdjustment.Proceed(db);
 
@@ -194,14 +202,6 @@ namespace GtfsProcessor
             Dictionary<MergedRun, GtfsModel.Extended.CalendarRecord> calendarToRunAssignment;
             gtfsFeedEx.Calendar.AddRange(calendarGenerator.GenerateCalendarsForRuns(runsProcessor.Runs, out calendarToRunAssignment).ToDictionary(cal => cal.GtfsId));
 
-            // ještě než půjdeme generovat trasy, musíme zkorigovat polohy nástupišť metra (možná je totiž opravuje dodatečný list zastávek)
-            List<GtfsStop> extraStops = null;
-            if (config.AdditionalStopsFileName != null)
-            {
-                extraStops = CsvFileSerializer.DeserializeFile<GtfsStop>(config.AdditionalStopsFileName);
-                CorrectStopPositionsInAsw(db.Stops, extraStops);
-            }
-
             // vyrobíme GTFS trasy spojům tak, že spoje se stejnou posloupností zastávek a variant tras budou sdílet stejnou trasu;
             // zároveň si uložíme mapování spojů na trasy a použijeme ho při konstrukci GTFS tripů
             Console.WriteLine("Generuji trasy...");
@@ -244,7 +244,7 @@ namespace GtfsProcessor
             // dodělání shapů metru
             Console.WriteLine("Konstruuji trasy metra a tramvají...");
             ConstructShapesFromNetwork(config.MetroNetworkFile, GtfsModel.Enumerations.TrafficType.Metro, gtfsFeedEx);
-            ConstructShapesFromNetwork(config.MetroNetworkFile.Replace("metro", "tram"), GtfsModel.Enumerations.TrafficType.Tram, gtfsFeedEx);
+            ConstructShapesFromNetwork(config.TramNetworkFile, GtfsModel.Enumerations.TrafficType.Tram, gtfsFeedEx);
 
             if (!config.TripDbAsReadOnly)
             {
