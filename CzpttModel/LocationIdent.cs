@@ -14,6 +14,8 @@ namespace CzpttModel
         /// </summary>
         public const string CountryCodeCZ = "CZ";
 
+        public const string CountryCodePL = "PL";
+
         /// <summary>
         /// Označuje stát podle číselníku ISO 3166 2 AN zkratou. Česká republika je označena <see cref="CountryCodeCZ"/>.
         /// </summary>

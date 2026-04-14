@@ -26,11 +26,13 @@ namespace TrainsEditor.CommonLogic
 
         // někdy SŽDC používá jiné označení stanic, než my, takže jim to přepíšeme na ty naše
         // TODO ideálně udělat nějakou vlastní strukturu a nepoužívat dictionary
-        public static readonly Dictionary<int, int> RewriteStations = new Dictionary<int, int>()
+        public static readonly Dictionary<string, string> RewriteStations = new Dictionary<string, string>()
         {
-            { 58117, 58486 }, // Praha-Smíchov sev.n.
-            { 58000, 54044 }, // Čáslav (místní nádraží)
-            { 38034, 34364 }, // Ostrava uhelné nádraží
+            { "CZ58117", "CZ58486" }, // Praha-Smíchov sev.n.
+            { "CZ58000", "CZ54044" }, // Čáslav (místní nádraží)
+            { "CZ38034", "CZ34364" }, // Ostrava uhelné nádraží
+            { "PL5710", "PL1331" }, // Głuchołazy
+            { "PL7565", "PL873" }, // Cieszyn
         };
     }
 }

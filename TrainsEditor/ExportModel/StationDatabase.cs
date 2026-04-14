@@ -113,7 +113,7 @@ namespace TrainsEditor.ExportModel
                     continue;
                 }
 
-                var cis = aswStopFirstVersion.CisNumber % 100000; // odstranit "úvodní" 54
+                var (countryCode, stationNumber) = TranslateCisNumber(aswStopFirstVersion.CisNumber);
                 var trainStop = new TrainStop()
                 {
                     AswNodeId = aswStopFirstVersion.NodeId,
@@ -128,15 +128,15 @@ namespace TrainsEditor.ExportModel
                     ZoneId = aswStopFirstVersion.PidZoneId,
                     ZoneRegionType = aswStopFirstVersion.ZoneRegionType,
                     WheelchairBoarding = FromAswWheelchairAccessibility(aswStopFirstVersion.WheelchairAccessibility),
-                    PrimaryLocationCode = cis,
+                    PrimaryLocationCode = stationNumber,
                     AllTransferIcons = GetTransferIcons(aswStopFirstVersion.TransferAttributes).ToArray(),
                     IsIntegrated = true
                 };
 
-                var stopAlreadyPresent = trainStopsFromAsw.GetValueOrDefault(LocationIdent.CountryCodeCZ + cis);
+                var stopAlreadyPresent = trainStopsFromAsw.GetValueOrDefault(countryCode + stationNumber);
                 if (stopAlreadyPresent == null)
                 {
-                    trainStopsFromAsw.Add(LocationIdent.CountryCodeCZ + cis, trainStop);
+                    trainStopsFromAsw.Add(countryCode + stationNumber, trainStop);
                 }
                 else
                 {
@@ -177,12 +177,12 @@ namespace TrainsEditor.ExportModel
             var trainStopsFromStationData = new Dictionary<string, TrainStop>();
             foreach (var station in stationData)
             {
-                var cis = station.CisNumber % 100000; // odstranit "úvodní" 54
-                var recordFromSR70 = allTrainStopsDictionary.GetValueOrDefault(LocationIdent.CountryCodeCZ + cis);
+                var (countryCode, stationNumber) = TranslateCisNumber(station.CisNumber);
+                var recordFromSR70 = allTrainStopsDictionary.GetValueOrDefault(countryCode + stationNumber);
                 var hasPosition = station.GpsLatitude != 0 && station.GpsLongitude != 0;
                 if (recordFromSR70 == null && (!hasPosition || string.IsNullOrEmpty(station.Name)))
                 {
-                    log.Log(LogMessageType.WARNING_TRAIN_STOP_MISSING_DATA, $"Záznam o zastávce {cis} nemá název nebo pozici a nelze je doplnit ze SR70, protože tam zastávka není");
+                    log.Log(LogMessageType.WARNING_TRAIN_STOP_MISSING_DATA, $"Záznam o zastávce {countryCode + stationNumber} nemá název nebo pozici a nelze je doplnit ze SR70, protože tam zastávka není");
                     continue;
                 }
 
@@ -197,18 +197,15 @@ namespace TrainsEditor.ExportModel
                     } : recordFromSR70.Position,
                     ZoneId = station.Zones,
                     WheelchairBoarding = station.WheelchairAccessible ? WheelchairBoarding.Possible : station.WheelchairAccessibilityNotSet ? WheelchairBoarding.Unknown : WheelchairBoarding.Unknown,
-                    PrimaryLocationCode = cis,
+                    PrimaryLocationCode = stationNumber,
                     IsIntegrated = true
                 };
 
-                var stopAlreadyPresent = trainStopsFromStationData.GetValueOrDefault(LocationIdent.CountryCodeCZ + cis);
+                var stopAlreadyPresent = trainStopsFromStationData.GetValueOrDefault(countryCode + stationNumber);
                 if (stopAlreadyPresent == null)
                 {
-                    trainStopsFromStationData.Add(LocationIdent.CountryCodeCZ + cis, trainStop);
-                    if (recordFromSR70 != null)
-                    {
-                        allTrainStopsDictionary[LocationIdent.CountryCodeCZ + cis] = trainStop;
-                    }
+                    trainStopsFromStationData.Add(countryCode + stationNumber, trainStop);
+                    allTrainStopsDictionary[countryCode + stationNumber] = trainStop;
                 }
                 else
                 {
@@ -224,29 +221,42 @@ namespace TrainsEditor.ExportModel
         }
 
         /// <summary>
+        /// Přeloží CIS číslo na ISO kód státu a číslo stanice
+        /// </summary>
+        /// <param name="cis">CIS číslo zastávky</param>
+        public static (string countryCode, int stationNumber) TranslateCisNumber(int cis)
+        {
+            var countryNumber = cis / 100000;
+            return (
+                countryNumber == 54 ? LocationIdent.CountryCodeCZ : countryNumber == 51 ? LocationIdent.CountryCodePL : "",
+                cis % 100000
+                );
+        }
+
+        /// <summary>
         /// Aplikuje pravidla přepisu, když SŽ někde používá jiný čísla, než očekáváme
         /// </summary>
         /// <param name="rewriteRules">Stanice uložené v číselníku ASW jinak, než jsou použity v datech SŽDC zde mohou mít uvedeny aliasy (stanice je pak v databázi pod všemi známými identifikátory)</param>
-        public void ApplyRewriteRules(IDictionary<int, int> rewriteRules)
+        public void ApplyRewriteRules(IDictionary<string, string> rewriteRules)
         {
             // IIa. rewrite pravidla (kde máme jiná CIS čísla)
             foreach (var rewriteRule in rewriteRules)
             {
-                var knownStop = AllStops.GetValueOrDefault(LocationIdent.CountryCodeCZ + rewriteRule.Value);
+                var knownStop = AllStops.GetValueOrDefault(rewriteRule.Value);
                 if (knownStop == null)
                 {
-                    log.Log(LogMessageType.WARNING_TRAIN_STOP_REWRITE_NOT_APPLIED, $"Stanice s CIS kódem {rewriteRule.Value} nebyla načtena. Pravidlo přepisu na {rewriteRule.Key} nebylo použito.");
+                    log.Log(LogMessageType.WARNING_TRAIN_STOP_REWRITE_NOT_APPLIED, $"Stanice s kódem {rewriteRule.Value} nebyla načtena. Pravidlo přepisu na {rewriteRule.Key} nebylo použito.");
                     continue;
                 }
 
-                if (StopsFromSystem.ContainsKey(LocationIdent.CountryCodeCZ + rewriteRule.Key))
+                if (StopsFromSystem.ContainsKey(rewriteRule.Key))
                 {
-                    log.Log(LogMessageType.WARNING_TRAIN_STOP_REWRITE_NOT_APPLIED, $"Stanice s CIS kódem {rewriteRule.Key} již byla načtena. Pravidlo přepisu z {rewriteRule.Value} na {rewriteRule} nebylo použito.");
+                    log.Log(LogMessageType.WARNING_TRAIN_STOP_REWRITE_NOT_APPLIED, $"Stanice s kódem {rewriteRule.Key} již byla načtena. Pravidlo přepisu z {rewriteRule.Value} na {rewriteRule.Key} nebylo použito.");
                     continue;
                 }
 
-                StopsFromSystem.Add(LocationIdent.CountryCodeCZ + rewriteRule.Key, knownStop);
-                AllStops[LocationIdent.CountryCodeCZ + rewriteRule.Key] = knownStop;
+                StopsFromSystem.Add(rewriteRule.Key, knownStop);
+                AllStops[rewriteRule.Key] = knownStop;
             }
         }
 

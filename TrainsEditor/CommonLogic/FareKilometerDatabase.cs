@@ -51,13 +51,10 @@ namespace TrainsEditor.CommonLogic
 
             foreach (var row in fileData)
             {
-                if (row.FromStopCisId / 100000 != 54 || row.ToStopCisId / 100000 != 54)
-                    continue; // není česká železniční stanice
+                var (countryCodeFrom, locationCodeFrom) = StationDatabase.TranslateCisNumber(row.FromStopCisId);
+                var (countryCodeTo, locationCodeTo) = StationDatabase.TranslateCisNumber(row.ToStopCisId);
 
-                var locationCodeFrom = LocationIdent.CountryCodeCZ + row.FromStopCisId % 100000;
-                var locationCodeTo = LocationIdent.CountryCodeCZ + row.ToStopCisId % 100000;
-
-                if (stationDb.AllStops.TryGetValue(locationCodeFrom, out var fromStation) && stationDb.AllStops.TryGetValue(locationCodeTo, out var toStation))
+                if (stationDb.AllStops.TryGetValue(countryCodeFrom + locationCodeFrom, out var fromStation) && stationDb.AllStops.TryGetValue(countryCodeTo + locationCodeTo, out var toStation))
                 {
                     result.fareKmDb.Add((fromStation, toStation), row.FareDistanceMeters / 1000);
                 }
