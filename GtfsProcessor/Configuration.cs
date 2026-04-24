@@ -55,6 +55,11 @@ namespace GtfsProcessor
         public string TramNetworkFile { get; private set; }
 
         /// <summary>
+        /// XML soubor s waypointy pro trasy tramvají
+        /// </summary>
+        public string TramWaypointsFile { get; private set; }
+
+        /// <summary>
         /// Složka, do které se ukládají (a zpětně načítají) data o spojích a zastávkách, aby měly stejná IDčka v navazujících feedech
         /// </summary>
         public string TripPersistentDbFolder { get; private set; }
@@ -167,6 +172,7 @@ namespace GtfsProcessor
             TrainGtfsFolder = GetFullPath(inputFilesSection["TrainGtfsFolder"]);
             MetroNetworkFile = GetFullPath(inputFilesSection["MetroNetworkFile"]);
             TramNetworkFile = GetFullPath(inputFilesSection["TramNetworkFile"]);
+            TramWaypointsFile = GetFullPath(inputFilesSection["TramWaypointsFile"]);
 
             var outputFilesSection = iniData.Sections["OutputFiles"];
             GtfsOutputFolder = GetFullPath(outputFilesSection["GtfsOutputFolder"]);

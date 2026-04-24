@@ -31,8 +31,10 @@ namespace ShapeManager
         // již nalezené trasy nad sítí vlaků mezi dvojicemi sousedních zastávek
         private readonly ShapeConstructor shapeConstructor = new ShapeConstructor();
 
-        // načtené body v síti reprezentující pozice stanic nad sítí
-        private Dictionary<Stop, ShapeConstructor.Point> stopsToPointsMapping;
+        // načtené body v síti reprezentující pozice stanic a waypointů nad sítí
+        private Dictionary<GpsCoordinates, ShapeConstructor.Point> stopsToPointsMapping;
+
+        private WaypointCollection waypointCollection;
 
         private ICommonLogger log;
 
@@ -51,11 +53,13 @@ namespace ShapeManager
         /// <param name="networkFileName">Soubor popisující síť (viz <see cref="ShapeConstructor"/>)</param>
         /// <param name="stops">Zastávky nad sítí</param>
         /// <param name="log">Objekt pro logování</param>
-        public static ShapeDatabase Create(string networkFileName, IEnumerable<Stop> stops, ICommonLogger log)
+        /// <param name="waypointsFileName">Soubor s waypointy, nemusí být zadán, pak se počítá s prázdnou množinou waypointů</param>
+        public static ShapeDatabase Create(string networkFileName, IEnumerable<Stop> stops, ICommonLogger log, string waypointsFileName = null)
         {
             var result = new ShapeDatabase(log);
             result.shapeConstructor.LoadPointData(networkFileName);
-            result.stopsToPointsMapping = result.MapStationsOnNetwork(stops, log);
+            result.waypointCollection = waypointsFileName != null ? WaypointCollection.Load(waypointsFileName) : new WaypointCollection(); ;
+            result.stopsToPointsMapping = result.MapStationsOnNetwork(stops, result.waypointCollection, log);
             return result;
         }
 
@@ -108,14 +112,41 @@ namespace ShapeManager
 
         private List<GpsCoordinates> CreatePath(Stop from, Stop to)
         {
-            var pointFrom = stopsToPointsMapping.GetValueOrDefault(from);
-            var pointTo = stopsToPointsMapping.GetValueOrDefault(to);
-
-            var resultPath = shapeConstructor.FindPath(pointFrom, pointTo);
-            if (resultPath == null)
+            var pointFrom = stopsToPointsMapping.GetValueOrDefault(from.Position);
+            var waypoints = waypointCollection.FindWaypoints(from, to);
+            var allPoints = new List<Point>() { pointFrom };
+            foreach (var waypoint in waypoints)
             {
-                log.Log(LogMessageType.WARNING_TRAIN_SHAPE_PATH_NOT_FOUND, $"Cesta ze stanice {from.Name} do stanice {to.Name} nebyla nalezena. Používám přímé propojení.");
-                return new List<GpsCoordinates>() { from.Position, to.Position };
+                var waypointPoint = stopsToPointsMapping.GetValueOrDefault(waypoint.ToGpsCoordinates());
+                if (waypointPoint != null)
+                {
+                    allPoints.Add(waypointPoint);
+                }
+            }
+
+            var pointTo = stopsToPointsMapping.GetValueOrDefault(to.Position);
+            allPoints.Add(pointTo);
+
+            // nyní máme v allPoints výchozí bod (zastávku), všechny waypointy a cílový bod (zastávku)
+            var resultPath = new List<GpsCoordinates>();
+            for (int i = 0; i < allPoints.Count - 1; i++)
+            {
+                var partialPath = shapeConstructor.FindPath(allPoints[i], allPoints[i + 1]);
+                if (partialPath == null)
+                {
+                    if (i == 0)
+                    {
+                        log.Log(LogMessageType.WARNING_TRAIN_SHAPE_PATH_NOT_FOUND, $"Cesta ze stanice {from.Name} do stanice {to.Name} nebyla nalezena. Používám přímé propojení.");
+                    }
+                    else
+                    {
+                        log.Log(LogMessageType.WARNING_TRAIN_SHAPE_PATH_NOT_FOUND, $"Cesta ze stanice {from.Name} do stanice {to.Name} (přes waypoint {i}: {allPoints[i].Gps}) nebyla nalezena. Používám přímé propojení.");
+                    }
+
+                    return new List<GpsCoordinates>() { from.Position, to.Position };
+                }
+
+                resultPath.AddRange(i == 0 ? partialPath : partialPath.Skip(1));
             }
 
             return resultPath;
@@ -126,58 +157,81 @@ namespace ShapeManager
         /// </summary>
         /// <param name="stations">Seznam stanic</param>
         /// <param name="log">Log, kam se zapisují nestandardní události během mapování</param>
-        private Dictionary<Stop, ShapeConstructor.Point> MapStationsOnNetwork(IEnumerable<Stop> stations, ICommonLogger log)
+        private Dictionary<GpsCoordinates, ShapeConstructor.Point> MapStationsOnNetwork(IEnumerable<Stop> stations, WaypointCollection waypointCollection, ICommonLogger log)
         {
-            var stationClosestPoints = new Dictionary<Stop, ShapeConstructor.Point>();
+            var stationClosestPoints = new Dictionary<GpsCoordinates, ShapeConstructor.Point>();
             foreach (var station in stations)
             {
-                // hrany s alespoň jedním krajním bodem nedaleko hledané stanice
-                var closeEdges = shapeConstructor.AllEdges.Where(e => MapFunctions.DistanceMeters(e.From.Gps.GpsLatitude, e.From.Gps.GpsLongitude, station.Position.GpsLatitude, station.Position.GpsLongitude) < MaxEdgeDistance
-                                                  || MapFunctions.DistanceMeters(e.To.Gps.GpsLatitude, e.To.Gps.GpsLongitude, station.Position.GpsLatitude, station.Position.GpsLongitude) < MaxEdgeDistance);
-                var closestCoordinate = new GpsCoordinates();
-                ShapeConstructor.Edge closestEdge = null;
-                double minDistance = double.MaxValue;
-                foreach (var edge in closeEdges)
+                var mappedStationPoint = MapPointOnNetwork(log, station.Position, $"stanice {station.Name}");
+                if (mappedStationPoint != null)
                 {
-                    var point = GetClosestPointOnEdge(edge, station.Position);
-                    var dist = MapFunctions.DistanceMeters(point.GpsLatitude, point.GpsLongitude, station.Position.GpsLatitude, station.Position.GpsLongitude);
-                    if (dist < minDistance)
+                    stationClosestPoints[station.Position] = mappedStationPoint;
+                }
+            }
+
+            foreach (var waypointsForStop in waypointCollection.Waypoints)
+            {
+                foreach (var waypoint in waypointsForStop.Waypoints)
+                {
+                    var waypointCoordinates = waypoint.ToGpsCoordinates();
+
+                    var mappedWaypoint = MapPointOnNetwork(log, waypointCoordinates, $"Waypoint {waypoint} ({waypointsForStop.From} - {waypointsForStop.To})");
+                    if (mappedWaypoint != null)
                     {
-                        minDistance = dist;
-                        closestCoordinate = point;
-                        closestEdge = edge;
+                        stationClosestPoints[waypointCoordinates] = mappedWaypoint;
                     }
                 }
-
-                if (closestEdge == null)
-                {
-                    log.Log(LogMessageType.WARNING_TRAIN_NO_SHAPE_AROUND, $"V okolí {MaxEdgeDistance} metrů stanice {station.Name} nebyla nalezena žádná hrana trasy, ke které by stanice mohla být připnuta. Trasy z/do této stanice budou vždy vedeny vzdušnou čarou.");
-                    continue;
-                }
-                else if (minDistance > DistanceWarning)
-                {
-                    log.Log(LogMessageType.WARNING_TRAIN_SHAPE_TOO_FAR_FROM_STOP, $"Stanice {station.Name} je od nejbližšího bodu na trase vzdálená {minDistance} metrů.");
-                }
-
-                // vytvoříme uprostřed hrany nový bod
-                ShapeConstructor.Point stationPoint;
-                if (closestCoordinate.Equals(closestEdge.From.Gps))
-                {
-                    stationPoint = closestEdge.From;
-                }
-                else if (closestCoordinate.Equals(closestEdge.To.Gps))
-                {
-                    stationPoint = closestEdge.To;
-                }
-                else
-                {
-                    stationPoint = shapeConstructor.CreateNewPointInEdge(closestCoordinate, closestEdge, out var newEdge1, out var newEdge2);
-                }
-
-                stationClosestPoints.Add(station, stationPoint);
             }
 
             return stationClosestPoints;
+        }
+
+        private Point MapPointOnNetwork(ICommonLogger log, GpsCoordinates positionToMap, string positionName)
+        {
+            // hrany s alespoň jedním krajním bodem nedaleko hledané stanice
+            var closeEdges = shapeConstructor.AllEdges.Where(e => MapFunctions.DistanceMeters(e.From.Gps.GpsLatitude, e.From.Gps.GpsLongitude, positionToMap.GpsLatitude, positionToMap.GpsLongitude) < MaxEdgeDistance
+                                              || MapFunctions.DistanceMeters(e.To.Gps.GpsLatitude, e.To.Gps.GpsLongitude, positionToMap.GpsLatitude, positionToMap.GpsLongitude) < MaxEdgeDistance);
+            var closestCoordinate = new GpsCoordinates();
+            ShapeConstructor.Edge closestEdge = null;
+            double minDistance = double.MaxValue;
+            foreach (var edge in closeEdges)
+            {
+                var point = GetClosestPointOnEdge(edge, positionToMap);
+                var dist = MapFunctions.DistanceMeters(point.GpsLatitude, point.GpsLongitude, positionToMap.GpsLatitude, positionToMap.GpsLongitude);
+                if (dist < minDistance)
+                {
+                    minDistance = dist;
+                    closestCoordinate = point;
+                    closestEdge = edge;
+                }
+            }
+
+            if (closestEdge == null)
+            {
+                log.Log(LogMessageType.WARNING_TRAIN_NO_SHAPE_AROUND, $"V okolí {MaxEdgeDistance} metrů stanice {positionName} nebyla nalezena žádná hrana trasy, ke které by stanice mohla být připnuta. Trasy z/do této stanice budou vždy vedeny vzdušnou čarou.");
+                return null;
+            }
+            else if (minDistance > DistanceWarning)
+            {
+                log.Log(LogMessageType.WARNING_TRAIN_SHAPE_TOO_FAR_FROM_STOP, $"Stanice {positionName} je od nejbližšího bodu na trase vzdálená {minDistance} metrů.");
+            }
+
+            // vytvoříme uprostřed hrany nový bod
+            ShapeConstructor.Point stationPoint;
+            if (closestCoordinate.Equals(closestEdge.From.Gps))
+            {
+                stationPoint = closestEdge.From;
+            }
+            else if (closestCoordinate.Equals(closestEdge.To.Gps))
+            {
+                stationPoint = closestEdge.To;
+            }
+            else
+            {
+                stationPoint = shapeConstructor.CreateNewPointInEdge(closestCoordinate, closestEdge, out var newEdge1, out var newEdge2);
+            }
+
+            return stationPoint;
         }
 
         private static GpsCoordinates GetClosestPointOnEdge(Edge edge, GpsCoordinates point)
@@ -266,6 +320,15 @@ namespace ShapeManager
                         if (point.Equals(prevPos))
                             continue; // může se stát na zlomu u zastávky (poslední bod předchozího úseku je shodný s tímto úsekem)
 
+                        if (resultShape.Points.Count >= 2)
+                        {
+                            var prevPrevPos = resultShape.Points[resultShape.Points.Count - 2].Position;
+                            if (IsSharpTurn(prevPrevPos, prevPos, point, out var angle))
+                            {
+                                log.Log(LogMessageType.WARNING_SHAPE_TOO_SHARP_TURN, $"Hodně ostrá zatáčka {angle:0}°, spoj {trip}, úsek {stopTimeFrom.Stop} - {stopTimeTo.Stop}, souřadnice {prevPrevPos}, {prevPos}, {point}.");
+                            }
+                        }
+
                         currentDistance += MapFunctions.DistanceMeters(prevPos.GpsLatitude, prevPos.GpsLongitude, point.GpsLatitude, point.GpsLongitude);
                     }
 
@@ -283,5 +346,35 @@ namespace ShapeManager
             return resultShape;
         }
 
+        public static bool IsSharpTurn(GpsCoordinates A, GpsCoordinates B, GpsCoordinates C, out double angleDeg, double thresholdDegrees = 45)
+        {
+            double scale = Math.Cos(B.GpsLatitude * Math.PI / 180.0);
+
+            // správně: AB a BC
+            double abx = (B.GpsLatitude - A.GpsLatitude);
+            double aby = (B.GpsLongitude - A.GpsLongitude) * scale;
+
+            double bcx = (C.GpsLatitude - B.GpsLatitude);
+            double bcy = (C.GpsLongitude - B.GpsLongitude) * scale;
+
+            double magAB = Math.Sqrt(abx * abx + aby * aby);
+            double magBC = Math.Sqrt(bcx * bcx + bcy * bcy);
+
+            if (magAB == 0 || magBC == 0)
+            {
+                angleDeg = 0;
+                return false;
+            }
+
+            double dot = abx * bcx + aby * bcy;
+
+            double cosTheta = dot / (magAB * magBC);
+            cosTheta = Math.Max(-1, Math.Min(1, cosTheta));
+
+            double angleRad = Math.Acos(cosTheta);
+            angleDeg = angleRad * 180.0 / Math.PI;
+
+            return angleDeg > thresholdDegrees;
+        }
     }
 }

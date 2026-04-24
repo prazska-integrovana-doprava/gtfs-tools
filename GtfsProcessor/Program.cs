@@ -243,8 +243,8 @@ namespace GtfsProcessor
 
             // dodělání shapů metru
             Console.WriteLine("Konstruuji trasy metra a tramvají...");
-            ConstructShapesFromNetwork(config.MetroNetworkFile, GtfsModel.Enumerations.TrafficType.Metro, gtfsFeedEx);
-            ConstructShapesFromNetwork(config.TramNetworkFile, GtfsModel.Enumerations.TrafficType.Tram, gtfsFeedEx);
+            ConstructShapesFromNetwork(config.MetroNetworkFile, null, GtfsModel.Enumerations.TrafficType.Metro, gtfsFeedEx);
+            ConstructShapesFromNetwork(config.TramNetworkFile, config.TramWaypointsFile, GtfsModel.Enumerations.TrafficType.Tram, gtfsFeedEx);
 
             if (!config.TripDbAsReadOnly)
             {
@@ -348,11 +348,11 @@ namespace GtfsProcessor
             GtfsFeedSerializer.SerializeFeed(config.GtfsOutputFolder, gtfsFeed);
         }
 
-        private static void ConstructShapesFromNetwork(string networkFileName, GtfsModel.Enumerations.TrafficType trafficType, GtfsModel.Extended.Feed gtfsFeedEx)
+        private static void ConstructShapesFromNetwork(string networkFileName, string waypointsFileName, GtfsModel.Enumerations.TrafficType trafficType, GtfsModel.Extended.Feed gtfsFeedEx)
         {
             var trips = gtfsFeedEx.Trips.Values.Where(t => t.Route.Type == trafficType).ToList();
             var stops = trips.SelectMany(t => t.StopTimes).Select(st => st.Stop).Distinct().ToList();
-            var shapeDb = ShapeDatabase.Create(networkFileName, stops, log);
+            var shapeDb = ShapeDatabase.Create(networkFileName, stops, log, waypointsFileName);
             shapeDb.ProcessTrips(trips);
             foreach (var shape in shapeDb.Shapes)
             {
