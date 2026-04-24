@@ -34,11 +34,6 @@ namespace TrainsEditor.GtfsExport
         // Složka s XML soubory vlaků
         private readonly string _trainFilesPath;
 
-        /// <summary>
-        /// ID dopravce "PID" v GTFS
-        /// </summary>
-        public const string PidAgencyId = "99";
-
         private TrainGroupLoader _trainGroupLoader;
 
         private PublicHolidaysCalendar _holidaysCalendar;
@@ -160,12 +155,13 @@ namespace TrainsEditor.GtfsExport
 
             // TODO a na to si udělat nějaký obecnější framework? stejně tak na ty .IsUsed a možná na celou tu "Feed databázi"
             console.WriteLine("Ukládání dat...");
+            var agencyInstance = CreateAgencyInstance(_currentIntegratedSystem);
             var feed = new GtfsFeed()
             {
-                Agency = new List<GtfsAgency>() { CreateAgencyInstance() },
+                Agency = new List<GtfsAgency>() { agencyInstance },
                 Calendar = calendars.Select(cal => cal.ToGtfsCalendar()).ToList(),
                 CalendarDates = calendars.SelectMany(cal => cal.GetAllGtfsExceptions()).ToList(),
-                Routes = _routeDatabase.UsedLines.Select(l => l.ToGtfsRoute(PidAgencyId)).ToList(),
+                Routes = _routeDatabase.UsedLines.Select(l => l.ToGtfsRoute(agencyInstance.Id)).ToList(),
                 Stops = _stopDatabase.UsedStops.Select(s => s.ToGtfsStop()).Distinct().ToList(),
                 StopTimes = trainTrips.SelectMany(t => t.GetGtfsStopTimes()).ToList(),
                 Trips = trainTrips.Select(t => t.ToGtfsTrip()).ToList(),
@@ -362,17 +358,37 @@ namespace TrainsEditor.GtfsExport
             //return tripsOfDirection.FirstOrDefault(t => t.StopTimes.Count == maxStopCount);
         }
 
-        private static GtfsAgency CreateAgencyInstance()
+        private static GtfsAgency CreateAgencyInstance(IntegratedSystemsEnum integratedSystem)
         {
-            return new GtfsAgency()
+            if (integratedSystem == IntegratedSystemsEnum.PID)
             {
-                Id = PidAgencyId,
-                Name = "Pražská integrovaná doprava - vlaky",
-                Lang = "cs",
-                Phone = "+420234704560",
-                Timezone = "Europe/Prague",
-                Url = "https://pid.cz",
-            };
+                return new GtfsAgency()
+                {
+                    Id = "99",
+                    Name = "Pražská integrovaná doprava - vlaky",
+                    Lang = "cs",
+                    Phone = "+420234704560",
+                    Timezone = "Europe/Prague",
+                    Url = "https://pid.cz",
+                };
+            }
+            else if (integratedSystem == IntegratedSystemsEnum.ODIS)
+            {
+                return new GtfsAgency()
+                {
+                    Id = "ODIS",
+                    Name = "ODIS",
+                    Lang = "cs",
+                    Phone = "+420597608508",
+                    Timezone = "Europe/Prague",
+                    Url = "https://www.kodis.cz",
+                    Email = "info@kodis.cz"
+                };
+            }
+            else
+            {
+                throw new ArgumentException($"Nepodporovaný IDS {integratedSystem}.");
+            }
         }
     }
 }

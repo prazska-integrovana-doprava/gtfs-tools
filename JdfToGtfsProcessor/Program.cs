@@ -3,6 +3,7 @@ using GtfsLogging;
 using GtfsModel.Functions;
 using JdfModel;
 using JdfToGtfsProcessor.Stops;
+using Microsoft.Extensions.Configuration;
 using System.Xml.Serialization;
 
 namespace JdfToGtfsProcessor
@@ -11,41 +12,77 @@ namespace JdfToGtfsProcessor
     {
         static void Main(string[] args)
         {
-            var logFactory = new LogWriterFactory(@"c:\temp\jrspoje\log");
-            var log = new SimpleLogger(logFactory.CreateWriterToFile("JdfProcessor_Common"));
+            var settings = LoadSettings();
+            if (settings.LogFolder == null)
+            {
+                Console.WriteLine("V konfiguračním souboru není zadána složka pro ukládání logů (položka LogFolder). Nelze pokračovat.");
+                return;
+            }
+
+            var logFactory = new LogWriterFactory(settings.LogFolder);
+            var commonLog = new SimpleLogger(logFactory.CreateWriterToFile("JdfProcessor_Common"));
+            var missingPlatformCodeLog = new SimpleLogger(logFactory.CreateWriterToFile("JdfProcessor_MissingPlatformCodes"));
+            var routeLog = new SimpleLogger(logFactory.CreateWriterToFile("JdfProcessor_RouteLog"));
 
             StopDatabase stopDatabase;
             Console.WriteLine("Načítám data o zastávkách a návaznostech...");
+            if (settings.StopDataFile == null)
+            {
+                Console.WriteLine("V konfiguračním souboru není zadána cesta k souboru s daty zastávek (položka StopDataFile). Nelze pokračovat.");
+                return;
+            }
+
             try
             {
-                var stopData = LoadXmlData<StopDataCollection>(@"c:\temp\jrspoje\jdf\ZAST_ODIS.xml");
+                var stopData = LoadXmlData<StopDataCollection>(settings.StopDataFile);
                 var stopDataDictionary = stopData!.GetStopsByNumbers();
                 stopDatabase = new StopDatabase(stopDataDictionary);
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Nepodařilo se načíst data ze ZAST_ODIS.xml:\n\n" + ex.Message);
+                Console.WriteLine($"Nepodařilo se načíst data ze {settings.StopDataFile}:\n\n" + ex.Message);
                 return;
             }
 
             Console.WriteLine("Načítám JDF...");
-            var jdfFeeds = JdfFeed.LoadFromDirectoryRecursive(@"c:\temp\jrspoje\jdf\").ToList();
+            if (settings.JdfFolder == null) 
+            {
+                Console.WriteLine("V konfiguračním souboru není zadána cesta ke složce s JDF soubory (položka JdfFolder). Nelze pokračovat.");
+                return;
+            }
+            else if (!Directory.Exists(settings.JdfFolder))
+            {
+                Console.WriteLine($"Složka {settings.JdfFolder} zadaná jako zdroj JDF dat nebyla nalezena. Nelze pokračovat.");
+                return;
+            }
+
+                var jdfFeeds = JdfFeed.LoadFromDirectoryRecursive(settings.JdfFolder).ToList();
+            if (!jdfFeeds.Any())
+            {
+                Console.WriteLine($"Ze složky {settings.JdfFolder} nebyl načten žádný JDF feed (je cesta zadána správně?). Nelze pokračovat.");
+                return;
+            }
+
             var jdfFeedProcessor = new JdfFeedProcessor(stopDatabase);
             jdfFeedProcessor.InitFeed(FeedPublisher.KODIS);
 
             foreach (var jdfFeedEntry in jdfFeeds)
             {
                 Console.WriteLine(jdfFeedEntry.path);
-                jdfFeedProcessor.ProcessFeed(jdfFeedEntry.feed, new SimpleLoggerByFile(jdfFeedEntry.path, log), false);
+                jdfFeedProcessor.ProcessFeed(jdfFeedEntry.feed, 
+                    new SimpleLoggerByFile(jdfFeedEntry.path, commonLog),
+                    new SimpleLoggerByFile(jdfFeedEntry.path, missingPlatformCodeLog),
+                    new SimpleLoggerByFile(jdfFeedEntry.path, routeLog),
+                    false);
             }
 
-            var gtfsFeedEx = jdfFeedProcessor.GetResultGtfsFeed(log);
+            var gtfsFeedEx = jdfFeedProcessor.GetResultGtfsFeed(commonLog);
 
             Console.WriteLine("Transformuji data do finálního GTFS modelu...");
             var tripsToRemove = gtfsFeedEx.Trips.Values.Where(t => !t.StopTimes.Any2()).ToArray();
             foreach (var tripToRemove in tripsToRemove)
             {
-                log.Log($"Spoj {tripToRemove} má méně než dvě zastavení, bude smazán.");
+                commonLog.Log($"Spoj {tripToRemove} má méně než dvě zastavení, bude smazán.");
                 gtfsFeedEx.Trips.Remove(tripToRemove.GtfsId);
             }
 
@@ -54,13 +91,41 @@ namespace JdfToGtfsProcessor
                 trip.Headsign = trip.StopTimes.Last().Stop.Name;
             }
 
+            if (settings.TrainGtfsFolder != null)
+            {
+                // vlaky zpracováváme úplně bokem z dat SŽ, takže jen vlastně děláme merge dvou GTFS
+                Console.WriteLine("Načítám GTFS vlaků...");
+                var trainsGtfsFeed = GtfsFeedSerializer.DeserializeFeed(settings.TrainGtfsFolder);
+                gtfsFeedEx.MergeWith(trainsGtfsFeed,
+                    GtfsModel.Extended.Feed.MergeDuplicityRule.AllowDuplicityTakeOriginal,
+                    GtfsModel.Extended.Feed.MergeDuplicityRule.DisallowDuplicity,
+                    GtfsModel.Extended.Feed.MergeDuplicityRule.DisallowDuplicity,
+                    GtfsModel.Extended.Feed.MergeDuplicityRule.DisallowDuplicity,
+                    GtfsModel.Extended.Feed.MergeDuplicityRule.DisallowDuplicity,
+                    GtfsModel.Extended.Feed.MergeDuplicityRule.DisallowDuplicity);
+            }
+            else
+            {
+                Console.WriteLine("XX Soubor s GTFS vlaků nezadán, vlaky nebudou načteny.");
+            }
+
             var gtfsFeed = gtfsFeedEx.ToGtfsFeed();
 
             Console.WriteLine("Ukládám GTFS soubory...");
-            GtfsFeedSerializer.SerializeFeed(@"c:\temp\jrspoje\gtfs_output", gtfsFeed);
+            GtfsFeedSerializer.SerializeFeed(settings.OutputFolder, gtfsFeed);
 
-            log.Close();
+            commonLog.Close();
             Console.WriteLine("Hotovo.");
+        }
+
+        private static AppSettings LoadSettings()
+        {
+            var config = new ConfigurationBuilder()
+                .AddJsonFile("appsettings.json")
+                .Build();
+
+            var settings = config.Get<AppSettings>();
+            return settings!;
         }
 
         private static T? LoadXmlData<T>(string path)
@@ -73,8 +138,5 @@ namespace JdfToGtfsProcessor
                 return data;
             }
         }
-
-
-
     }
 }

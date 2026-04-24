@@ -95,8 +95,8 @@ namespace TrainsEditor.ExportModel
                     TextColor = Color.White,
                 };
 
-                foreach (var agency in agencyData)
-                {
+                var agency = agencyData.FirstOrDefault(a => a.Id == route.AgencyId);
+                if (agency != null) {
                     line.SubAgencies.Add(new RouteSubAgency()
                     {
                         RouteId = line.GtfsId,

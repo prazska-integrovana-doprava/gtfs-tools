@@ -9,7 +9,7 @@ namespace JdfModel
     public class Route
     {
         /// <summary>
-        /// Číslo linky - povinné čestimístné číslo
+        /// Číslo linky - povinné šestimístné číslo
         /// </summary>
         [CsvField("", 1, CsvFieldPostProcess.Quote)]
         public int RouteId { get; set; }

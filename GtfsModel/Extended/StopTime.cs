@@ -137,8 +137,9 @@ namespace GtfsModel.Extended
                 FareKilometerDistance = gtfsStopTime.FareKilometerDistance,
                 TripOperationType = gtfsStopTime.TripOperationType,
                 BikesAllowed = gtfsStopTime.BikesAllowed,
-                StopIcons = TransferIconCodes.ReverseTransform(gtfsStopTime.StopIcons).ToArray(),
-                HeadsignIcons = TransferIconCodes.ReverseTransform(gtfsStopTime.HeadsignIcons).ToArray(),
+                // u položek níže je důležité odlišit null od prázdného pole, protože null je default hodnota a pokud všechny záznamy mají null, sloupec se nemusí vypisovat na výstup
+                StopIcons = gtfsStopTime.StopIcons != null ? TransferIconCodes.ReverseTransform(gtfsStopTime.StopIcons).ToArray() : null,
+                HeadsignIcons = gtfsStopTime.HeadsignIcons != null ? TransferIconCodes.ReverseTransform(gtfsStopTime.HeadsignIcons).ToArray() : null,
             };
         }
 

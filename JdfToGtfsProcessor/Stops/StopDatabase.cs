@@ -119,7 +119,7 @@ namespace JdfToGtfsProcessor.Stops
         /// <param name="stopTime">Zastavení JDF</param>
         /// <param name="zone">Zóny spoje v zastávce</param>
         /// <returns>GTFS stop na míru nebo null, pokud nešlo najít</returns>
-        public GtfsModel.Extended.Stop? GetStopForStopTime(StopTime stopTime, string zone, ISimpleLogger log)
+        public GtfsModel.Extended.Stop? GetStopForStopTime(StopTime stopTime, string zone, ISimpleLogger missingPlatformCodeLog)
         {
             var stopsForCis = gtfsStops.GetValueOrDefault(stopTime.StopId);
             if (stopsForCis == null)
@@ -133,7 +133,7 @@ namespace JdfToGtfsProcessor.Stops
                 if (!stopsForCis.UniversalPlatformWasUsed)
                 {
                     // chybu vypisujeme jen při prvním výskytu
-                    log.Log($"Zastavení {stopTime} - nenalezena GTFS zastávka (chybí stanoviště '{stopTime.PlatformCode}'). Používám obecnou zastávku {stopTime.StopId} bez stanoviště.");
+                    missingPlatformCodeLog.Log($"Zastavení {stopTime} - nenalezena GTFS zastávka (chybí stanoviště '{stopTime.PlatformCode}'). Používám obecnou zastávku {stopTime.StopId} bez stanoviště.");
                 }
                 
                 platform = stopsForCis.UniversalPlatform;

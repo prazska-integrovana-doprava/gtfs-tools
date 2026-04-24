@@ -56,7 +56,7 @@ namespace JdfToGtfsProcessor
             }
         }
 
-        public void ProcessFeed(JdfFeed jdfFeed, ISimpleLogger log, bool skipPastFeeds)
+        public void ProcessFeed(JdfFeed jdfFeed, ISimpleLogger log, ISimpleLogger missingPlatformCodeLog, ISimpleLogger routeLog, bool skipPastFeeds)
         {
             if (!jdfFeed.Routes.Any() || !jdfFeed.Stops.Any() || !jdfFeed.Trips.Any() || !jdfFeed.StopTimes.Any())
             {
@@ -75,7 +75,7 @@ namespace JdfToGtfsProcessor
             stopDatabase.CreateStopDatabase(jdfFeed.Stops.Values, feedStartDate, log);
 
             // linky
-            routeMapping.TransformJdfRoutesToGtfs(jdfFeed.Routes.Values, jdfFeed.RoutesExtendedData, gtfsFeedEx.Agency["ODIS"], jdfFeed.Agencies, log);
+            routeMapping.TransformJdfRoutesToGtfs(jdfFeed.Routes.Values, jdfFeed.RoutesExtendedData, gtfsFeedEx.Agency["ODIS"], jdfFeed.Agencies, jdfFeed.AlternativeAgencies, routeLog);
 
             foreach (var route in jdfFeed.Routes.Values)
             {
@@ -182,7 +182,22 @@ namespace JdfToGtfsProcessor
                     continue;
                 }
 
-                var subAgency = gtfsRoute.SubAgencies.FirstOrDefault(sa => sa.LicenceNumber == trip.RouteId);
+                RouteSubAgency? subAgency;
+                var altAgencies = jdfFeed.AlternativeAgencies.Where(aa => aa.RouteNumber == trip.RouteId && (aa.TripNumber == 0 || aa.TripNumber == trip.TripNumber));
+                if (!altAgencies.Any()) 
+                {
+                    subAgency = gtfsRoute.SubAgencies.FirstOrDefault(sa => sa.LicenceNumber == trip.RouteId);
+                }
+                else
+                {
+                    if (altAgencies.Any2())
+                    {
+                        log.Log($"Spoj {trip} má v altdop.txt více záznamů pro nastavení dopravce. Pravděpodobně jsou rozlišeny fixed cody nebo datumovou platností, což aplikace v tuto chvíli nepodporuje. Bude použit první záznam.");
+                    }
+
+                    subAgency = gtfsRoute.SubAgencies.FirstOrDefault(sa => sa.SubAgencyId == altAgencies.First().AgencyId);
+                }
+
                 if (subAgency == null)
                 {
                     log.Log($"Nedohledán dopravce (gtfs sub agency) pro spoj {trip}.");
@@ -256,7 +271,7 @@ namespace JdfToGtfsProcessor
                 }
 
                 var stopId = stopTime.StopId.ToString() + "_" + stopTime.PlatformCode;
-                var gtfsStop = stopDatabase.GetStopForStopTime(stopTime, OrderZonesByNumericalValue(routeStop.FareZone), log);
+                var gtfsStop = stopDatabase.GetStopForStopTime(stopTime, OrderZonesByNumericalValue(routeStop.FareZone), missingPlatformCodeLog);
                 if (gtfsStop == null)
                 {
                     if (!stopDatabase.IgnoredStopsDueToError.Contains(stopTime.StopId))

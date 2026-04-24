@@ -119,6 +119,7 @@ namespace TrainsEditor.ExportModel
             // pokud se změní číslo vlaku nebo linka, vrátíme, co máme, a konstruujeme další vlak
             var stationTimes = new List<StationTime>();
             var logMessages = new List<(LogMessageType, string)>();
+            var tripOperationType = currentIntegratedSystem == IntegratedSystemsEnum.PID ? (TripOperationType?)TripOperationType.Regular : null;
             CZPTTLocation prevLocation = null;
             StationTime prevPublicStationTime = null;
             foreach (var location in czpttMessage.CZPTTInformation.CZPTTLocation)
@@ -127,7 +128,7 @@ namespace TrainsEditor.ExportModel
                 var isLocationLast = location == czpttMessage.CZPTTInformation.CZPTTLocation.Last();
                 var isWheelchairAccessible = networkSpecificParamsProvider.FindCentralNotesForLocation(location, CentralNoteCode.WheelchairTransportAndPickup, CentralNoteCode.WheelchairTransportAvailable).Any();
 
-                var stationTime = StationTime.Create(location, czpttMessage, isWheelchairAccessible, prevLocation, stopDb, isLocationFirst || isLocationLast, loaderLog);
+                var stationTime = StationTime.Create(location, czpttMessage, isWheelchairAccessible, tripOperationType, prevLocation, stopDb, isLocationFirst || isLocationLast, loaderLog);
                 if (stationTime == null)
                     continue;
 
@@ -144,7 +145,7 @@ namespace TrainsEditor.ExportModel
                         || prevPublicStationTime.IsSubstituteTransportOnDeparture != stationTime.IsSubstituteTransportOnDeparture))
                 {
                     // nesmíme použít 'prevConstructedStationTime', protože potřebujeme vlastní referenci (bude jiná linka)
-                    stationTime = StationTime.Create(location, czpttMessage, isWheelchairAccessible, prevLocation, stopDb, isLocationFirst || isLocationLast, loaderLog);
+                    stationTime = StationTime.Create(location, czpttMessage, isWheelchairAccessible, tripOperationType, prevLocation, stopDb, isLocationFirst || isLocationLast, loaderLog);
                     if (stationTime.IsValid && stationTime.IsPublic)
                     {
                         var lineTrain = TrainTrip.Construct(resultTrain, stationTimes, lineDb, loaderLog, processLog, emptyLineHandler, currentIntegratedSystem);

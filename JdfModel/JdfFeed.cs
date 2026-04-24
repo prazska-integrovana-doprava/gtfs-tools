@@ -28,6 +28,8 @@ namespace JdfModel
 
         public List<StopTime> StopTimes { get; private set; }
 
+        public List<AlternativeAgency> AlternativeAgencies { get; private set; }
+
         public static JdfFeed LoadFromDirectory(string path)
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
@@ -44,6 +46,7 @@ namespace JdfModel
                 TimeRemarks = CsvFileSerializer.DeserializeFile<TimeRemark>(Path.Combine(path, "caskody.txt"), ',', null, "ddMMyyyy", encoding, false, ";"),
                 RouteStops = CsvFileSerializer.DeserializeFile<RouteStop>(Path.Combine(path, "zaslinky.txt"), ',', null, "ddMMyyyy", encoding, false, ";"),
                 StopTimes = CsvFileSerializer.DeserializeFile<StopTime>(Path.Combine(path, "zasspoje.txt"), ',', null, "ddMMyyyy", encoding, false, ";"),
+                AlternativeAgencies = CsvFileSerializer.DeserializeFile<AlternativeAgency>(Path.Combine(path, "altdop.txt"), ',', null, "ddMMyyyy", encoding, false, ";"),
             };
         }
 
@@ -88,6 +91,7 @@ namespace JdfModel
                 TimeRemarks = DeserializeFileInArchive<TimeRemark>(entries, "caskody.txt"),
                 RouteStops = DeserializeFileInArchive<RouteStop>(entries, "zaslinky.txt"),
                 StopTimes = DeserializeFileInArchive<StopTime>(entries, "zasspoje.txt"),
+                AlternativeAgencies = DeserializeFileInArchive<AlternativeAgency>(entries, "altdop.txt"),
             };
         }
 

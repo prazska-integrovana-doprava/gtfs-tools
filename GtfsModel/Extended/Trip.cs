@@ -168,7 +168,7 @@ namespace GtfsModel.Extended
                 ShortName = gtfsTrip.ShortName,
                 WheelchairAccessible = gtfsTrip.WheelchairAccessible,
                 SubAgency = routes[gtfsTrip.RouteId].SubAgencies.FirstOrDefault(a => a.SubAgencyId == gtfsTrip.SubAgencyId),
-                HeadsignIcons = TransferIconCodes.ReverseTransform(gtfsTrip.HeadsignIcons).ToArray(),
+                HeadsignIcons = gtfsTrip.HeadsignIcons != null ? TransferIconCodes.ReverseTransform(gtfsTrip.HeadsignIcons).ToArray() : null, // je důležité odlišit null od prázdného pole, protože null je default hodnota a pokud všechny záznamy mají null, sloupec se nemusí vypisovat na výstup
             };
         }
 

@@ -28,7 +28,7 @@ namespace JdfToGtfsProcessor
             reverseMappingFromGtfsToJdf = new Dictionary<GtfsModel.Extended.Route, Route>();
         }
 
-        public void TransformJdfRoutesToGtfs(IEnumerable<Route> jdfRoutes, Dictionary<int, List<RouteExt>> jdfRoutesExtendedData, GtfsModel.GtfsAgency gtfsAgency, Dictionary<string, Agency> jdfAgencies, ISimpleLogger log) 
+        public void TransformJdfRoutesToGtfs(IEnumerable<Route> jdfRoutes, Dictionary<int, List<RouteExt>> jdfRoutesExtendedData, GtfsModel.GtfsAgency gtfsAgency, Dictionary<string, Agency> jdfAgencies, List<AlternativeAgency> alternativeAgencies, ISimpleLogger routeLog) 
         {
             // tohle je tu jen pro kontrolu, že každá linka je v souboru jen jednou
             jdfRoutes.ToDictionary(r => r.RouteId);
@@ -38,7 +38,7 @@ namespace JdfToGtfsProcessor
                 var routeExts = jdfRoutesExtendedData.GetValueOrDefault(route.RouteId);
                 if (routeExts != null && routeExts.Count > 1)
                 {
-                    log.Log($"Existuje více záznamů pro linku {route} v souboru RouteExt.txt. Používám první uvedený.");
+                    routeLog.Log($"Existuje více záznamů pro linku {route} v souboru RouteExt.txt. Používám první uvedený.");
                 }
 
                 var routeExt = routeExts?.FirstOrDefault();
@@ -50,7 +50,7 @@ namespace JdfToGtfsProcessor
                 else
                 {
                     routeShortName = (route.RouteId % 1000).ToString();
-                    log.Log($"Linka {route} nemá záznam v LinExt.txt nebo v něm nemá definovaný alias, používám automaticky poslední tři číslice z licenčního čísla: {routeShortName}");
+                    routeLog.Log($"Linka {route} nemá záznam v LinExt.txt nebo v něm nemá definovaný alias, používám automaticky poslední tři číslice z licenčního čísla: {routeShortName}");
                 }
 
                 var gtfsRouteId = route.RouteId.ToString();
@@ -60,15 +60,15 @@ namespace JdfToGtfsProcessor
                     var otherOriginalRoute = reverseMappingFromGtfsToJdf[gtfsRoute];
                     if (otherOriginalRoute.RouteDescription != route.RouteDescription)
                     {
-                        log.Log($"Linky {otherOriginalRoute} a {route} budou sloučeny jako linka {routeShortName}, mají ovšem odlišné názvy v JDF: {otherOriginalRoute.RouteDescription} x {route.RouteDescription}. Použije se první hodnota.");
+                        routeLog.Log($"Linky {otherOriginalRoute} a {route} budou sloučeny jako linka {routeShortName}, mají ovšem odlišné názvy v JDF: {otherOriginalRoute.RouteDescription} x {route.RouteDescription}. Použije se první hodnota.");
                     }
                     else if (otherOriginalRoute.TrafficType != route.TrafficType)
                     {
-                        log.Log($"Linky {otherOriginalRoute} a {route} budou sloučeny jako linka {routeShortName}, jsou ovšem odlišného druhu dopravy: {otherOriginalRoute.TrafficType} x {route.TrafficType}. Použije se první hodnota, takže spoje linky {route} budou nejspíše vedeny pod chybným druhem dopravy.");
+                        routeLog.Log($"Linky {otherOriginalRoute} a {route} budou sloučeny jako linka {routeShortName}, jsou ovšem odlišného druhu dopravy: {otherOriginalRoute.TrafficType} x {route.TrafficType}. Použije se první hodnota, takže spoje linky {route} budou nejspíše vedeny pod chybným druhem dopravy.");
                     }
                     else if ((otherOriginalRoute.RouteType == RouteTypes.Urban) != (route.RouteType == RouteTypes.Urban))
                     {
-                        log.Log($"Linky {otherOriginalRoute} a {route} budou sloučeny jako linka {routeShortName}, mají ovšem odlišný typ: {otherOriginalRoute.RouteType} x {route.RouteType}. Použije se {otherOriginalRoute.RouteType}.");
+                        routeLog.Log($"Linky {otherOriginalRoute} a {route} budou sloučeny jako linka {routeShortName}, mají ovšem odlišný typ: {otherOriginalRoute.RouteType} x {route.RouteType}. Použije se {otherOriginalRoute.RouteType}.");
                     }
                 }
                 else
@@ -79,7 +79,7 @@ namespace JdfToGtfsProcessor
                         Agency = gtfsAgency,
                         LongName = route.RouteDescription,
                         ShortName = routeShortName,
-                        Type = TranslateTrafficType(route, log),
+                        Type = TranslateTrafficType(route, routeLog),
                         IsRegional = route.RouteType != RouteTypes.Urban,
                     };
 
@@ -94,23 +94,27 @@ namespace JdfToGtfsProcessor
                 {
                     JdfRoutesToGtfs.Add(route.RouteId, gtfsRoute);
 
-                    var jdfAgency = jdfAgencies.GetValueOrDefault(route.AgencyId);
-                    if (jdfAgency == null)
+                    var agencyIds = new[] { route.AgencyId }.Union(alternativeAgencies.Where(aa => aa.RouteNumber == route.RouteId).Select(aa => aa.AgencyId)).Distinct();
+                    foreach (var agencyId in agencyIds)
                     {
-                        log.Log($"Dopravce {route.AgencyId} linky {route} nenalezen. Nebude vyplněn název dopravce.");
-                    }
+                        var jdfAgency = jdfAgencies.GetValueOrDefault(agencyId);
+                        if (jdfAgency == null)
+                        {
+                            routeLog.Log($"Dopravce {route.AgencyId} linky {route} nenalezen. Nebude vyplněn název dopravce.");
+                        }
 
-                    gtfsRoute.SubAgencies.Add(new GtfsModel.RouteSubAgency()
-                    {
-                        LicenceNumber = route.RouteId,
-                        RouteId = gtfsRoute.GtfsId,
-                        SubAgencyId = route.AgencyId,
-                        SubAgencyName = jdfAgency?.Name,
-                    });
+                        gtfsRoute.SubAgencies.Add(new GtfsModel.RouteSubAgency()
+                        {
+                            LicenceNumber = route.RouteId,
+                            RouteId = gtfsRoute.GtfsId,
+                            SubAgencyId = agencyId,
+                            SubAgencyName = jdfAgency?.Name,
+                        });
+                    }
                 }
                 else if (JdfRoutesToGtfs[route.RouteId] != gtfsRoute)
                 {
-                    log.Log($"Linka {route} už je nasměrována na GTFS {JdfRoutesToGtfs[route.RouteId]}, ale teď má být najednou přesměrována na {gtfsRoute}. Ignoruji.");
+                    routeLog.Log($"Linka {route} už je nasměrována na GTFS {JdfRoutesToGtfs[route.RouteId]}, ale teď má být najednou přesměrována na {gtfsRoute}. Ignoruji.");
                 }
             }
         }
