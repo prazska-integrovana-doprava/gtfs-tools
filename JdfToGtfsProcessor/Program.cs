@@ -3,6 +3,7 @@ using GtfsLogging;
 using GtfsModel.Functions;
 using JdfModel;
 using JdfToGtfsProcessor.Stops;
+using JdfToGtfsProcessor.Transfers;
 using Microsoft.Extensions.Configuration;
 using System.Xml.Serialization;
 
@@ -25,7 +26,7 @@ namespace JdfToGtfsProcessor
             var routeLog = new SimpleLogger(logFactory.CreateWriterToFile("JdfProcessor_RouteLog"));
 
             StopDatabase stopDatabase;
-            Console.WriteLine("Načítám data o zastávkách a návaznostech...");
+            Console.WriteLine("Načítám data o zastávkách...");
             if (settings.StopDataFile == null)
             {
                 Console.WriteLine("V konfiguračním souboru není zadána cesta k souboru s daty zastávek (položka StopDataFile). Nelze pokračovat.");
@@ -56,7 +57,7 @@ namespace JdfToGtfsProcessor
                 return;
             }
 
-                var jdfFeeds = JdfFeed.LoadFromDirectoryRecursive(settings.JdfFolder).ToList();
+            var jdfFeeds = JdfFeed.LoadFromDirectoryRecursive(settings.JdfFolder).ToList();
             if (!jdfFeeds.Any())
             {
                 Console.WriteLine($"Ze složky {settings.JdfFolder} nebyl načten žádný JDF feed (je cesta zadána správně?). Nelze pokračovat.");
@@ -89,7 +90,17 @@ namespace JdfToGtfsProcessor
             foreach (var trip in gtfsFeedEx.Trips.Values)
             {
                 trip.Headsign = trip.StopTimes.Last().Stop.Name;
+                trip.Route.Trips.Add(trip);
             }
+
+            Console.WriteLine("Načítám soubory s garantovanými přestupy...");
+            var busToBusTransfers = LoadTransfersFile(settings.BusToBusTransfersFile, "BUS->BUS");
+            var trainToBusTransfers = LoadTransfersFile(settings.TrainToBusTransfersFile, "VLAK->BUS");
+            var transferLog = new SimpleLogger(logFactory.CreateWriterToFile("JdfProcessor_Transfers"));
+            var transferProcessor = new TimedTransfersProcessor(busToBusTransfers, trainToBusTransfers, transferLog, stopDatabase);
+
+            Console.WriteLine("Zpracovávám garantované přestupy BUS->BUS...");
+            gtfsFeedEx.Transfers.AddRange(transferProcessor.ProcessBusToBusTransfers(gtfsFeedEx.Routes));
 
             if (settings.TrainGtfsFolder != null)
             {
@@ -103,6 +114,9 @@ namespace JdfToGtfsProcessor
                     GtfsModel.Extended.Feed.MergeDuplicityRule.DisallowDuplicity,
                     GtfsModel.Extended.Feed.MergeDuplicityRule.DisallowDuplicity,
                     GtfsModel.Extended.Feed.MergeDuplicityRule.DisallowDuplicity);
+
+                Console.WriteLine("Zpracovávám garantované přestupy VLAK->BUS...");
+                gtfsFeedEx.Transfers.AddRange(transferProcessor.ProcessTrainToBusTransfers(gtfsFeedEx.Routes));
             }
             else
             {
@@ -136,6 +150,34 @@ namespace JdfToGtfsProcessor
             {
                 var data = (T?)serializer.Deserialize(reader);
                 return data;
+            }
+        }
+
+        private static List<XmlTransfer> LoadTransfersFile(string? path, string transferName)
+        {
+            if (path != null)
+            {
+                try
+                {
+                    var transferCollection = LoadXmlData<XmlTransferCollection>(path);
+                    if (transferCollection == null || transferCollection.Items == null)
+                    {
+                        Console.WriteLine($"Soubor {path} je prázdný.");
+                        return new();
+                    }
+
+                    return transferCollection.Items;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Nepodařilo se načíst data ze {path}:\n\n" + ex.Message);
+                    return new();
+                }
+            }
+            else
+            {
+                Console.WriteLine($"Soubor pro návaznosti {transferName} není zadán.");
+                return new();
             }
         }
     }

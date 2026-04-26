@@ -18,14 +18,14 @@ namespace JdfToGtfsProcessor.Stops
         private Dictionary<int, Dictionary<string, StopData>> stopDataDictionary;
 
         // indexováno číslem zastávky a nástupištěm - může být více záznamů lišící se tarifním pásmem
-        private Dictionary<int, StopCollectionForCisNumber> gtfsStops;
+        public Dictionary<int, StopCollectionForCisNumber> StopsToGtfsMapping;
 
         public HashSet<int> IgnoredStopsDueToError;
 
         public StopDatabase(Dictionary<int, Dictionary<string, StopData>> stopDataDictionary)
         {
             this.stopDataDictionary = stopDataDictionary;
-            gtfsStops = new Dictionary<int, StopCollectionForCisNumber>();
+            StopsToGtfsMapping = new Dictionary<int, StopCollectionForCisNumber>();
             IgnoredStopsDueToError = new HashSet<int>();
         }
 
@@ -43,18 +43,18 @@ namespace JdfToGtfsProcessor.Stops
                     continue;
                 }
 
-                if (gtfsStops.ContainsKey(stop.StopId))
+                if (StopsToGtfsMapping.ContainsKey(stop.StopId))
                 {
-                    if (gtfsStops[stop.StopId].StopName != stop.StopName)
+                    if (StopsToGtfsMapping[stop.StopId].StopName != stop.StopName)
                     {
                         if (feedStartDate <= DateTime.Now.Date)
                         {
-                            log.Log($"Zastávka {stop} má jiný název, než dříve uložený název {gtfsStops[stop.StopId].StopName}. Používám nový název, protože feed už platí (nebo platil v minulosti).");
-                            gtfsStops[stop.StopId].StopName = stop.StopName;
+                            log.Log($"Zastávka {stop} má jiný název, než dříve uložený název {StopsToGtfsMapping[stop.StopId].StopName}. Používám nový název, protože feed už platí (nebo platil v minulosti).");
+                            StopsToGtfsMapping[stop.StopId].StopName = stop.StopName;
                         }
                         else
                         {
-                            log.Log($"Zastávka {stop} má jiný název, než dříve uložený název {gtfsStops[stop.StopId].StopName}. Nový název bude ignorován, protože platnost JDF je až od {feedStartDate}.");
+                            log.Log($"Zastávka {stop} má jiný název, než dříve uložený název {StopsToGtfsMapping[stop.StopId].StopName}. Nový název bude ignorován, protože platnost JDF je až od {feedStartDate}.");
                         }
                     }
 
@@ -84,7 +84,7 @@ namespace JdfToGtfsProcessor.Stops
                         CisId = stop.StopId,
                         Position = avgPosition
                     }));
-                    gtfsStops.Add(stop.StopId, gtfsStopsForCis);
+                    StopsToGtfsMapping.Add(stop.StopId, gtfsStopsForCis);
 
                     foreach (var thisStopData in thisStopDataForAllPlatforms.Values)
                     {
@@ -121,7 +121,7 @@ namespace JdfToGtfsProcessor.Stops
         /// <returns>GTFS stop na míru nebo null, pokud nešlo najít</returns>
         public GtfsModel.Extended.Stop? GetStopForStopTime(StopTime stopTime, string zone, ISimpleLogger missingPlatformCodeLog)
         {
-            var stopsForCis = gtfsStops.GetValueOrDefault(stopTime.StopId);
+            var stopsForCis = StopsToGtfsMapping.GetValueOrDefault(stopTime.StopId);
             if (stopsForCis == null)
             {
                 return null;

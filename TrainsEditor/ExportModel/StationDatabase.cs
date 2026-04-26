@@ -198,6 +198,7 @@ namespace TrainsEditor.ExportModel
                     ZoneId = station.Zones,
                     WheelchairBoarding = station.WheelchairAccessible ? WheelchairBoarding.Possible : station.WheelchairAccessibilityNotSet ? WheelchairBoarding.Unknown : WheelchairBoarding.Unknown,
                     PrimaryLocationCode = stationNumber,
+                    CisId = station.CisNumber,
                     IsIntegrated = true
                 };
 
