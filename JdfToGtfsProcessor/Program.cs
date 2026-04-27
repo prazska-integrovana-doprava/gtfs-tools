@@ -129,6 +129,9 @@ namespace JdfToGtfsProcessor
             GtfsFeedSerializer.SerializeFeed(settings.OutputFolder, gtfsFeed);
 
             commonLog.Close();
+            missingPlatformCodeLog.Close();
+            routeLog.Close();
+            transferLog.Close();
             Console.WriteLine("Hotovo.");
         }
 

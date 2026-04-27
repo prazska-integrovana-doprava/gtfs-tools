@@ -109,7 +109,7 @@ namespace TrainsEditor.ExportModel
                 WholeTrain = wholeTrain,
                 BikesAllowed = BikeAccessibility.Possible,
                 DirectionId = (trainNumber % 2 == 1) ? Direction.Inbound : Direction.Outbound, // BÚNO
-                IsExceptional = line.AswId >= 1100 && line.AswId < 1200,
+                IsExceptional = line.AswId >= 1100 && line.AswId < 1200, // TODO dát pryč, už se jmenujou slušně
                 StopTimes = stationTimes.Select(st => st as StopTime).ToList(),
                 ShortName = trainShortName,
                 TrainNumber = trainNumber,

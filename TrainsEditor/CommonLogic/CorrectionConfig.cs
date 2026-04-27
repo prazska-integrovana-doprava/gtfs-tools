@@ -31,6 +31,7 @@ namespace TrainsEditor.CommonLogic
             { "CZ58117", "CZ58486" }, // Praha-Smíchov sev.n.
             { "CZ58000", "CZ54044" }, // Čáslav (místní nádraží)
             { "CZ38034", "CZ34364" }, // Ostrava uhelné nádraží
+            { "CZ38006", "CZ34894" }, // Třemešná ve Slezsku ú.r.
             { "PL5710", "PL1331" }, // Głuchołazy
             { "PL7565", "PL873" }, // Cieszyn
         };
