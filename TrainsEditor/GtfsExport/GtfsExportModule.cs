@@ -228,7 +228,7 @@ namespace TrainsEditor.GtfsExport
 
         private TrainGroupCollection LoadTrainsFromFolder(string folder, TrainGroupLoader.TrainsLoaderCallback reportCallback)
         {
-            return _trainGroupLoader.LoadTrainFiles(folder, DateTime.Now.AddHours(-3).Date, reportCallback);
+            return _trainGroupLoader.LoadTrainFiles(folder, true, reportCallback);
         }
 
 

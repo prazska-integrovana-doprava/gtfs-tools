@@ -60,7 +60,7 @@ namespace TrainsEditor
         private class BackgroundLoaderArgument
         {
             public string Folder { get; set; }
-            public DateTime? PastDataLimit { get; set; }
+            public bool IgnorePastData { get; set; }
             public DateTime? StartDateForVisualCalendar { get; set; }
             public DateTime? EndDateForVisualCalendar { get; set; }
         }
@@ -136,7 +136,7 @@ namespace TrainsEditor
             var arg = (BackgroundLoaderArgument)e.Argument;
             try
             {
-                var orderedTrains = FilesManager.LoadTrainFiles(arg.Folder, arg.PastDataLimit, StationDatabase, RouteDatabase, holidaysCalendar, arg.StartDateForVisualCalendar, arg.EndDateForVisualCalendar, currentIntegratedSystem, LoadTrainFilesCallback);
+                var orderedTrains = FilesManager.LoadTrainFiles(arg.Folder, arg.IgnorePastData, StationDatabase, RouteDatabase, holidaysCalendar, arg.StartDateForVisualCalendar, arg.EndDateForVisualCalendar, currentIntegratedSystem, LoadTrainFilesCallback);
                 e.Result = new BackgroundLoaderResult()
                 {
                     LoadedFiles = new ObservableCollection<AbstractTrainFile>(orderedTrains),
@@ -222,7 +222,7 @@ namespace TrainsEditor
             backgroundWorker.RunWorkerAsync(new BackgroundLoaderArgument()
             {
                 Folder = txtFolderRepo.Text,
-                PastDataLimit = chcIgnorePastData.IsChecked.GetValueOrDefault() ? DateTime.Now.AddHours(-4) : (DateTime?)null,
+                IgnorePastData = chcIgnorePastData.IsChecked.GetValueOrDefault(),
                 StartDateForVisualCalendar = dtStartDate.SelectedDate,
                 EndDateForVisualCalendar = dtEndDate.SelectedDate,
             });

@@ -89,6 +89,7 @@
     <Compile Include="CommonModel\TrainGroup.cs" />
     <Compile Include="CommonModel\TrainGroupCollection.cs" />
     <Compile Include="CommonLogic\TrainGroupLoader.cs" />
+    <Compile Include="EditorLogic\FileListStore.cs" />
     <Compile Include="EditorLogic\FilesDownloader.cs" />
     <Compile Include="EditorLogic\FtpFileInfo.cs" />
     <Compile Include="EditorLogic\XmlSerializeToObjectHelper.cs" />

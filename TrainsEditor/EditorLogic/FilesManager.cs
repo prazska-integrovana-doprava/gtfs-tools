@@ -25,17 +25,17 @@ namespace TrainsEditor.EditorLogic
         /// Během toho je schopen reportovat status a podporuje zrušení operace (kvůli kooperaci s UI).
         /// </summary>
         /// <param name="folder">Složka se soubory vlaků (všemi).</param>
-        /// <param name="pastDataLimit">Datum a čas, před nímž nás již vlaky nezajímají. Vlaky, které podle své zadané bitmapy neplatí po tomto datu, nebudou načteny. Lze vložit null, pak jsou načteny všechny vlaky.</param>
+        /// <param name="ignorePastData">True, pokud mají být načteny pouze vlaky platící ode dneška dál. Když false, pak jsou načteny všechny vlaky.</param>
         /// <param name="stationDatabase">Databáze zastávek PID pro určení zejména tarifních pásem a ASW ID</param>
         /// <param name="routeDatabase">Databáze linek PID pro určení dopravce a trasy</param>
         /// <param name="startDateForVisualCalendar">Počáteční datum pro vizuální kalendář (viz <see cref="CalendarVisualBitmap"/>)</param>
         /// <param name="endDateForVisualCalendar">Koncové datum pro vizuální kalendář (viz <see cref="CalendarVisualBitmap"/>)</param>
         /// <param name="reportCallback">Callback pro report stavu, který zároveň umožňuje zrušit operaci. Používáme callback <see cref="CommonLogic.TrainGroupLoader"/>u. Protože načítání dat probíhá ve dvou fázích (nejdřív načtení do <see cref="TrainGroupCollection"/> a pak transformace do ViewModelu) a první fáze probíhá uvnitř <see cref="CommonLogic.TrainGroupLoader"/>u, reportuje se navenek stav postupně od 0 do 100 v první fázi a pak znovu od 0 do 100 v druhé fázi (transformace). Zároveň fázi transformace nejde zrušit, dokončí se vždy se všemi soubory, které se načetly v první fázi.</param>
         /// <returns>ViewModely načtených vlaků</returns>
-        public static IEnumerable<AbstractTrainFile> LoadTrainFiles(string folder, DateTime? pastDataLimit, StationDatabase stationDatabase, RouteDatabase routeDatabase, PublicHolidaysCalendar holidaysCalendar,
+        public static IEnumerable<AbstractTrainFile> LoadTrainFiles(string folder, bool ignorePastData, StationDatabase stationDatabase, RouteDatabase routeDatabase, PublicHolidaysCalendar holidaysCalendar,
             DateTime? startDateForVisualCalendar, DateTime? endDateForVisualCalendar, IntegratedSystemsEnum currentIntegratedSystem, TrainGroupLoader.TrainsLoaderCallback reportCallback = null)
         {
-            var groupsByTrId = TrainGroupLoader.LoadTrainFiles(folder, pastDataLimit, reportCallback);
+            var groupsByTrId = TrainGroupLoader.LoadTrainFiles(folder, ignorePastData, reportCallback);
             var loadedFiles = new List<AbstractTrainFile>();
             int nLoaded = 0;
             foreach (var group in groupsByTrId.OrderBy(gr => gr.MinimumNonzeroTrainNumber))

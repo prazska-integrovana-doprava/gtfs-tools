@@ -44,10 +44,12 @@ namespace TrainsEditor.CommonLogic
         /// <param name="pastDataLimit">Je-li zadáno, vlaky, jejichž platnost končí před tímto dnem, budou ignorovány</param>
         /// <param name="reportCallback">Callback, kam se hlásí progress a může zrušit načítání (při zrušení je vrácena ta část souborů, které již byly načteny).</param>
         /// <returns>Načtené vlaky rozdělené po skupinách.</returns>
-        public TrainGroupCollection LoadTrainFiles(string folder, DateTime? pastDataLimit, TrainsLoaderCallback reportCallback = null)
+        public TrainGroupCollection LoadTrainFiles(string folder, bool ignorePastData, TrainsLoaderCallback reportCallback = null)
         {
             var fileList = Directory.EnumerateDirectories(folder).SelectMany(dir => Directory.EnumerateFiles(dir, "*.xml", SearchOption.TopDirectoryOnly)).ToArray();
+            var ignoredFileList = ignorePastData ? new FileListStore(Path.Combine(folder, "pastFiles.cache")) : null;
 
+            var pastDataLimit = ignorePastData ? DateTime.Now.AddHours(-4) : (DateTime?)null;
             var result = new TrainGroupCollection();
             bool shouldResume = true;
             reportCallback?.Invoke(0, fileList.Length, out shouldResume);
@@ -57,6 +59,13 @@ namespace TrainsEditor.CommonLogic
             int nLoaded = 0;
             foreach (var file in fileList)
             {
+                var fileWithoutFolder = file.Replace(folder, "");
+                if (ignorePastData && ignoredFileList.Contains(fileWithoutFolder))
+                {
+                    nLoaded++;
+                    continue;
+                }
+
                 CurrentlyProcessedFileName = file;
                 var trainFile = LoadFileInternal(file);
 
@@ -65,13 +74,18 @@ namespace TrainsEditor.CommonLogic
                     // přidáváme pouze pokud už není neplatný (v případě, kdy caller zadal limit na platnost)
                     result.AddTrain(trainFile);
                 }
-            
+                else
+                {
+                    ignoredFileList.Add(fileWithoutFolder);
+                }
+
                 reportCallback?.Invoke(++nLoaded, fileList.Length, out shouldResume);
                 CurrentlyProcessedFileName = null;
                 if (!shouldResume)
                     break;
             }
 
+            ignoredFileList?.Flush();
             result.ProcessCalendars();
             LoadedTrainGroups = result;
             return result;
