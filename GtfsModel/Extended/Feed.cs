@@ -229,7 +229,7 @@ namespace GtfsModel.Extended
             {
                 Agency = Agency.Values.ToList(),
                 Calendar = Calendar.Values.Where(cal => cal is CalendarRecord).Select(cal => ((CalendarRecord)cal).ToGtfsCalendar()).ToList(),
-                CalendarDates = Calendar.Values.SelectMany(cal => cal.Exceptions.Values.Select(ex => ex.ToGtfsCalendarDate(cal.GtfsId))).ToList(),
+                CalendarDates = Calendar.Values.SelectMany(cal => cal.GetAllGtfsExceptions()).ToList(),
                 FeedInfo = FeedInfo != null ? new List<GtfsFeedInfo>() { FeedInfo } : new List<GtfsFeedInfo>(),
                 Routes = Routes.Values.Select(r => r.ToGtfsRoute(Agency.Values.First().Id)).ToList(),
                 RouteSubAgencies = Routes.Values.SelectMany(r => r.SubAgencies).Distinct().ToList(),

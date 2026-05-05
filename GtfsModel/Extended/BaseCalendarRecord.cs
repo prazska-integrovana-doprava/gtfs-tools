@@ -106,6 +106,19 @@ namespace GtfsModel.Extended
         }
 
         /// <summary>
+        /// Vrátí všechny dny, které má společné s kalendářem <paramref name="other"/>
+        /// </summary>
+        public IEnumerable<DateTime> IntersectDatesWith(BaseCalendarRecord other)
+        {
+            var otherDates = new HashSet<DateTime>(other.ListDates());
+            foreach (var day in ListDates())
+            {
+                if (otherDates.Contains(day))
+                    yield return day;
+            }
+        }
+
+        /// <summary>
         /// Přidá výjimku do kalendáře
         /// </summary>
         /// <param name="date">Datum</param>
@@ -124,7 +137,7 @@ namespace GtfsModel.Extended
         /// </summary>
         public IEnumerable<GtfsCalendarDate> GetAllGtfsExceptions()
         {
-            foreach (var exception in Exceptions.Values)
+            foreach (var exception in Exceptions.Values.OrderBy(v => v.Date))
             {
                 yield return exception.ToGtfsCalendarDate(GtfsId);
             }

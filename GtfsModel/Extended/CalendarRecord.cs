@@ -108,7 +108,7 @@ namespace GtfsModel.Extended
             if (dateFrom > StartDate && dateFrom < EndDate && dateTo > StartDate && dateTo < EndDate)
             {
                 // uvnitř intervalu, nejhorší případ, nastřílíme to výjimkama
-                for (var date = dateFrom; date < dateTo; date = date.AddDays(1))
+                for (var date = dateFrom; date <= dateTo; date = date.AddDays(1))
                 {
                     if (OperatesOn(date.DayOfWeek))
                     {

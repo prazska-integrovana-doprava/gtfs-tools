@@ -30,23 +30,25 @@ namespace JdfModel
 
         public List<AlternativeAgency> AlternativeAgencies { get; private set; }
 
+        public List<TimedTransfer> TimeTransfer { get; private set; }
+
         public static JdfFeed LoadFromDirectory(string path)
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            var encoding = Encoding.GetEncoding(1250);
 
             return new JdfFeed()
             {
-                Stops = CsvFileSerializer.DeserializeFile<Stop>(Path.Combine(path, "zastavky.txt"), ',', null, "ddMMyyyy", encoding, false, ";").ToDictionary(s => s.StopId),
-                Agencies = CsvFileSerializer.DeserializeFile<Agency>(Path.Combine(path, "dopravci.txt"), ',', null, "ddMMyyyy", encoding, false, ";").ToDictionary(a => a.Id),
-                Routes = CsvFileSerializer.DeserializeFile<Route>(Path.Combine(path, "linky.txt"), ',', null, "ddMMyyyy", encoding, false, ";").ToDictionary(r => r.RouteId),
-                RoutesExtendedData = CsvFileSerializer.DeserializeFile<RouteExt>(Path.Combine(path, "linext.txt"), ',', null, "ddMMyyyy", encoding, false, ";").GroupBy(r => r.RouteId).ToDictionary(r => r.Key, r => r.ToList()),
-                Trips = CsvFileSerializer.DeserializeFile<Trip>(Path.Combine(path, "spoje.txt"), ',', null, "ddMMyyyy", encoding, false, ";"),
-                FixedCodes = CsvFileSerializer.DeserializeFile<FixedCode>(Path.Combine(path, "pevnykod.txt"), ',', null, "ddMMyyyy", encoding, false, ";").ToDictionary(fc => fc.CodeId),
-                TimeRemarks = CsvFileSerializer.DeserializeFile<TimeRemark>(Path.Combine(path, "caskody.txt"), ',', null, "ddMMyyyy", encoding, false, ";"),
-                RouteStops = CsvFileSerializer.DeserializeFile<RouteStop>(Path.Combine(path, "zaslinky.txt"), ',', null, "ddMMyyyy", encoding, false, ";"),
-                StopTimes = CsvFileSerializer.DeserializeFile<StopTime>(Path.Combine(path, "zasspoje.txt"), ',', null, "ddMMyyyy", encoding, false, ";"),
-                AlternativeAgencies = CsvFileSerializer.DeserializeFile<AlternativeAgency>(Path.Combine(path, "altdop.txt"), ',', null, "ddMMyyyy", encoding, false, ";"),
+                Stops = DeserializeFile<Stop>(path, "zastavky.txt").ToDictionary(s => s.StopId),
+                Agencies = DeserializeFile<Agency>(path, "dopravci.txt").ToDictionary(a => a.Id),
+                Routes = DeserializeFile<Route>(path, "linky.txt").ToDictionary(r => r.RouteId),
+                RoutesExtendedData = DeserializeFile<RouteExt>(path, "linext.txt").GroupBy(r => r.RouteId).ToDictionary(r => r.Key, r => r.ToList()),
+                Trips = DeserializeFile<Trip>(path, "spoje.txt"),
+                FixedCodes = DeserializeFile<FixedCode>(path, "pevnykod.txt").ToDictionary(fc => fc.CodeId),
+                TimeRemarks = DeserializeFile<TimeRemark>(path, "caskody.txt"),
+                RouteStops = DeserializeFile<RouteStop>(path, "zaslinky.txt"),
+                StopTimes = DeserializeFile<StopTime>(path, "zasspoje.txt"),
+                AlternativeAgencies = DeserializeFile<AlternativeAgency>(path, "altdop.txt"),
+                TimeTransfer = DeserializeFile<TimedTransfer>(path, "navaznosti.txt"),
             };
         }
 
@@ -92,6 +94,7 @@ namespace JdfModel
                 RouteStops = DeserializeFileInArchive<RouteStop>(entries, "zaslinky.txt"),
                 StopTimes = DeserializeFileInArchive<StopTime>(entries, "zasspoje.txt"),
                 AlternativeAgencies = DeserializeFileInArchive<AlternativeAgency>(entries, "altdop.txt"),
+                TimeTransfer = DeserializeFileInArchive<TimedTransfer>(entries, "navaznosti.txt"),
             };
         }
 
@@ -107,6 +110,12 @@ namespace JdfModel
                     yield return (zipFilePath + "\\" + folder, jdfFeed);
                 }
             }
+        }
+
+        private static List<T> DeserializeFile<T>(string path, string fileName) where T: new()
+        {
+            var encoding = Encoding.GetEncoding(1250);
+            return CsvFileSerializer.DeserializeFile<T>(Path.Combine(path, fileName), ',', null, "ddMMyyyy", encoding, false, ";");
         }
 
         private static List<T> DeserializeFileInArchive<T>(List<ZipArchiveEntry> entries, string fileName) where T: new()

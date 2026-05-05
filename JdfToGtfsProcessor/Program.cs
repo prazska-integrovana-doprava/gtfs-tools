@@ -24,6 +24,7 @@ namespace JdfToGtfsProcessor
             var commonLog = new SimpleLogger(logFactory.CreateWriterToFile("JdfProcessor_Common"));
             var missingPlatformCodeLog = new SimpleLogger(logFactory.CreateWriterToFile("JdfProcessor_MissingPlatformCodes"));
             var routeLog = new SimpleLogger(logFactory.CreateWriterToFile("JdfProcessor_RouteLog"));
+            var jdfTimedTransferLog = new SimpleLogger(logFactory.CreateWriterToFile("JdfProcessor_JdfTimedTransfers"));
 
             StopDatabase stopDatabase;
             Console.WriteLine("Načítám data o zastávkách...");
@@ -74,6 +75,7 @@ namespace JdfToGtfsProcessor
                     new SimpleLoggerByFile(jdfFeedEntry.path, commonLog),
                     new SimpleLoggerByFile(jdfFeedEntry.path, missingPlatformCodeLog),
                     new SimpleLoggerByFile(jdfFeedEntry.path, routeLog),
+                    new SimpleLoggerByFile(jdfFeedEntry.path, jdfTimedTransferLog),
                     false);
             }
 
@@ -87,17 +89,11 @@ namespace JdfToGtfsProcessor
                 gtfsFeedEx.Trips.Remove(tripToRemove.GtfsId);
             }
 
-            foreach (var trip in gtfsFeedEx.Trips.Values)
-            {
-                trip.Headsign = trip.StopTimes.Last().Stop.Name;
-                trip.Route.Trips.Add(trip);
-            }
-
             Console.WriteLine("Načítám soubory s garantovanými přestupy...");
             var busToBusTransfers = LoadTransfersFile(settings.BusToBusTransfersFile, "BUS->BUS");
             var trainToBusTransfers = LoadTransfersFile(settings.TrainToBusTransfersFile, "VLAK->BUS");
-            var transferLog = new SimpleLogger(logFactory.CreateWriterToFile("JdfProcessor_Transfers"));
-            var transferProcessor = new TimedTransfersProcessor(busToBusTransfers, trainToBusTransfers, transferLog, stopDatabase);
+            var externalTransferLog = new SimpleLogger(logFactory.CreateWriterToFile("JdfProcessor_ExternalTransfers"));
+            var transferProcessor = new ExternalTimedTransfersProcessor(busToBusTransfers, trainToBusTransfers, externalTransferLog, stopDatabase);
 
             Console.WriteLine("Zpracovávám garantované přestupy BUS->BUS...");
             gtfsFeedEx.Transfers.AddRange(transferProcessor.ProcessBusToBusTransfers(gtfsFeedEx.Routes));
@@ -131,7 +127,8 @@ namespace JdfToGtfsProcessor
             commonLog.Close();
             missingPlatformCodeLog.Close();
             routeLog.Close();
-            transferLog.Close();
+            externalTransferLog.Close();
+            jdfTimedTransferLog.Close();
             Console.WriteLine("Hotovo.");
         }
 

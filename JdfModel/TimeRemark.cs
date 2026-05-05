@@ -1,6 +1,5 @@
 ﻿using CsvSerializer.Attributes;
 using System;
-using System.Runtime.InteropServices.ComTypes;
 
 namespace JdfModel
 {

@@ -1,9 +1,9 @@
 ﻿using CommonLibrary;
 using GtfsLogging;
-using GtfsModel;
 using JdfModel;
 using JdfToGtfsProcessor.Calendars;
 using JdfToGtfsProcessor.Stops;
+using JdfToGtfsProcessor.Transfers;
 
 namespace JdfToGtfsProcessor
 {
@@ -15,6 +15,8 @@ namespace JdfToGtfsProcessor
 
         private Dictionary<int, List<GtfsModel.Extended.Trip>> tripsByJdfRoute;
 
+        private Dictionary<GtfsModel.Extended.StopTime, (List<TimedTransfer> timedTransfers, ISimpleLogger logger)> timedTransfersForStopTimes;
+
         private GtfsModel.Extended.Feed gtfsFeedEx;
 
         public JdfFeedProcessor(StopDatabase stopDatabase)
@@ -22,6 +24,7 @@ namespace JdfToGtfsProcessor
             this.stopDatabase = stopDatabase;
             routeMapping = new RouteMapping();
             tripsByJdfRoute = new Dictionary<int, List<GtfsModel.Extended.Trip>>();
+            timedTransfersForStopTimes = new Dictionary<GtfsModel.Extended.StopTime, (List<TimedTransfer>, ISimpleLogger)>();
             gtfsFeedEx = new GtfsModel.Extended.Feed();
         }
 
@@ -29,7 +32,7 @@ namespace JdfToGtfsProcessor
         {
             if (feedPublisher == FeedPublisher.KODIS)
             {
-                gtfsFeedEx.Agency.Add("ODIS", new GtfsAgency()
+                gtfsFeedEx.Agency.Add("ODIS", new GtfsModel.GtfsAgency()
                 {
                     Id = "ODIS",
                     Name = "ODIS",
@@ -40,7 +43,7 @@ namespace JdfToGtfsProcessor
                     Email = "info@kodis.cz"
                 });
 
-                gtfsFeedEx.FeedInfo = new GtfsFeedInfo()
+                gtfsFeedEx.FeedInfo = new GtfsModel.GtfsFeedInfo()
                 {
                     PublisherName = "KODIS",
                     PublisherUrl = "https://kodis.cz",
@@ -56,7 +59,7 @@ namespace JdfToGtfsProcessor
             }
         }
 
-        public void ProcessFeed(JdfFeed jdfFeed, ISimpleLogger log, ISimpleLogger missingPlatformCodeLog, ISimpleLogger routeLog, bool skipPastFeeds)
+        public void ProcessFeed(JdfFeed jdfFeed, ISimpleLogger log, ISimpleLogger missingPlatformCodeLog, ISimpleLogger routeLog, ISimpleLogger timedTransferLog, bool skipPastFeeds)
         {
             if (!jdfFeed.Routes.Any() || !jdfFeed.Stops.Any() || !jdfFeed.Trips.Any() || !jdfFeed.StopTimes.Any())
             {
@@ -89,6 +92,10 @@ namespace JdfToGtfsProcessor
                         if (trip.CalendarRecord.IsEmpty)
                         {
                             tripsByJdfRoute[route.RouteId].Remove(trip);
+                            foreach (var stopTime in trip.StopTimes)
+                            {
+                                timedTransfersForStopTimes.Remove(stopTime);
+                            }
                         }
                     }
                 }
@@ -182,7 +189,7 @@ namespace JdfToGtfsProcessor
                     continue;
                 }
 
-                RouteSubAgency? subAgency;
+                GtfsModel.RouteSubAgency? subAgency;
                 var altAgencies = jdfFeed.AlternativeAgencies.Where(aa => aa.RouteNumber == trip.RouteId && (aa.TripNumber == 0 || aa.TripNumber == trip.TripNumber));
                 if (!altAgencies.Any()) 
                 {
@@ -282,7 +289,7 @@ namespace JdfToGtfsProcessor
                     continue;
                 }
 
-                stopTimesForTrip.Add(new GtfsModel.Extended.StopTime()
+                var gtfsStopTime = new GtfsModel.Extended.StopTime()
                 {
                     ArrivalTime = arrivalTime ?? departureTime!.Value, // výše máme podmínku, že alespoň jeden z dvojice departureTime a arrivalTime nesmí být null
                     BikesAllowed = GtfsModel.Enumerations.BikeAccessibility.Possible,
@@ -293,7 +300,15 @@ namespace JdfToGtfsProcessor
                     FareKilometerDistance = stopTime.DistanceFromStartKm,
                     Trip = gtfsTrip,
                     Stop = gtfsStop,
-                });
+                };
+
+                stopTimesForTrip.Add(gtfsStopTime);
+
+                var timedTransfers = jdfFeed.TimeTransfer.Where(tt => tt.RouteId == stopTime.RouteId && tt.TripNumber == stopTime.TripNumber && tt.StopIndex == stopTime.StopIndex).ToList();
+                if (timedTransfers.Any())
+                {
+                    timedTransfersForStopTimes.Add(gtfsStopTime, (timedTransfers, timedTransferLog));
+                }
             }
         }
 
@@ -306,6 +321,7 @@ namespace JdfToGtfsProcessor
                 {
                     var tripId = route.Key + "_" + trip.TripNumber.ToString() + "_" + trip.CalendarRecord.GetFirstDayOfService()!.Value.ToString("yyyyMMdd"); // stále hlídáme, že kalendář je neprázdný
                     trip.GtfsId = tripId;
+                    trip.Headsign = trip.StopTimes.LastOrDefault()?.Stop?.Name;
                     if (gtfsFeedEx.Trips.ContainsKey(tripId))
                     {
                         log.Log($"Spoj {tripId} už v databázi je jako {gtfsFeedEx.Trips[tripId]}. Asi jde o duplicitu.");
@@ -313,6 +329,7 @@ namespace JdfToGtfsProcessor
                     }
 
                     gtfsFeedEx.Trips.Add(tripId, trip);
+                    trip.Route.Trips.Add(trip);
                 }
             }
 
@@ -327,6 +344,8 @@ namespace JdfToGtfsProcessor
 
             calendarDatabase.SetCalendarIds();
             gtfsFeedEx.Calendar = calendarDatabase.AllCalendars.ToDictionary(cal => cal.GtfsId);
+
+            new TripBlockFromTransfersProcessor().Process(gtfsFeedEx, timedTransfersForStopTimes);
 
             return gtfsFeedEx;
         }

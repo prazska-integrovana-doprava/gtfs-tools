@@ -7,9 +7,10 @@ using JdfToGtfsProcessor.Stops;
 namespace JdfToGtfsProcessor.Transfers
 {
     /// <summary>
-    /// Zpracovává garantované přestupní poznámky
+    /// Zpracovává garantované přestupní poznámky z externích dat
+    /// NEpoužívá soubor navaznosti.txt
     /// </summary>
-    internal class TimedTransfersProcessor
+    internal class ExternalTimedTransfersProcessor
     {
         private List<XmlTransfer> busToBusTransfers;
 
@@ -18,7 +19,7 @@ namespace JdfToGtfsProcessor.Transfers
         private ISimpleLogger log;
         private StopDatabase stopDb;
 
-        public TimedTransfersProcessor(List<XmlTransfer> busToBusTransfers, List<XmlTransfer> trainToBusTransfers, ISimpleLogger log, StopDatabase stopDb)
+        public ExternalTimedTransfersProcessor(List<XmlTransfer> busToBusTransfers, List<XmlTransfer> trainToBusTransfers, ISimpleLogger log, StopDatabase stopDb)
         {
             this.busToBusTransfers = busToBusTransfers;
             this.trainToBusTransfers = trainToBusTransfers;
@@ -122,12 +123,23 @@ namespace JdfToGtfsProcessor.Transfers
                 var stopTime1 = FindStopTimeOnTrip(trip1, transfer.Stop1, transfer.Departure1Time, TimeSpec.DEPARTURE);
                 foreach (var trip2 in trips2)
                 {
+                    if (!trip1.CalendarRecord.IntersectDatesWith(trip2.CalendarRecord).Any())
+                    {
+                        continue;
+                    }
+
                     var stopTime2 = FindStopTimeOnTrip(trip2, transfer.Stop2, transfer.Arrival2Time, TimeSpec.ARRIVAL);
                     if (stopTime1 != null && stopTime2 != null)
                     {
                         if (stopTime2.ArrivalTime > stopTime1.DepartureTime)
                         {
-                            log.Log($"  - [WARN] {trip2} má příjezd ({stopTime2.ArrivalTime}) po odjezdu {trip1} ({stopTime1.DepartureTime}). Ignoruji.");
+                            log.Log($"  - [WARN] {trip2.GtfsId} má příjezd ({stopTime2.ArrivalTime}) po odjezdu {trip1.GtfsId} ({stopTime1.DepartureTime}). Ignoruji.");
+                            continue;
+                        }
+
+                        if (result.Any(tt => tt.FromTrip == trip2 && tt.FromStop == stopTime2.Stop && tt.ToTrip == trip1 && tt.ToStop == stopTime1.Stop))
+                        {
+                            log.Log($"  - [WARN] vazba z {trip2.GtfsId} na {trip1.GtfsId} už byla jednou vložena.");
                             continue;
                         }
 
