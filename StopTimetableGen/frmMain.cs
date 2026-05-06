@@ -33,6 +33,8 @@ namespace StopTimetableGen
 
         private void frmMain_Load(object sender, EventArgs e)
         {
+            dtStartDate.Value = DateTime.Now;
+
             cbRoute.Items.AddRange(gtfsRoutes.Select(route => $"{route.ShortName} | {route.LongName}").ToArray());
             cbIgnoredStop.Items.AddRange(gtfsStops.Where(s => s.LocationType == LocationType.Stop).Select(s => s.Name).Distinct().OrderBy(s => s).ToArray());
 
