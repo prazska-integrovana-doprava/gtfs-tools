@@ -1,5 +1,6 @@
 ﻿using CommonLibrary;
 using CsvSerializer;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -52,23 +53,33 @@ namespace JdfModel
             };
         }
 
-        public static IEnumerable<(string path, JdfFeed feed)> LoadFromDirectoryRecursive(string path)
+        public static IEnumerable<(string path, JdfFeed feed)> LoadFromDirectoryRecursive(string path, out List<Exception> exceptions)
         {
+            var result = new List<(string, JdfFeed)>();
+            exceptions = new List<Exception>();
+
             if (Directory.EnumerateFiles(path, "*.txt").Any2())
             {
-                // musí být ve složce aspoň dva texťáky
-                yield return (path, LoadFromDirectory(path));
+                try
+                {
+                    // musí být ve složce aspoň dva texťáky
+                    result.Add((path, LoadFromDirectory(path)));
+                }
+                catch (Exception ex)
+                {
+                    exceptions.Add(ex);
+                }
             }
 
             var subfolders = Directory.GetDirectories(path).OrderBy(d => Path.GetFileName(d));
             foreach (var subdir in subfolders)
             {
-                var entries = LoadFromDirectoryRecursive(subdir);
-                foreach (var entry in entries)
-                {
-                    yield return entry;
-                }
+                var entries = LoadFromDirectoryRecursive(subdir, out var exceptionsRecursive);
+                result.AddRange(entries);
+                exceptions.AddRange(exceptionsRecursive);
             }
+
+            return result;
         }
 
         public static JdfFeed LoadFromZipArchive(ZipArchive zipFile, string pathInArchive)
@@ -125,7 +136,7 @@ namespace JdfModel
             {
                 var stream = entry.Open();
                 var reader = new StreamReader(stream, Encoding.GetEncoding(1250));
-                return CsvFileSerializer.Deserialize<T>(reader, ',', null, "ddMMyyyy", false, ";");
+                return CsvFileSerializer.Deserialize<T>(reader, entry.Name, ',', null, "ddMMyyyy", false, ";");
             }
             else
             {

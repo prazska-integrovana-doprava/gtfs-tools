@@ -89,7 +89,7 @@ namespace CsvSerializer
                 return new List<T>();
 
             var reader = new StreamReader(inputFileName, encoding ?? Encoding.UTF8);
-            return Deserialize<T>(reader, separator, cultureInfo, dateTimeFormat, containsHeader, lineSeparator);
+            return Deserialize<T>(reader, inputFileName, separator, cultureInfo, dateTimeFormat, containsHeader, lineSeparator);
         }
 
         /// <summary>
@@ -102,13 +102,13 @@ namespace CsvSerializer
         /// <param name="dateTimeFormat">Formát data</param>
         /// <param name="containsHeader">True, pokud na prvním řádku souboru je hlavička s názvy sloupců (pokusí se namapovat podle atributů třídy)</param>
         /// <returns>Kolekce záznamů načtená ze souboru</returns>
-        public static List<T> Deserialize<T>(TextReader reader, char separator = DefaultSeparator, CultureInfo cultureInfo = null, string dateTimeFormat = DefaultDateTimeFormat, bool containsHeader = true, string lineSeparator = "") where T : new()
+        public static List<T> Deserialize<T>(TextReader reader, string fileName, char separator = DefaultSeparator, CultureInfo cultureInfo = null, string dateTimeFormat = DefaultDateTimeFormat, bool containsHeader = true, string lineSeparator = "") where T : new()
         {
             var members = GetFieldAttributes<T>().ToArray();
 
             var result = new List<T>();
             T current;
-            var csvReader = new CsvRecordDeserializer<T>(reader, separator, cultureInfo ?? CultureInfo.InvariantCulture, dateTimeFormat, lineSeparator);
+            var csvReader = new CsvRecordDeserializer<T>(reader, separator, cultureInfo ?? CultureInfo.InvariantCulture, dateTimeFormat, lineSeparator, fileName);
 
             if (containsHeader)
             {

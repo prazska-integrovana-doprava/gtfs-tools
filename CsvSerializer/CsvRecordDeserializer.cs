@@ -14,6 +14,8 @@ namespace CsvSerializer
     /// <typeparam name="T">Typ záznamu</typeparam>
     internal class CsvRecordDeserializer<T> where T : new()
     {
+        private string fileName;
+
         private TextReader reader;
 
         // může obsahovat NULL položky, pokud jsou ve vstupním souboru neznámé sloupce
@@ -24,13 +26,14 @@ namespace CsvSerializer
         private string dateTimeFormat;
         private string lineSeparator;
 
-        public CsvRecordDeserializer(TextReader reader, char separator, CultureInfo cultureInfo, string dateTimeFormat, string lineSeparator)
+        public CsvRecordDeserializer(TextReader reader, char separator, CultureInfo cultureInfo, string dateTimeFormat, string lineSeparator, string fileName)
         {
             this.reader = reader;
             this.separator = separator;
             this.cultureInfo = cultureInfo;
             this.dateTimeFormat = dateTimeFormat;
             this.lineSeparator = lineSeparator;
+            this.fileName = fileName;
         }
 
         /// <summary>
@@ -91,7 +94,7 @@ namespace CsvSerializer
             var row = line.SplitWithRespectToQuotes(separator).ToArray();
             if (row.Length < membersOrdered.Count)
             {
-                throw new FormatException("Line is too short");
+                throw new FormatException($"Line is too short. File {fileName}.");
             }
 
             for (int i = 0; i < membersOrdered.Count; i++)

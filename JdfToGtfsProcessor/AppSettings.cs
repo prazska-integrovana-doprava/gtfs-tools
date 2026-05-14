@@ -9,5 +9,7 @@
         public string? TrainGtfsFolder { get; set; }
         public string? BusToBusTransfersFile { get; set; }
         public string? TrainToBusTransfersFile { get; set; }
+        public string? BusNetworkFile { get; set; }
+        public string? TrolleybusNetworkFile { get; set; }
     }
 }

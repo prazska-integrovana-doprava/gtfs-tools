@@ -563,10 +563,7 @@ namespace TrainsEditor
 
             backgroundWorker = null;
 
-            if (result.Exception == null && result.Finished)
-            {
-                TextWindow.ShowTextInfo(resultText);
-            }
+            TextWindow.ShowTextInfo(resultText);
         }
 
 

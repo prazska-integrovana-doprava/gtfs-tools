@@ -23,6 +23,7 @@
     <ProjectReference Include="..\GtfsLogging\GtfsLogging.csproj" />
     <ProjectReference Include="..\GtfsModel\GtfsModel.csproj" />
     <ProjectReference Include="..\JdfModel\JdfModel.csproj" />
+    <ProjectReference Include="..\ShapeManager\ShapeManager.csproj" />
   </ItemGroup>
 
   <ItemGroup>

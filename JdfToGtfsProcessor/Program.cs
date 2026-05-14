@@ -5,6 +5,7 @@ using JdfModel;
 using JdfToGtfsProcessor.Stops;
 using JdfToGtfsProcessor.Transfers;
 using Microsoft.Extensions.Configuration;
+using ShapeManager;
 using System.Xml.Serialization;
 
 namespace JdfToGtfsProcessor
@@ -58,7 +59,13 @@ namespace JdfToGtfsProcessor
                 return;
             }
 
-            var jdfFeeds = JdfFeed.LoadFromDirectoryRecursive(settings.JdfFolder).ToList();
+            var jdfFeeds = JdfFeed.LoadFromDirectoryRecursive(settings.JdfFolder, out var exceptions).ToList();
+            foreach (var ex in exceptions)
+            {
+                Console.WriteLine(ex);
+                commonLog.Log(ex.ToString());
+            }
+
             if (!jdfFeeds.Any())
             {
                 Console.WriteLine($"Ze složky {settings.JdfFolder} nebyl načten žádný JDF feed (je cesta zadána správně?). Nelze pokračovat.");
@@ -88,6 +95,11 @@ namespace JdfToGtfsProcessor
                 commonLog.Log($"Spoj {tripToRemove} má méně než dvě zastavení, bude smazán.");
                 gtfsFeedEx.Trips.Remove(tripToRemove.GtfsId);
             }
+
+            Console.WriteLine("Konstruuji trasy...");
+            var shapeLog = new CommonLogger(logFactory.CreateWriterToFile("JdfProcessor_ShapeConstructor"));
+            ConstructShapesFromNetwork(settings.TrolleybusNetworkFile, null, GtfsModel.Enumerations.TrafficType.Trolleybus, gtfsFeedEx, shapeLog);
+            ConstructShapesFromNetwork(settings.BusNetworkFile, null, GtfsModel.Enumerations.TrafficType.Bus, gtfsFeedEx, shapeLog);
 
             Console.WriteLine("Načítám soubory s garantovanými přestupy...");
             var busToBusTransfers = LoadTransfersFile(settings.BusToBusTransfersFile, "BUS->BUS");
@@ -150,6 +162,22 @@ namespace JdfToGtfsProcessor
             {
                 var data = (T?)serializer.Deserialize(reader);
                 return data;
+            }
+        }
+        private static void ConstructShapesFromNetwork(string? networkFileName, string? waypointsFileName, GtfsModel.Enumerations.TrafficType trafficType, GtfsModel.Extended.Feed gtfsFeedEx, ICommonLogger log)
+        {
+            if (string.IsNullOrEmpty(networkFileName))
+            {
+                return;
+            }
+
+            var trips = gtfsFeedEx.Trips.Values.Where(t => t.Route.Type == trafficType).ToList();
+            var stops = trips.SelectMany(t => t.StopTimes).Select(st => st.Stop).Distinct().ToList();
+            var shapeDb = ShapeDatabase.Create(networkFileName, stops, log, waypointsFileName);
+            shapeDb.ProcessTrips(trips);
+            foreach (var shape in shapeDb.Shapes)
+            {
+                gtfsFeedEx.Shapes.Add(shape.Id, shape);
             }
         }
 

@@ -76,11 +76,7 @@ namespace ShapeManager
         /// všechny hrany sítě, obousměrné (tedy za oba směry jedna hrana)
         /// </summary>
         public List<Edge> AllEdges { get; private set; }
-        
-        // indexováno x a y, vychází z toho, že ve vstupním souboru sítě jsou definované vícebodové sekvence (multihrany), které
-        // se vzájemně potkávají právě v těchto border points, skrz které je musíme propojit
-        private Dictionary<double, Dictionary<double, Point>> borderPoints;
-                
+                        
         /// <summary>
         /// Inicializuje instanci nahráním sítě z CSV
         /// </summary>
@@ -102,7 +98,7 @@ namespace ShapeManager
             }
 
             AllPoints = new List<Point>();
-            borderPoints = new Dictionary<double, Dictionary<double, Point>>();
+            var allPointsByCoordinate = new Dictionary<double, Dictionary<double, Point>>();
             AllEdges = new List<Edge>();
             
             foreach (var multiline in allLines.GroupBy(l => l.LineId))
@@ -117,26 +113,18 @@ namespace ShapeManager
                 }
 
                 var points = multiline.Select(p => new Point(p.Latitude, p.Longitude)).ToArray();
-                AllPoints.AddRange(points.Skip(1).Take(points.Length - 2)); // bez prvního a posledního, ty až podmínečně
-
-                var firstPointAlreadyLoaded = FindBorderPointByPosition(points.First().Gps);
-                if (firstPointAlreadyLoaded != null)
+                for (int i = 0; i < points.Length; i++)
                 {
-                    points[0] = firstPointAlreadyLoaded;
-                }
-                else
-                {
-                    AddBorderPoint(points.First());
-                }
-
-                var lastPointAlreadyLoaded = FindBorderPointByPosition(points.Last().Gps);
-                if (lastPointAlreadyLoaded != null)
-                {
-                    points[points.Length - 1] = lastPointAlreadyLoaded;
-                }
-                else
-                {
-                    AddBorderPoint(points.Last());
+                    var existingPoint = allPointsByCoordinate.GetValueOrDefault(points[i].Gps.GpsLatitude)?.GetValueOrDefault(points[i].Gps.GpsLongitude); ;
+                    if (existingPoint != null)
+                    {
+                        points[i] = existingPoint;
+                    }
+                    else
+                    {
+                        AllPoints.Add(points[i]);
+                        allPointsByCoordinate.GetValueAndAddIfMissing(points[i].Gps.GpsLatitude, new Dictionary<double, Point>()).Add(points[i].Gps.GpsLongitude, points[i]);
+                    }
                 }
 
                 for (int i = 1; i < points.Length; i++)
@@ -244,17 +232,6 @@ namespace ShapeManager
 
             AllPoints.Add(resultPoint);
             return resultPoint;
-        }
-
-        private Point FindBorderPointByPosition(GpsCoordinates gps)
-        {
-            return borderPoints.GetValueOrDefault(gps.GpsLatitude)?.GetValueOrDefault(gps.GpsLongitude);
-        }
-
-        private void AddBorderPoint(Point p)
-        {
-            AllPoints.Add(p);
-            borderPoints.GetValueAndAddIfMissing(p.Gps.GpsLatitude, new Dictionary<double, Point>()).Add(p.Gps.GpsLongitude, p);
         }
     }
 }
