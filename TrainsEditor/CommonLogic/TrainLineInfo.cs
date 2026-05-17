@@ -166,7 +166,7 @@ namespace TrainsEditor.CommonLogic
             }
             else if (trainLineNumberCode > 8000 && trainLineNumberCode < 8100)
             {
-                if (trainLineNumberCode < 8600)
+                if (trainLineNumberCode < 8060)
                 {
                     return new TrainLineInfo(TrainLineType.Odis, $"S{trainLineNumberCode % 100}", trainLineNumberCode);
                 }

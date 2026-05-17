@@ -1,10 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using CommonLibrary;
+﻿using CommonLibrary;
 using CommonLibrary.DotNet48;
 using CsvSerializer;
 using CsvSerializer.Attributes;
+using NetTopologySuite.Geometries;
+using NetTopologySuite.Index.Strtree;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace ShapeManager
 {
@@ -53,13 +55,13 @@ namespace ShapeManager
         // Jeden bod sítě v CSV souboru, ze kterého se síť načítá
         private class CsvPoint
         {
-            [CsvField("cis", 1)]
+            [CsvField("fid", 1)]
             public long LineId { get; set; }
 
-            [CsvField("lat", 2)]
+            [CsvField("y", 2)]
             public double Latitude { get; set; }
 
-            [CsvField("lon", 3)]
+            [CsvField("x", 3)]
             public double Longitude { get; set; }
 
             [CsvField("one_way", 4, CsvFieldPostProcess.None, false)]
@@ -73,10 +75,11 @@ namespace ShapeManager
         public List<Point> AllPoints { get; private set; }
 
         /// <summary>
-        /// všechny hrany sítě, obousměrné (tedy za oba směry jedna hrana)
+        /// Index pomáhající hledat hrany v okolí
         /// </summary>
-        public List<Edge> AllEdges { get; private set; }
-                        
+        public STRtree<Edge> SpatialIndex { get; private set; }
+
+
         /// <summary>
         /// Inicializuje instanci nahráním sítě z CSV
         /// </summary>
@@ -99,7 +102,7 @@ namespace ShapeManager
 
             AllPoints = new List<Point>();
             var allPointsByCoordinate = new Dictionary<double, Dictionary<double, Point>>();
-            AllEdges = new List<Edge>();
+            var allEdges = new List<Edge>();
             
             foreach (var multiline in allLines.GroupBy(l => l.LineId))
             {
@@ -135,9 +138,11 @@ namespace ShapeManager
                         points[i].Neighbours.Add(points[i - 1]);
                     }
 
-                    AllEdges.Add(new Edge(points[i - 1], points[i], isOneWay));
+                    allEdges.Add(new Edge(points[i - 1], points[i], isOneWay));
                 }
             }
+
+            BuildSpatialIndex(allEdges);
         }
         
         /// <summary>
@@ -154,15 +159,24 @@ namespace ShapeManager
                 return null;
             }
 
+            var distances = new Dictionary<Point, double>
+            {
+                [pointFrom] = 0
+            };
+
             // Dijkstra
-            var openVertices = new Dictionary<Point, double>() { { pointFrom, 0 } };
+            var openVertices = new MinHeap<(Point, double)>();
+            openVertices.Enqueue((pointFrom, 0), PointDistance(pointFrom, pointTo));
             var closedVertices = new HashSet<Point>();
             var predecessors = new Dictionary<Point, Point>() { { pointFrom, null } };
             while (openVertices.Any())
             {
-                var minDistance = openVertices.Values.Min();
-                var minPoint = openVertices.First(v => v.Value == minDistance).Key;
-                openVertices.Remove(minPoint);
+                var (minPoint, minDistance) = openVertices.Dequeue();
+
+                // už jsme zpracovali lepší variantu
+                if (closedVertices.Contains(minPoint))
+                    continue;
+
                 closedVertices.Add(minPoint);
 
                 if (minPoint == pointTo)
@@ -182,19 +196,17 @@ namespace ShapeManager
 
                 foreach (var neighbour in minPoint.Neighbours)
                 {
-                    var distance = minDistance + MapFunctions.DistanceMeters(minPoint.Gps.GpsLatitude, minPoint.Gps.GpsLongitude, neighbour.Gps.GpsLatitude, neighbour.Gps.GpsLongitude);
                     if (closedVertices.Contains(neighbour))
                         continue;
 
-                    if (!openVertices.ContainsKey(neighbour))
+                    var distance = minDistance + PointDistance(minPoint, neighbour); 
+                    var heuristic = PointDistance(neighbour, pointTo);
+
+                    if (!distances.TryGetValue(neighbour, out var oldDist) || distance < oldDist)
                     {
-                        openVertices.Add(neighbour, distance);
-                        predecessors.Add(neighbour, minPoint);
-                    }
-                    else if (openVertices[neighbour] > distance)
-                    {
-                        openVertices[neighbour] = distance;
+                        distances[neighbour] = distance;
                         predecessors[neighbour] = minPoint;
+                        openVertices.Enqueue((neighbour, distance), distance + heuristic);
                     }
                 }
             }
@@ -202,36 +214,123 @@ namespace ShapeManager
             return null; // trasa se nenašla
         }
 
-        /// <summary>
-        /// Rozdělí hranu na dvě zadaným bodem a vše propojí. Původní hranu smaže a vloží dvě nové i nový bod.
-        /// </summary>
-        /// <param name="gpsCoordinate">Souřadnice na hraně</param>
-        /// <param name="edge">Hrana k rozdělení</param>
-        /// <param name="newEdge1">Nová hrana 1</param>
-        /// <param name="newEdge2">Nová hrana 2</param>
-        /// <returns>Nově vytvořený bod</returns>
-        public Point CreateNewPointInEdge(GpsCoordinates gpsCoordinate, Edge edge, out Edge newEdge1, out Edge newEdge2)
+        private double PointDistance(Point a, Point b)
         {
-            var resultPoint = new Point(gpsCoordinate);
-            edge.From.Neighbours.Remove(edge.To);
-            edge.From.Neighbours.Add(resultPoint);
-            resultPoint.Neighbours.Add(edge.To);
-            if (!edge.IsOneWay)
+            return MapFunctions.DistanceMeters(
+                a.Gps.GpsLatitude,
+                a.Gps.GpsLongitude,
+                b.Gps.GpsLatitude,
+                b.Gps.GpsLongitude);
+        }
+
+        /// <summary>
+        /// Rozdělí hranu podle zadaných bodů. Vrátí ke každé zadané souřadnici na hraně nově vytvořený bod
+        /// </summary>
+        /// <param name="edge">Hrana</param>
+        /// <param name="splitPoints">Body</param>
+        /// <returns></returns>
+        public Dictionary<GpsCoordinates, Point> SplitEdgeByMultiplePoints(Edge edge, List<GpsCoordinates> splitPoints)
+        {
+            if (splitPoints == null || splitPoints.Count == 0)
+                return new Dictionary<GpsCoordinates, Point>();
+
+            Disconnect(edge.From, edge.To, edge.IsOneWay);
+
+            // 1) spočítáme parametr t (0..1) pro každý bod na hraně
+            var ordered = splitPoints
+                .Select(p => new
+                {
+                    Point = p,
+                    T = ProjectT(edge, p) // 0 = From, 1 = To
+                })
+                .OrderBy(x => x.T)
+                .ToList();
+
+            var result = new Dictionary<GpsCoordinates, Point>();
+
+            // 2) start
+            var currentFrom = edge.From;
+            Point prevPoint = edge.From;
+
+            foreach (var item in ordered)
             {
-                edge.To.Neighbours.Remove(edge.From);
-                edge.To.Neighbours.Add(resultPoint);
-                resultPoint.Neighbours.Add(edge.From);
+                var midPoint = new Point(item.Point);
+                AllPoints.Add(midPoint);
+
+                // uprava sousedů
+                Connect(currentFrom, midPoint, edge.IsOneWay);
+
+                result[item.Point] = midPoint;
+
+                currentFrom = midPoint;
             }
 
-            // ještě smažeme hranu a přidáme místo ní dvě
-            AllEdges.Remove(edge);
-            newEdge1 = new Edge(edge.From, resultPoint, edge.IsOneWay);
-            AllEdges.Add(newEdge1);
-            newEdge2 = new Edge(resultPoint, edge.To, edge.IsOneWay);
-            AllEdges.Add(newEdge2);
+            // 3) poslední segment
+            Connect(currentFrom, edge.To, edge.IsOneWay);
 
-            AllPoints.Add(resultPoint);
-            return resultPoint;
+            return result;
+        }
+
+        private double ProjectT(Edge edge, GpsCoordinates p)
+        {
+            var ax = edge.From.Gps.GpsLongitude;
+            var ay = edge.From.Gps.GpsLatitude;
+
+            var bx = edge.To.Gps.GpsLongitude;
+            var by = edge.To.Gps.GpsLatitude;
+
+            var px = p.GpsLongitude;
+            var py = p.GpsLatitude;
+
+            var abx = bx - ax;
+            var aby = by - ay;
+
+            var apx = px - ax;
+            var apy = py - ay;
+
+            var abLen2 = abx * abx + aby * aby;
+
+            if (abLen2 == 0)
+                return 0;
+
+            return (apx * abx + apy * aby) / abLen2;
+        }
+
+        private void Connect(Point a, Point b, bool oneWay)
+        {
+            a.Neighbours.Add(b);
+
+            if (!oneWay)
+                b.Neighbours.Add(a);
+        }
+
+        private void Disconnect(Point a, Point b, bool oneWay)
+        {
+            a.Neighbours.Remove(b);
+
+            if (!oneWay)
+                b.Neighbours.Remove(a);
+        }
+
+        private void BuildSpatialIndex(List<Edge> allEdges)
+        {
+            SpatialIndex = new STRtree<Edge>();
+
+            foreach (var edge in allEdges)
+            {
+                // obálka (bounding box) hrany
+                var envelope = new Envelope(
+                    Math.Min(edge.From.Gps.GpsLongitude, edge.To.Gps.GpsLongitude),
+                    Math.Max(edge.From.Gps.GpsLongitude, edge.To.Gps.GpsLongitude),
+                    Math.Min(edge.From.Gps.GpsLatitude, edge.To.Gps.GpsLatitude),
+                    Math.Max(edge.From.Gps.GpsLatitude, edge.To.Gps.GpsLatitude)
+                );
+
+                SpatialIndex.Insert(envelope, edge);
+            }
+
+            // postaví interní strukturu stromu
+            SpatialIndex.Build();
         }
     }
 }

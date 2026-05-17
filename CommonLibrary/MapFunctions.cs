@@ -89,9 +89,17 @@ namespace CommonLibrary
         /// </summary>
         public static double DistanceMeters(double lat1, double lon1, double lat2, double lon2)
         {
+            return Math.Sqrt(DistanceMeters2(lat1, lon1, lat2, lon2));
+        }
+
+        /// <summary>
+        /// Přibližná vzdálenost mezi dvěma body v metrech bez odmocniny
+        /// </summary>
+        public static double DistanceMeters2(double lat1, double lon1, double lat2, double lon2)
+        {
             var dx = Math.Abs(lon2 - lon1) * LonDegreeDistance;
             var dy = Math.Abs(lat2 - lat1) * LatDegreeDistance;
-            return Math.Sqrt(dx * dx + dy * dy);
+            return dx * dx + dy * dy;
         }
 
         public static double DistanceMetersExact(double lat1, double lon1, double lat2, double lon2)

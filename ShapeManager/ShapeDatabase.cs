@@ -1,11 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using CommonLibrary;
+﻿using CommonLibrary;
 using CommonLibrary.DotNet48;
 using GtfsLogging;
 using GtfsModel.Extended;
+using NetTopologySuite.Geometries;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using static ShapeManager.ShapeConstructor;
+using static System.Collections.Specialized.BitVector32;
 
 namespace ShapeManager
 {
@@ -16,12 +19,12 @@ namespace ShapeManager
     {
         // vzdálenost, do které prohledáváme hrany kolem stanice - musí být trochu větší, protože prohledávám podle krajních bodů a když
         // je hrana dlouhá, může stanice spadnout mezi tyto dva body
-        private const double MaxEdgeDistance = 1000; // metrů
+        private const double MaxEdgeDistance = 500; // metrů
 
         // vzdálenost, při které reportujeme, že je stanice moc daleko - vztahuje se ke vzdálenosti přímo ke trati (po splitu hran)
         private const double DistanceWarning = 30; // metrů
 
-        private Dictionary<Stop, Dictionary<Stop, List<GpsCoordinates>>> paths = new Dictionary<Stop, Dictionary<Stop, List<GpsCoordinates>>>();
+        private Dictionary<(Stop, Stop), List<GpsCoordinates>> paths = new Dictionary<(Stop, Stop), List<GpsCoordinates>>();
 
         /// <summary>
         /// Již zkonstruované trasy
@@ -36,9 +39,13 @@ namespace ShapeManager
 
         private WaypointCollection waypointCollection;
 
+        private double sharpAngleThreshold;
+
         private ICommonLogger log;
 
         private Dictionary<Route, int> lastRouteShapeIndex = new Dictionary<Route, int>();
+
+        private Dictionary<Shape, Stop[]> shapeStopsIndex = new Dictionary<Shape, Stop[]>();
 
         protected ShapeDatabase(ICommonLogger log)
         {
@@ -54,11 +61,13 @@ namespace ShapeManager
         /// <param name="stops">Zastávky nad sítí</param>
         /// <param name="log">Objekt pro logování</param>
         /// <param name="waypointsFileName">Soubor s waypointy, nemusí být zadán, pak se počítá s prázdnou množinou waypointů</param>
-        public static ShapeDatabase Create(string networkFileName, IEnumerable<Stop> stops, ICommonLogger log, string waypointsFileName = null)
+        /// <param name="sharpAngleThreshold">Úhel na trase, který už má být logován jako nestandardní</param>
+        public static ShapeDatabase Create(string networkFileName, IEnumerable<Stop> stops, ICommonLogger log, string waypointsFileName = null, double sharpAngleThreshold = 45)
         {
             var result = new ShapeDatabase(log);
+            result.sharpAngleThreshold = sharpAngleThreshold;
             result.shapeConstructor.LoadPointData(networkFileName);
-            result.waypointCollection = waypointsFileName != null ? WaypointCollection.Load(waypointsFileName) : new WaypointCollection(); ;
+            result.waypointCollection = waypointsFileName != null ? WaypointCollection.Load(waypointsFileName) : new WaypointCollection();
             result.stopsToPointsMapping = result.MapStationsOnNetwork(stops, result.waypointCollection, log);
             return result;
         }
@@ -80,7 +89,7 @@ namespace ShapeManager
             var tripStops = trip.StopTimes.Select(st => st.Stop).ToArray();
             foreach (var shape in Shapes)
             {
-                var shapeStops = shape.TripsOfThisShape.First().StopTimes.Select(st => st.Stop).ToArray();
+                var shapeStops = shapeStopsIndex[shape];
                 if (Enumerable.SequenceEqual(shapeStops, tripStops))
                 {
                     CopyTraveledDistances(shape.TripsOfThisShape.First(), trip);
@@ -95,26 +104,28 @@ namespace ShapeManager
             trip.Shape = newShape;
             Shapes.Add(newShape);
             newShape.TripsOfThisShape.Add(trip);
+            shapeStopsIndex.Add(newShape, tripStops);
             return newShape;
         }
 
-        private List<GpsCoordinates> FindOrCreatePath(Stop from, Stop to)
+        private (List<GpsCoordinates> path, List<string> logMessages, bool wasFromCache) FindOrCreatePath(Stop from, Stop to)
         {
-            var path = paths.GetValueOrDefault(from)?.GetValueOrDefault(to);
+            var path = paths.GetValueOrDefault((from, to));
             if (path == null)
             {
-                path = CreatePath(from, to);
-                paths.GetValueAndAddIfMissing(from, new Dictionary<Stop, List<GpsCoordinates>>()).Add(to, path);
+                path = CreatePath(from, to, out var logMessages);
+                return (path, logMessages, false);
             }
 
-            return path;
+            return (path, new List<string>(), true);
         }
 
-        private List<GpsCoordinates> CreatePath(Stop from, Stop to)
+        private List<GpsCoordinates> CreatePath(Stop from, Stop to, out List<string> logMessages)
         {
             var pointFrom = stopsToPointsMapping.GetValueOrDefault(from.Position);
             var waypoints = waypointCollection.FindWaypoints(from, to);
-            var allPoints = new List<Point>() { pointFrom };
+            var allPoints = new List<ShapeConstructor.Point>() { pointFrom };
+            logMessages = new List<string>();
             foreach (var waypoint in waypoints)
             {
                 var waypointPoint = stopsToPointsMapping.GetValueOrDefault(waypoint.ToGpsCoordinates());
@@ -136,11 +147,11 @@ namespace ShapeManager
                 {
                     if (i == 0)
                     {
-                        log.Log(LogMessageType.WARNING_TRAIN_SHAPE_PATH_NOT_FOUND, $"Cesta ze stanice {from.Name} do stanice {to.Name} nebyla nalezena. Používám přímé propojení.");
+                        logMessages.Add($"Cesta ze stanice {from.Name} do stanice {to.Name} nebyla nalezena. Používám přímé propojení.");
                     }
                     else
                     {
-                        log.Log(LogMessageType.WARNING_TRAIN_SHAPE_PATH_NOT_FOUND, $"Cesta ze stanice {from.Name} do stanice {to.Name} (přes waypoint {i}: {allPoints[i].Gps}) nebyla nalezena. Používám přímé propojení.");
+                        logMessages.Add($"Cesta ze stanice {from.Name} do stanice {to.Name} (přes waypoint {i}: {allPoints[i].Gps}) nebyla nalezena. Používám přímé propojení.");
                     }
 
                     return new List<GpsCoordinates>() { from.Position, to.Position };
@@ -159,13 +170,13 @@ namespace ShapeManager
         /// <param name="log">Log, kam se zapisují nestandardní události během mapování</param>
         private Dictionary<GpsCoordinates, ShapeConstructor.Point> MapStationsOnNetwork(IEnumerable<Stop> stations, WaypointCollection waypointCollection, ICommonLogger log)
         {
-            var stationClosestPoints = new Dictionary<GpsCoordinates, ShapeConstructor.Point>();
+            var edgePoints = new Dictionary<Edge, Dictionary<GpsCoordinates, GpsCoordinates>>();
             foreach (var station in stations)
             {
                 var mappedStationPoint = MapPointOnNetwork(log, station.Position, $"stanice {station.Name}");
                 if (mappedStationPoint != null)
                 {
-                    stationClosestPoints[station.Position] = mappedStationPoint;
+                    edgePoints.GetValueAndAddIfMissing(mappedStationPoint.Value.closestEdge, new Dictionary<GpsCoordinates, GpsCoordinates>())[station.Position] = mappedStationPoint.Value.closestCoordinate;
                 }
             }
 
@@ -178,26 +189,54 @@ namespace ShapeManager
                     var mappedWaypoint = MapPointOnNetwork(log, waypointCoordinates, $"Waypoint {waypoint} ({waypointsForStop.From} - {waypointsForStop.To})");
                     if (mappedWaypoint != null)
                     {
-                        stationClosestPoints[waypointCoordinates] = mappedWaypoint;
+                        edgePoints.GetValueAndAddIfMissing(mappedWaypoint.Value.closestEdge, new Dictionary<GpsCoordinates, GpsCoordinates>())[waypointCoordinates] = mappedWaypoint.Value.closestCoordinate;
                     }
+                }
+            }
+
+            var stationClosestPoints = new Dictionary<GpsCoordinates, ShapeConstructor.Point>();
+            foreach (var edgeAndPoints in edgePoints)
+            {
+                var edge = edgeAndPoints.Key;
+                var splitPoints = new List<KeyValuePair<GpsCoordinates, GpsCoordinates>>();
+                foreach (var edgePoint in edgeAndPoints.Value)
+                {
+                    if (edgePoint.Value == edge.From.Gps)
+                    {
+                        stationClosestPoints[edgePoint.Key] = edge.From;
+                    }
+                    else if (edgePoint.Value == edge.To.Gps)
+                    {
+                        stationClosestPoints[edgePoint.Key] = edge.To;
+                    }
+                    else
+                    {
+                        splitPoints.Add(edgePoint);
+                    }
+                }
+
+                var splitResult = shapeConstructor.SplitEdgeByMultiplePoints(edge, splitPoints.Select(kvp => kvp.Value).ToList());
+                foreach (var splitPoint in splitPoints)
+                {
+                    stationClosestPoints[splitPoint.Key] = splitResult[splitPoint.Value];
                 }
             }
 
             return stationClosestPoints;
         }
 
-        private Point MapPointOnNetwork(ICommonLogger log, GpsCoordinates positionToMap, string positionName)
+        private (Edge closestEdge, GpsCoordinates closestCoordinate)? MapPointOnNetwork(ICommonLogger log, GpsCoordinates positionToMap, string positionName)
         {
-            // hrany s alespoň jedním krajním bodem nedaleko hledané stanice
-            var closeEdges = shapeConstructor.AllEdges.Where(e => MapFunctions.DistanceMeters(e.From.Gps.GpsLatitude, e.From.Gps.GpsLongitude, positionToMap.GpsLatitude, positionToMap.GpsLongitude) < MaxEdgeDistance
-                                              || MapFunctions.DistanceMeters(e.To.Gps.GpsLatitude, e.To.Gps.GpsLongitude, positionToMap.GpsLatitude, positionToMap.GpsLongitude) < MaxEdgeDistance);
+            var bbox = CreateSearchEnvelope(positionToMap, MaxEdgeDistance);
+            var closeEdges = shapeConstructor.SpatialIndex.Query(bbox);
+
             var closestCoordinate = new GpsCoordinates();
-            ShapeConstructor.Edge closestEdge = null;
+            Edge closestEdge = null;
             double minDistance = double.MaxValue;
             foreach (var edge in closeEdges)
             {
                 var point = GetClosestPointOnEdge(edge, positionToMap);
-                var dist = MapFunctions.DistanceMeters(point.GpsLatitude, point.GpsLongitude, positionToMap.GpsLatitude, positionToMap.GpsLongitude);
+                var dist = MapFunctions.DistanceMeters2(point.GpsLatitude, point.GpsLongitude, positionToMap.GpsLatitude, positionToMap.GpsLongitude);
                 if (dist < minDistance)
                 {
                     minDistance = dist;
@@ -216,22 +255,24 @@ namespace ShapeManager
                 log.Log(LogMessageType.WARNING_TRAIN_SHAPE_TOO_FAR_FROM_STOP, $"Stanice {positionName} je od nejbližšího bodu na trase vzdálená {minDistance} metrů.");
             }
 
-            // vytvoříme uprostřed hrany nový bod
-            ShapeConstructor.Point stationPoint;
-            if (closestCoordinate.Equals(closestEdge.From.Gps))
-            {
-                stationPoint = closestEdge.From;
-            }
-            else if (closestCoordinate.Equals(closestEdge.To.Gps))
-            {
-                stationPoint = closestEdge.To;
-            }
-            else
-            {
-                stationPoint = shapeConstructor.CreateNewPointInEdge(closestCoordinate, closestEdge, out var newEdge1, out var newEdge2);
-            }
+            return (closestEdge, closestCoordinate);
+        }
 
-            return stationPoint;
+        private Envelope CreateSearchEnvelope(GpsCoordinates p, double radiusMeters)
+        {
+            const double metersPerDegreeLat = MapFunctions.LatDegreeDistance;
+
+            double deltaLat = radiusMeters / metersPerDegreeLat;
+
+            double deltaLon =
+                radiusMeters /
+                (metersPerDegreeLat * Math.Cos(p.GpsLatitude * Math.PI / 180));
+
+            return new Envelope(
+                p.GpsLongitude - deltaLon,
+                p.GpsLongitude + deltaLon,
+                p.GpsLatitude - deltaLat,
+                p.GpsLatitude + deltaLat);
         }
 
         private static GpsCoordinates GetClosestPointOnEdge(Edge edge, GpsCoordinates point)
@@ -304,13 +345,29 @@ namespace ShapeManager
 
             trip.StopTimes[0].ShapeDistanceTraveledMeters = 0;
 
+            var results = new (List<GpsCoordinates> path, List<string> logMessages, bool wasFromCache)[trip.StopTimes.Count];
+            Parallel.For(1, trip.StopTimes.Count, i =>
+            {
+                results[i] = FindOrCreatePath(trip.StopTimes[i - 1].Stop, trip.StopTimes[i].Stop);
+            });
+
             int pointSequenceIndex = 1;
             double currentDistance = 0;
             for (int i = 1; i < trip.StopTimes.Count; i++)
             {
                 var stopTimeFrom = trip.StopTimes[i - 1];
                 var stopTimeTo = trip.StopTimes[i];
-                var path = FindOrCreatePath(stopTimeFrom.Stop, stopTimeTo.Stop);
+                var (path, logMessages, wasFromCache) = results[i];
+
+                if (!wasFromCache)
+                {
+                    paths[(stopTimeFrom.Stop, stopTimeTo.Stop)] = path;
+                }
+
+                foreach (var msg in logMessages)
+                {
+                    log.Log(LogMessageType.WARNING_TRAIN_SHAPE_PATH_NOT_FOUND, msg);
+                }
 
                 foreach (var point in path)
                 {
@@ -323,7 +380,7 @@ namespace ShapeManager
                         if (resultShape.Points.Count >= 2)
                         {
                             var prevPrevPos = resultShape.Points[resultShape.Points.Count - 2].Position;
-                            if (IsSharpTurn(prevPrevPos, prevPos, point, out var angle))
+                            if (IsSharpTurn(prevPrevPos, prevPos, point, out var angle, sharpAngleThreshold))
                             {
                                 log.Log(LogMessageType.WARNING_SHAPE_TOO_SHARP_TURN, $"Hodně ostrá zatáčka {angle:0}°, spoj {trip}, úsek {stopTimeFrom.Stop} - {stopTimeTo.Stop}, souřadnice {prevPrevPos}, {prevPos}, {point}.");
                             }

@@ -69,9 +69,10 @@ namespace JdfToGtfsProcessor
 
             var feedStartDate = jdfFeed.Routes.Values.Min(r => r.ValidFrom);
             var feedEndDate = jdfFeed.Routes.Values.Max(r => r.ValidTo);
-            if (skipPastFeeds && feedEndDate > DateTime.Now.Date)
+            if (skipPastFeeds && feedEndDate < DateTime.Now.Date)
             {
                 log.Log($"Ignoruji feed, je celý v minulosti (končí {feedEndDate})");
+                return;
             }
 
             // zastávky

@@ -48,27 +48,35 @@ namespace JdfToGtfsProcessor
             }
 
             Console.WriteLine("Načítám JDF...");
-            if (settings.JdfFolder == null) 
+            if (settings.JdfFolders == null) 
             {
-                Console.WriteLine("V konfiguračním souboru není zadána cesta ke složce s JDF soubory (položka JdfFolder). Nelze pokračovat.");
-                return;
-            }
-            else if (!Directory.Exists(settings.JdfFolder))
-            {
-                Console.WriteLine($"Složka {settings.JdfFolder} zadaná jako zdroj JDF dat nebyla nalezena. Nelze pokračovat.");
+                Console.WriteLine("V konfiguračním souboru není zadána žádná cesta ke složce s JDF soubory (položka JdfFolders). Nelze pokračovat.");
                 return;
             }
 
-            var jdfFeeds = JdfFeed.LoadFromDirectoryRecursive(settings.JdfFolder, out var exceptions).ToList();
-            foreach (var ex in exceptions)
+            var jdfFeeds = new List<(string path, JdfFeed feed)>();
+            foreach (var jdfFolder in settings.JdfFolders)
             {
-                Console.WriteLine(ex);
-                commonLog.Log(ex.ToString());
+                if (!Directory.Exists(jdfFolder))
+                {
+                    Console.WriteLine($"Složka {jdfFolder} zadaná jako zdroj JDF dat nebyla nalezena.");
+                    continue;
+                }
+
+                Console.WriteLine(jdfFolder + "...");
+                var jdfFeedsThisFile = JdfFeed.LoadFromDirectoryRecursive(jdfFolder, out var exceptions).ToList();
+                jdfFeeds.AddRange(jdfFeedsThisFile);
+                foreach (var ex in exceptions)
+                {
+                    Console.WriteLine(ex);
+                    commonLog.Log(ex.ToString());
+                }
+
             }
 
             if (!jdfFeeds.Any())
             {
-                Console.WriteLine($"Ze složky {settings.JdfFolder} nebyl načten žádný JDF feed (je cesta zadána správně?). Nelze pokračovat.");
+                Console.WriteLine($"Ze zadaných složek nebyl načten žádný JDF feed (je cesta zadána správně?). Nelze pokračovat.");
                 return;
             }
 
@@ -83,7 +91,7 @@ namespace JdfToGtfsProcessor
                     new SimpleLoggerByFile(jdfFeedEntry.path, missingPlatformCodeLog),
                     new SimpleLoggerByFile(jdfFeedEntry.path, routeLog),
                     new SimpleLoggerByFile(jdfFeedEntry.path, jdfTimedTransferLog),
-                    false);
+                    true);
             }
 
             var gtfsFeedEx = jdfFeedProcessor.GetResultGtfsFeed(commonLog);
@@ -164,6 +172,7 @@ namespace JdfToGtfsProcessor
                 return data;
             }
         }
+
         private static void ConstructShapesFromNetwork(string? networkFileName, string? waypointsFileName, GtfsModel.Enumerations.TrafficType trafficType, GtfsModel.Extended.Feed gtfsFeedEx, ICommonLogger log)
         {
             if (string.IsNullOrEmpty(networkFileName))
@@ -173,7 +182,7 @@ namespace JdfToGtfsProcessor
 
             var trips = gtfsFeedEx.Trips.Values.Where(t => t.Route.Type == trafficType).ToList();
             var stops = trips.SelectMany(t => t.StopTimes).Select(st => st.Stop).Distinct().ToList();
-            var shapeDb = ShapeDatabase.Create(networkFileName, stops, log, waypointsFileName);
+            var shapeDb = ShapeDatabase.Create(networkFileName, stops, log, waypointsFileName, 120);
             shapeDb.ProcessTrips(trips);
             foreach (var shape in shapeDb.Shapes)
             {

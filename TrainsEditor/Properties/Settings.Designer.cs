@@ -12,7 +12,7 @@ namespace TrainsEditor.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.14.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.13.0.0")]
     internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -25,7 +25,7 @@ namespace TrainsEditor.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        [global::System.Configuration.DefaultSettingValueAttribute("..\\..\\inputy\\ZastavkyLinkyDopravci.xml")]
         public string StopsAndLinesFileNameAsw {
             get {
                 return ((string)(this["StopsAndLinesFileNameAsw"]));
@@ -34,7 +34,25 @@ namespace TrainsEditor.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("c:\\temp\\jrspoje\\GVD\\SR70.csv")]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string FareKmFile {
+            get {
+                return ((string)(this["FareKmFile"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string StopsAndLinesFileName {
+            get {
+                return ((string)(this["StopsAndLinesFileName"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("..\\..\\inputy\\SR70.csv")]
         public string SR70Stops {
             get {
                 return ((string)(this["SR70Stops"]));
@@ -43,7 +61,7 @@ namespace TrainsEditor.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("c:\\temp\\jrspoje\\GVD")]
+        [global::System.Configuration.DefaultSettingValueAttribute("c:\\temp\\jrspoje\\xml_repository")]
         public string RepositoryFolder {
             get {
                 return ((string)(this["RepositoryFolder"]));
@@ -52,7 +70,7 @@ namespace TrainsEditor.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("c:\\temp\\jrspoje\\GVD\\sit_vlak_odis.csv")]
+        [global::System.Configuration.DefaultSettingValueAttribute("..\\..\\inputy\\sit_vlak.csv")]
         public string TrackNetworkFile {
             get {
                 return ((string)(this["TrackNetworkFile"]));
@@ -79,53 +97,34 @@ namespace TrainsEditor.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute(@"					<ArrayOfTripDirectionSpec xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xmlns:xsd=""http://www.w3.org/2001/XMLSchema"">
-						<TripDirectionSpec>
-							<LineName>S33</LineName>
-							<TrainNumber>8515</TrainNumber>
-						</TripDirectionSpec>
-                        <TripDirectionSpec>
-							<LineName>S33</LineName>
-							<TrainNumber>8518</TrainNumber>
-						</TripDirectionSpec>
-						<TripDirectionSpec>
-							<LineName>S9</LineName>
-							<TrainNumber>2540</TrainNumber>
-						</TripDirectionSpec>
-						<TripDirectionSpec>
-							<LineName>S9</LineName>
-							<TrainNumber>2509</TrainNumber>
-						</TripDirectionSpec>
-						<TripDirectionSpec>
-							<LineName>S2</LineName>
-							<TrainNumber>5802</TrainNumber>
-						</TripDirectionSpec>
-						<TripDirectionSpec>
-							<LineName>S2</LineName>
-							<TrainNumber>5805</TrainNumber>
-						</TripDirectionSpec>
-					</ArrayOfTripDirectionSpec>")]
+        [global::System.Configuration.DefaultSettingValueAttribute("\r\n\t\t\t\t\t<ArrayOfTripDirectionSpec xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-inst" +
+            "ance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\">\r\n\t\t\t\t\t\t<TripDirectionSpec>\r\n" +
+            "\t\t\t\t\t\t\t<LineName>S33</LineName>\r\n\t\t\t\t\t\t\t<TrainNumber>8515</TrainNumber>\r\n\t\t\t\t\t\t<" +
+            "/TripDirectionSpec>\r\n\t\t\t\t\t\t<TripDirectionSpec>\r\n\t\t\t\t\t\t\t<LineName>S33</LineName>\r" +
+            "\n\t\t\t\t\t\t\t<TrainNumber>8518</TrainNumber>\r\n\t\t\t\t\t\t</TripDirectionSpec>\r\n\t\t\t\t\t\t<Trip" +
+            "DirectionSpec>\r\n\t\t\t\t\t\t\t<LineName>S9</LineName>\r\n\t\t\t\t\t\t\t<TrainNumber>2540</TrainN" +
+            "umber>\r\n\t\t\t\t\t\t</TripDirectionSpec>\r\n\t\t\t\t\t\t<TripDirectionSpec>\r\n\t\t\t\t\t\t\t<LineName>" +
+            "S9</LineName>\r\n\t\t\t\t\t\t\t<TrainNumber>2509</TrainNumber>\r\n\t\t\t\t\t\t</TripDirectionSpec" +
+            ">\r\n\t\t\t\t\t\t<TripDirectionSpec>\r\n\t\t\t\t\t\t\t<LineName>S2</LineName>\r\n\t\t\t\t\t\t\t<TrainNumbe" +
+            "r>5802</TrainNumber>\r\n\t\t\t\t\t\t</TripDirectionSpec>\r\n\t\t\t\t\t\t<TripDirectionSpec>\r\n\t\t\t" +
+            "\t\t\t\t<LineName>S2</LineName>\r\n\t\t\t\t\t\t\t<TrainNumber>5805</TrainNumber>\r\n\t\t\t\t\t\t</Tri" +
+            "pDirectionSpec>\r\n\t\t\t\t\t\t<TripDirectionSpec>\r\n\t\t\t\t\t\t\t<LineName>S21</LineName>\r\n\t\t\t" +
+            "\t\t\t\t<TrainNumber>15600</TrainNumber>\r\n\t\t\t\t\t\t</TripDirectionSpec>\r\n\t\t\t\t\t\t<TripDir" +
+            "ectionSpec>\r\n\t\t\t\t\t\t\t<LineName>S21</LineName>\r\n\t\t\t\t\t\t\t<TrainNumber>15601</TrainNu" +
+            "mber>\r\n\t\t\t\t\t\t</TripDirectionSpec>\r\n\t\t\t\t\t\t<TripDirectionSpec>\r\n\t\t\t\t\t\t\t<LineName>U" +
+            "14</LineName>\r\n\t\t\t\t\t\t\t<TrainNumber>16864</TrainNumber>\r\n\t\t\t\t\t\t</TripDirectionSpe" +
+            "c>\r\n\t\t\t\t\t\t<TripDirectionSpec>\r\n\t\t\t\t\t\t\t<LineName>U14</LineName>\r\n\t\t\t\t\t\t\t<TrainNum" +
+            "ber>16867</TrainNumber>\r\n\t\t\t\t\t\t</TripDirectionSpec>\r\n\t\t\t\t\t\t<TripDirectionSpec>\r\n" +
+            "\t\t\t\t\t\t\t<LineName>U12</LineName>\r\n\t\t\t\t\t\t\t<TrainNumber>6703</TrainNumber>\r\n\t\t\t\t\t\t<" +
+            "/TripDirectionSpec>\r\n\t\t\t\t\t\t<TripDirectionSpec>\r\n\t\t\t\t\t\t\t<LineName>U12</LineName>\r" +
+            "\n\t\t\t\t\t\t\t<TrainNumber>6702</TrainNumber>\r\n\t\t\t\t\t\t</TripDirectionSpec>\r\n\t\t\t\t\t\t<Trip" +
+            "DirectionSpec>\r\n\t\t\t\t\t\t\t<LineName>S98</LineName>\r\n\t\t\t\t\t\t\t<TrainNumber>26106</Trai" +
+            "nNumber>\r\n\t\t\t\t\t\t</TripDirectionSpec>\r\n\t\t\t\t\t\t<TripDirectionSpec>\r\n\t\t\t\t\t\t\t<LineNam" +
+            "e>S98</LineName>\r\n\t\t\t\t\t\t\t<TrainNumber>26107</TrainNumber>\r\n\t\t\t\t\t\t</TripDirection" +
+            "Spec>\r\n\t\t\t\t\t</ArrayOfTripDirectionSpec>\r\n\t\t\t\t")]
         public global::System.Collections.Generic.List<TrainsEditor.GtfsExport.TripDirectionSpec> RepresentativeTrips {
             get {
                 return ((global::System.Collections.Generic.List<TrainsEditor.GtfsExport.TripDirectionSpec>)(this["RepresentativeTrips"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("c:\\temp\\jrspoje\\GVD\\VlakyOdis.xml")]
-        public string StopsAndLinesFileName {
-            get {
-                return ((string)(this["StopsAndLinesFileName"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("c:\\temp\\jrspoje\\GVD\\fare_km.csv")]
-        public string FareKmFile {
-            get {
-                return ((string)(this["FareKmFile"]));
             }
         }
     }
