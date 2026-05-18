@@ -95,8 +95,9 @@ namespace TrainsEditor.ExportModel
         /// <param name="loaderLog">Logování načítání dat</param>
         /// <param name="processLog">Logování zpracování</param>
         /// <param name="emptyLineHandler">Procedura, která se zavolá, když se narazí na vlak s nevyplněnou linkou</param>
+        /// <param name="currentIntegratedSystem">IDS, pro který generujeme data</param>
         public static Train Create(SingleTrainFile trainFile, StationDatabase stopDb, RouteDatabase lineDb, ICommonLogger loaderLog, ISimpleLogger processLog,
-            TrainWithEmptyLineHandler emptyLineHandler)
+            TrainWithEmptyLineHandler emptyLineHandler, IntegratedSystemsEnum currentIntegratedSystem)
         {
             var czpttMessage = trainFile.TrainData;
             var paId = czpttMessage.Identifiers.First(i => i.ObjectType == CompositeIdentifierPlannedType.ObjectTypeEnum.PA);
@@ -117,6 +118,8 @@ namespace TrainsEditor.ExportModel
             // prochází stanice a pokud tam vlak staví, přidá ji do seznamu
             // pokud se změní číslo vlaku nebo linka, vrátíme, co máme, a konstruujeme další vlak
             var stationTimes = new List<StationTime>();
+            var logMessages = new List<(LogMessageType, string)>();
+            var tripOperationType = currentIntegratedSystem == IntegratedSystemsEnum.PID ? (TripOperationType?)TripOperationType.Regular : null;
             CZPTTLocation prevLocation = null;
             StationTime prevPublicStationTime = null;
             foreach (var location in czpttMessage.CZPTTInformation.CZPTTLocation)
@@ -125,11 +128,11 @@ namespace TrainsEditor.ExportModel
                 var isLocationLast = location == czpttMessage.CZPTTInformation.CZPTTLocation.Last();
                 var isWheelchairAccessible = networkSpecificParamsProvider.FindCentralNotesForLocation(location, CentralNoteCode.WheelchairTransportAndPickup, CentralNoteCode.WheelchairTransportAvailable).Any();
 
-                var stationTime = StationTime.Create(location, czpttMessage, isWheelchairAccessible, prevLocation, stopDb, isLocationFirst || isLocationLast, loaderLog);
+                var stationTime = StationTime.Create(location, czpttMessage, isWheelchairAccessible, tripOperationType, prevLocation, stopDb, isLocationFirst || isLocationLast, loaderLog);
                 if (stationTime == null)
                     continue;
 
-                resultTrain.CorrectDeparturesBeforeArrivals(stationTime, stationTimes.LastOrDefault()?.DepartureTime, loaderLog);
+                logMessages.AddRange(resultTrain.CorrectDeparturesBeforeArrivals(stationTime, stationTimes.LastOrDefault()?.DepartureTime));
                 resultTrain.StopTimes.Add(stationTime);
                 if (stationTime.IsValid)
                 {
@@ -142,15 +145,20 @@ namespace TrainsEditor.ExportModel
                         || prevPublicStationTime.IsSubstituteTransportOnDeparture != stationTime.IsSubstituteTransportOnDeparture))
                 {
                     // nesmíme použít 'prevConstructedStationTime', protože potřebujeme vlastní referenci (bude jiná linka)
-                    stationTime = StationTime.Create(location, czpttMessage, isWheelchairAccessible, prevLocation, stopDb, isLocationFirst || isLocationLast, loaderLog);
+                    stationTime = StationTime.Create(location, czpttMessage, isWheelchairAccessible, tripOperationType, prevLocation, stopDb, isLocationFirst || isLocationLast, loaderLog);
                     if (stationTime.IsValid && stationTime.IsPublic)
                     {
-                        var lineTrain = TrainTrip.Construct(resultTrain, stationTimes, lineDb, loaderLog, processLog, emptyLineHandler);
+                        var lineTrain = TrainTrip.Construct(resultTrain, stationTimes, lineDb, loaderLog, processLog, emptyLineHandler, currentIntegratedSystem);
                         if (lineTrain != null)
+                        {
                             resultTrain.LineTrips.Add(lineTrain);
+                            foreach (var msg in logMessages)
+                                loaderLog.Log(msg.Item1, msg.Item2, resultTrain);
+                        }
 
-                        resultTrain.CorrectDeparturesBeforeArrivals(stationTime, lineTrain?.StopTimes?.LastOrDefault()?.ArrivalTime, loaderLog); //arrival je schválně, departure z poslední stanice je nesmysl
+                        logMessages.AddRange(resultTrain.CorrectDeparturesBeforeArrivals(stationTime, lineTrain?.StopTimes?.LastOrDefault()?.ArrivalTime)); //arrival je schválně, departure z poslední stanice je nesmysl
                         stationTimes = new List<StationTime>();
+                        logMessages.Clear();
                         if (stationTime.IsPublicOnDeparture && !stationTime.IsSubstituteTransportOnDeparture)
                         {
                             stationTimes.Add(stationTime);
@@ -167,7 +175,7 @@ namespace TrainsEditor.ExportModel
 
             if (stationTimes.Any2())
             {
-                var lineTrain = TrainTrip.Construct(resultTrain, stationTimes, lineDb, loaderLog, processLog, emptyLineHandler);
+                var lineTrain = TrainTrip.Construct(resultTrain, stationTimes, lineDb, loaderLog, processLog, emptyLineHandler, currentIntegratedSystem);
                 if (lineTrain != null)
                     resultTrain.LineTrips.Add(lineTrain);
             }
@@ -234,12 +242,12 @@ namespace TrainsEditor.ExportModel
         }
 
         // Kontrola a korekce protičasů (nesmí upravovat minulá data, takže upravuje jen stoptime)
-        protected void CorrectDeparturesBeforeArrivals(StationTime stopTime, Time? prevStopTimeDeparture, ICommonLogger loaderLog)
+        protected IEnumerable<(LogMessageType, string)> CorrectDeparturesBeforeArrivals(StationTime stopTime, Time? prevStopTimeDeparture)
         {
             if (stopTime.ArrivalTime > stopTime.DepartureTime)
             {
                 FirstInvalidTime = FirstInvalidTime ?? stopTime.DepartureTime;
-                loaderLog.Log(LogMessageType.WARNING_STOPTIME_PREMATURE_DEPARTURE, $"Čas příjezdu do {stopTime.Stop.Name} je po času odjezdu z této stanice. Nastavuji čas příjezdu z {stopTime.ArrivalTime} na {stopTime.DepartureTime}.", this);
+                yield return (LogMessageType.WARNING_STOPTIME_PREMATURE_DEPARTURE, $"Čas příjezdu do {stopTime.Stop.Name} je po času odjezdu z této stanice. Nastavuji čas příjezdu z {stopTime.ArrivalTime} na {stopTime.DepartureTime}.");
                 stopTime.ArrivalTime = stopTime.DepartureTime;
             }
 
@@ -248,13 +256,13 @@ namespace TrainsEditor.ExportModel
                 FirstInvalidTime = FirstInvalidTime ?? stopTime.ArrivalTime;
                 if (prevStopTimeDeparture.Value > stopTime.DepartureTime)
                 {
-                    loaderLog.Log(LogMessageType.WARNING_STOPTIME_PREMATURE_ARRIVAL, $"Čas příjezdu i odjezdu z {stopTime.Stop.Name} je před časem odjezdu z předchozí stanice. Nastavuji časy příjezdu i odjezdu z {stopTime.ArrivalTime}–{stopTime.DepartureTime} na {prevStopTimeDeparture.Value}.", this);
+                    yield return (LogMessageType.WARNING_STOPTIME_PREMATURE_ARRIVAL, $"Čas příjezdu i odjezdu z {stopTime.Stop.Name} je před časem odjezdu z předchozí stanice. Nastavuji časy příjezdu i odjezdu z {stopTime.ArrivalTime}–{stopTime.DepartureTime} na {prevStopTimeDeparture.Value}.");
                     stopTime.ArrivalTime = prevStopTimeDeparture.Value;
                     stopTime.DepartureTime = prevStopTimeDeparture.Value;
                 }
                 else
                 {
-                    loaderLog.Log(LogMessageType.WARNING_STOPTIME_PREMATURE_ARRIVAL, $"Čas příjezdu do {stopTime.Stop.Name} je před časem odjezdu z předchozí stanice. Nastavuji čas příjezdu z {stopTime.ArrivalTime} na {prevStopTimeDeparture.Value}.", this);
+                    yield return (LogMessageType.WARNING_STOPTIME_PREMATURE_ARRIVAL, $"Čas příjezdu do {stopTime.Stop.Name} je před časem odjezdu z předchozí stanice. Nastavuji čas příjezdu z {stopTime.ArrivalTime} na {prevStopTimeDeparture.Value}.");
                     stopTime.ArrivalTime = prevStopTimeDeparture.Value;
                 }
             }

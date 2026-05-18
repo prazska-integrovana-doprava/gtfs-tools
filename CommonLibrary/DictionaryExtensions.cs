@@ -5,39 +5,6 @@ namespace CommonLibrary
     public static class DictionaryExtensions
     {
         /// <summary>
-        /// Vrátí hodnotu, je-li v dictionary, jinak null. Odpovídá operaci [] s tím rozdílem, že v případě nepřítomnosti prvku v kolekci
-        /// nevyvolává výjimku, ale vrací null.
-        /// </summary>
-        /// <param name="dict">Dictionary</param>
-        /// <param name="key">Klíč k hledané hodnotě</param>
-        /// <returns>Nalezená hodnota z dictionary nebo null, pokud žádná není.</returns>
-        public static TValue GetValueOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> dict, TKey key)
-        {
-            return GetValueOrDefault(dict, key, default(TValue));
-        }
-
-        /// <summary>
-        /// Vrátí hodnotu, je-li v dictionary, jinak <paramref name="defaultValue"/>.
-        /// Odpovídá operaci [] s tím rozdílem, že v případě nepřítomnosti prvku v kolekci nevyvolává výjimku, ale vrací <paramref name="defaultValue"/>.
-        /// </summary>
-        /// <param name="dict">Dictionary</param>
-        /// <param name="key">Klíč k hledané hodnotě</param>
-        /// <param name="defaultValue">Výchozí hodnota, která se vrátí, pokud prvek v dictionary není.</param>
-        /// <returns>Nalezená hodnota z dictionary nebo <paramref name="defaultValue"/>, pokud žádná není.</returns>
-        public static TValue GetValueOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> dict, TKey key, TValue defaultValue)
-        {
-            TValue result;
-            if (dict.TryGetValue(key, out result))
-            {
-                return result;
-            }
-            else
-            {
-                return defaultValue;
-            }
-        }
-
-        /// <summary>
         /// Vrátí hodnotu pro daný klíč, je-li v dictionary. Pokud není, založí nový záznam s <paramref name="defaultValue"/> a vrátí ten.
         /// </summary>
         /// <param name="dict">Dictionary</param>
@@ -72,3 +39,44 @@ namespace CommonLibrary
         }
     }
 }
+
+// abych v projektech v .NETu 8, kde už tyhle metody jsou, se mi tam necpaly jako ambiguous
+namespace CommonLibrary.DotNet48
+{
+    public static class DictionaryExtensions_DotNet48
+    {
+        /// <summary>
+        /// Vrátí hodnotu, je-li v dictionary, jinak null. Odpovídá operaci [] s tím rozdílem, že v případě nepřítomnosti prvku v kolekci
+        /// nevyvolává výjimku, ale vrací null.
+        /// </summary>
+        /// <param name="dict">Dictionary</param>
+        /// <param name="key">Klíč k hledané hodnotě</param>
+        /// <returns>Nalezená hodnota z dictionary nebo null, pokud žádná není.</returns>
+        public static TValue GetValueOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> dict, TKey key)
+        {
+            return GetValueOrDefault(dict, key, default(TValue));
+        }
+
+        /// <summary>
+        /// Vrátí hodnotu, je-li v dictionary, jinak <paramref name="defaultValue"/>.
+        /// Odpovídá operaci [] s tím rozdílem, že v případě nepřítomnosti prvku v kolekci nevyvolává výjimku, ale vrací <paramref name="defaultValue"/>.
+        /// </summary>
+        /// <param name="dict">Dictionary</param>
+        /// <param name="key">Klíč k hledané hodnotě</param>
+        /// <param name="defaultValue">Výchozí hodnota, která se vrátí, pokud prvek v dictionary není.</param>
+        /// <returns>Nalezená hodnota z dictionary nebo <paramref name="defaultValue"/>, pokud žádná není.</returns>
+        public static TValue GetValueOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> dict, TKey key, TValue defaultValue)
+        {
+            TValue result;
+            if (dict.TryGetValue(key, out result))
+            {
+                return result;
+            }
+            else
+            {
+                return defaultValue;
+            }
+        }
+    }
+}
+

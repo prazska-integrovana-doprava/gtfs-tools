@@ -55,7 +55,7 @@ namespace StopTimetableGen.Transformations
             // TODO zvážit úpravu kalendáře tak, aby byl den v týdnu zastoupen už při jediném odjezdu v daný provozní den
             // - jinak se může stát, že se spoj nedostane do jízdního řádu, protože tam se třídí podle dnů v týdnu
             // - na druhou stranu to může být záměr - nezaplevelovat si JŘ jednodenními spoji
-            var departureTrips = departures.Select(st => new DepartureTrip(st, st.Trip.CalendarRecord));
+            var departureTrips = departures.Select(st => new DepartureTrip(st, (CalendarRecord)st.Trip.CalendarRecord)); // předpokládáme jen skutečné kalendáře, pokud bychom chtěli zobecnit pro BaseCalendarRecord, museli bychom vyřešit, jak se k takovému kalendáři chovat
             return departureTrips.MergeIdentical(new DepartureCompareAndMerge(ignoreWheelchairAccessibility));
         }
 

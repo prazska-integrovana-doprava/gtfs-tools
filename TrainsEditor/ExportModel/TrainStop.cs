@@ -16,12 +16,7 @@ namespace TrainsEditor.ExportModel
         /// <summary>
         /// True, pokud se zastávka nachází i v číselníku ASW JŘ (tj. má pásmo a ASW ID)
         /// </summary>
-        public bool IsFromAsw { get { return AswNodeId != 0; } }
-
-        /// <summary>
-        /// Všechna pásma všech tarifních systémů
-        /// </summary>
-        public AswModel.Extended.ZoneInfo[] ZoneIds { get; set; }
+        public bool IsIntegrated { get; set; }
 
         /// <summary>
         /// Všechny přestupní ikonky pro zastávku. Protože jde o atribut k zastávce, je potřeba je ještě profiltrovat podle času (třeba přestup na metro ve 2:00 by se neměl aplikovat).
@@ -35,7 +30,7 @@ namespace TrainsEditor.ExportModel
 
         public override string ToString()
         {
-            if (IsFromAsw)
+            if (IsIntegrated)
                 return $"{Name} [{ZoneId}]";
             else
                 return $"{Name}";

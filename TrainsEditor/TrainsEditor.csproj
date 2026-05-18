@@ -15,6 +15,21 @@
     <WarningLevel>4</WarningLevel>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <TargetFrameworkProfile />
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -51,12 +66,28 @@
       <HintPath>..\packages\FluentFTP.45.0.3\lib\net472\FluentFTP.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Windows.Shell, Version=3.5.41019.1, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
+    <Reference Include="NetTopologySuite, Version=2.0.0.0, Culture=neutral, PublicKeyToken=f580a05016ebada1, processorArchitecture=MSIL">
+      <HintPath>..\packages\NetTopologySuite.2.6.0\lib\netstandard2.0\NetTopologySuite.dll</HintPath>
+    </Reference>
     <Reference Include="RibbonControlsLibrary, Version=3.5.41019.1, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
     <Reference Include="System" />
+    <Reference Include="System.Buffers, Version=4.0.4.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Buffers.4.6.0\lib\net462\System.Buffers.dll</HintPath>
+    </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="System.Memory, Version=4.0.2.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Memory.4.6.0\lib\net462\System.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors, Version=4.1.5.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Numerics.Vectors.4.6.0\lib\net462\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=6.0.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.6.1.0\lib\net462\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
@@ -78,6 +109,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="CommonLogic\FareKilometerDatabase.cs" />
     <Compile Include="CommonLogic\IntegratedSystemsEnum.cs" />
     <Compile Include="CommonLogic\IntegratedSystemsExtensions.cs" />
     <Compile Include="CommonLogic\TrainNetworkSpecificParamsProvider.cs" />
@@ -88,6 +120,7 @@
     <Compile Include="CommonModel\TrainGroup.cs" />
     <Compile Include="CommonModel\TrainGroupCollection.cs" />
     <Compile Include="CommonLogic\TrainGroupLoader.cs" />
+    <Compile Include="EditorLogic\FileListStore.cs" />
     <Compile Include="EditorLogic\FilesDownloader.cs" />
     <Compile Include="EditorLogic\FtpFileInfo.cs" />
     <Compile Include="EditorLogic\XmlSerializeToObjectHelper.cs" />
@@ -113,6 +146,10 @@
     <Compile Include="ExportModel\TrainTrip.cs" />
     <Compile Include="GtfsExport\Loggers.cs" />
     <Compile Include="Settings.cs" />
+    <Compile Include="SystemDescriptionModel\Agency.cs" />
+    <Compile Include="SystemDescriptionModel\Route.cs" />
+    <Compile Include="SystemDescriptionModel\Station.cs" />
+    <Compile Include="SystemDescriptionModel\SystemData.cs" />
     <Compile Include="TextWindow.xaml.cs">
       <DependentUpon>TextWindow.xaml</DependentUpon>
     </Compile>
@@ -195,11 +232,11 @@
       <Name>AswModel</Name>
     </ProjectReference>
     <ProjectReference Include="..\CommonLibrary\CommonLibrary.csproj">
-      <Project>{0d03b588-9405-4dc4-9cef-2b6f3fd41416}</Project>
+      <Project>{43509328-ca87-4cd8-b6c7-ca80385ea0a5}</Project>
       <Name>CommonLibrary</Name>
     </ProjectReference>
     <ProjectReference Include="..\CsvSerializer\CsvSerializer.csproj">
-      <Project>{e7b3ffbc-ae55-4612-90ce-38bae11d087b}</Project>
+      <Project>{9d341936-f936-4748-956f-be13f4f88dd8}</Project>
       <Name>CsvSerializer</Name>
     </ProjectReference>
     <ProjectReference Include="..\CzpttModel\CzpttModel.csproj">
@@ -207,17 +244,29 @@
       <Name>CzpttModel</Name>
     </ProjectReference>
     <ProjectReference Include="..\GtfsLogging\GtfsLogging.csproj">
-      <Project>{6e305575-db41-4baf-9112-baf5ed6ef863}</Project>
+      <Project>{3b149374-edec-4d91-974c-828d0a58ba21}</Project>
       <Name>GtfsLogging</Name>
     </ProjectReference>
     <ProjectReference Include="..\GtfsModel\GtfsModel.csproj">
-      <Project>{efa7bf8a-d351-4e97-8562-4dea7767a377}</Project>
+      <Project>{39ac442c-2e48-4148-979e-6f8effc6a8d5}</Project>
       <Name>GtfsModel</Name>
     </ProjectReference>
     <ProjectReference Include="..\ShapeManager\ShapeManager.csproj">
       <Project>{eb59ba74-1be8-4645-989e-2871b3ffe226}</Project>
       <Name>ShapeManager</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.8">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4.8 %28x86 and x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

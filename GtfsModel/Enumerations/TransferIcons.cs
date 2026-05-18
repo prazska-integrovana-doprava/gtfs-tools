@@ -49,7 +49,7 @@ namespace GtfsModel.Enumerations
         {
             if (icons == null)
             {
-                return "";
+                return null;
             }
 
             return string.Join("", icons.Select(i => Map[i]));

@@ -1,5 +1,6 @@
 ﻿using AswModel.Extended;
 using CommonLibrary;
+using CommonLibrary.DotNet48;
 using GtfsLogging;
 using GtfsProcessor.DataClasses;
 using System;

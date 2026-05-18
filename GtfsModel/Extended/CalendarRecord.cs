@@ -1,4 +1,5 @@
 ﻿using CommonLibrary;
+using CommonLibrary.DotNet48;
 using GtfsModel.Enumerations;
 using System;
 using System.Collections.Generic;
@@ -9,13 +10,8 @@ namespace GtfsModel.Extended
     /// <summary>
     /// Kalendář jízd spoje - od kdy do kdy a které dny v týdnu. Záznam v calendar.txt (rozšíření <see cref="GtfsCalendarRecord"/>)
     /// </summary>
-    public class CalendarRecord
+    public class CalendarRecord : BaseCalendarRecord
     {
-        /// <summary>
-        /// ID v rámci GTFS feedu
-        /// </summary>
-        public string GtfsId { get; set; }
-
         /// <summary>
         /// Indexováno pomocí <see cref="DayOfWeek"/>. 7 položek, pro každý den v týdnu určujících,
         /// jestli spoj v tento den v týdnu jezdí.
@@ -57,53 +53,39 @@ namespace GtfsModel.Extended
             }
         }
 
-        /// <summary>
-        /// Vrátí všechny dny, kdy spoj jede
-        /// </summary>
-        public IEnumerable<DateTime> ListDates()
+        public CalendarRecord()
         {
+            InService = new bool[7];
+        }
+
+        public override IEnumerable<DateTime> ListDates()
+        {
+            // nejdřív výjimky před začátkem platnosti kalendáře
+            foreach (var exception in Exceptions.Values.Where(e => e.ExceptionType == CalendarExceptionType.Add && e.Date < StartDate))
+            {
+                yield return exception.Date;
+            }
+
+            // potom dny v rámci kalendáře
             for (var dt = StartDate; dt <= EndDate; dt = dt.AddDays(1))
             {
                 if (OperatesAt(dt))
                     yield return dt;
             }
-        }
 
-        /// <summary>
-        /// Spoje, které jedou podle tohoto kalendáře
-        /// </summary>
-        public IList<Trip> Trips { get; set; }
-
-        // indexováno indexem dne od začátku exportu
-        public Dictionary<DateTime, CalendarExceptionRecord> Exceptions { get; set; }
-
-        public IEnumerable<CalendarExceptionRecord> ExceptionsOrdered { get { return Exceptions.Values.OrderBy(e => e.Date); } }
-
-        public CalendarRecord()
-        {
-            InService = new bool[7];
-            Exceptions = new Dictionary<DateTime, CalendarExceptionRecord>();
-            Trips = new List<Trip>();
+            // a nakonec výjimky po platnosti kalendáře
+            foreach (var exception in Exceptions.Values.Where(e => e.ExceptionType == CalendarExceptionType.Add && e.Date > EndDate))
+            {
+                yield return exception.Date;
+            }
         }
 
         /// <summary>
         /// Vrací true, pokud spoj jede v dané datum
         /// </summary>
         /// <param name="date">Datum</param>
-        /// <param name="dayOfWeek">Den v týdnu</param>
         /// <returns>True, pokud jede, jinak false</returns>
-        public bool OperatesAt(DateTime date)
-        {
-            if (date < StartDate || date > EndDate)
-            {
-                return false;
-            }
-
-            return OperatesAtIgnoreStartEnd(date);
-        }
-
-        // Vrací true, pokud spoj jede v dané datum bez ohledu na interval platnosti kalendáře
-        private bool OperatesAtIgnoreStartEnd(DateTime date)
+        public override bool OperatesAt(DateTime date)
         {
             var exception = Exceptions.GetValueOrDefault(date);
             if (exception != null)
@@ -111,7 +93,49 @@ namespace GtfsModel.Extended
                 return exception.ExceptionType == CalendarExceptionType.Add;
             }
 
+            if (date < StartDate || date > EndDate)
+            {
+                return false;
+            }
+
             return OperatesOn(date.DayOfWeek);
+        }
+
+        public override void ShortenBy(DateTime dateFrom, DateTime dateTo)
+        {
+            base.ShortenBy(dateFrom, dateTo);
+            
+            if (dateFrom > StartDate && dateFrom < EndDate && dateTo > StartDate && dateTo < EndDate)
+            {
+                // uvnitř intervalu, nejhorší případ, nastřílíme to výjimkama
+                for (var date = dateFrom; date <= dateTo; date = date.AddDays(1))
+                {
+                    if (OperatesOn(date.DayOfWeek))
+                    {
+                        AddException(date, CalendarExceptionType.Remove);
+                    }
+                }
+            }
+            else if (dateFrom > StartDate && dateFrom <= EndDate && dateTo >= EndDate)
+            {
+                // začíná v intervalu a ruší se až do konce
+                EndDate = dateFrom.AddDays(-1);
+            }
+            else if (dateFrom <= StartDate && dateTo >= StartDate && dateTo < EndDate)
+            {
+                // ruší se od začátku až do dne uvnitř intervalu
+                StartDate = dateTo.AddDays(1);
+            }
+            else if (dateFrom <= StartDate && dateTo >= EndDate)
+            {
+                // překrývá celý interval, uděláme z toho prázdný kalendář
+                EndDate = StartDate;
+                AddException(StartDate, CalendarExceptionType.Remove);
+            }
+            else
+            {
+                // zbývá jen varianta, kdy je interval mimo, pak to nezasáhne
+            }
         }
 
         /// <summary>
@@ -175,7 +199,7 @@ namespace GtfsModel.Extended
         /// 
         /// Návrat false v zásadě říká, že z kalendáře nejde poznat, jestli spoj v daný den jede, nebo ne.
         /// </summary>
-        public bool IsDefinedOn(DayOfWeek dayOfWeek, DaysOfWeekCalendar daysOfWeekCalendar)
+        public bool IsDefinedOn(DayOfWeek dayOfWeek, PublicHolidaysCalendar daysOfWeekCalendar)
         {
             for (var date = StartDate; date <= EndDate; date = date.AddDays(1))
             {
@@ -185,34 +209,6 @@ namespace GtfsModel.Extended
             }
 
             return false;
-        }
-
-        /// <summary>
-        /// Přidá výjimku do kalendáře
-        /// </summary>
-        /// <param name="date">Datum</param>
-        /// <param name="exceptionType">Typ výjimky (jede/nejede)</param>
-        public void AddException(DateTime date, CalendarExceptionType exceptionType)
-        {
-            Exceptions.Add(date, new CalendarExceptionRecord()
-            {
-                Date = date,
-                ExceptionType = exceptionType,
-            });
-        }
-
-        /// <summary>
-        /// Přidá výjimku do kalendáře. Pokud už s tímto datem existuje jiný záznam, přepíše ho
-        /// </summary>
-        /// <param name="date">Datum</param>
-        /// <param name="exceptionType">Typ výjimky (jede/nejede)</param>
-        public void AddExceptionIgnoreOlder(DateTime date, CalendarExceptionType exceptionType)
-        {
-            Exceptions[date] = new CalendarExceptionRecord()
-            {
-                Date = date,
-                ExceptionType = exceptionType,
-            };
         }
 
         /// <summary>
@@ -309,17 +305,6 @@ namespace GtfsModel.Extended
                 StartDate = StartDate,
                 EndDate = EndDate,
             };
-        }
-
-        /// <summary>
-        /// Vrátí všechny GTFS záznamy výjimek v kalendáři
-        /// </summary>
-        public IEnumerable<GtfsCalendarDate> GetAllGtfsExceptions()
-        {
-            foreach (var exception in Exceptions.Values)
-            {
-                yield return exception.ToGtfsCalendarDate(GtfsId);
-            }
         }
 
         public override string ToString()

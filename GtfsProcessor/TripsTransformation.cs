@@ -1,5 +1,5 @@
 ﻿using AswModel.Extended;
-using CommonLibrary;
+using CommonLibrary.DotNet48;
 using GtfsModel.Enumerations;
 using GtfsProcessor.DataClasses;
 using System.Collections.Generic;
@@ -104,7 +104,7 @@ namespace GtfsProcessor
                 Route = route,
                 Shape = shapeAssignment.GetValueOrDefault(trip),
                 ShortName = "",
-                SubAgency = trip.Agency != null ? route.SubAgencies.FirstOrDefault(a => a.SubAgencyId == trip.Agency.Id) : null, // může se stát, že dopravce není zadán, anebo jde o dopravce, který není na lince uveden v číselníku, pak ho nebudeme uvádět ani u spoje (ale teoreticky bychom mohli, jen nenalezneme příslušnou sub agency, museli bychom předávat rovnou číslo dopravce)
+                SubAgency = trip.Agency != null ? route.SubAgencies.FirstOrDefault(a => a.SubAgencyId == trip.Agency.Id.ToString()) : null, // může se stát, že dopravce není zadán, anebo jde o dopravce, který není na lince uveden v číselníku, pak ho nebudeme uvádět ani u spoje (ale teoreticky bychom mohli, jen nenalezneme příslušnou sub agency, museli bychom předávat rovnou číslo dopravce)
                 WheelchairAccessible = trip.IsWheelchairAccessible ? GtfsModel.Enumerations.WheelchairAccessibility.Possible : GtfsModel.Enumerations.WheelchairAccessibility.NotPossible,
                 // BikesAllowed nastavíme později podle StopTimes
                 // NextPublicTripInBlock se nastaví, až se bude generovat onen následný trip (jinak bychom udělali nekonečnou rekurzi)

@@ -35,23 +35,6 @@ namespace StopTimetableGen
 
 
         /// <summary>
-        /// Text informující, které dny jedou spoje navíc podle sobotního JŘ
-        /// </summary>
-        public static string GetSaturdayString(DaysOfWeekCalendar calendar, DateTime startDate, DateTime endDate)
-        {
-            return $"{JoinDates(calendar.ListDatesWithChanges(new[] { DayOfWeek.Saturday }, startDate, endDate))} jede podle sobotního jízdního řádu.";
-        }
-
-        /// <summary>
-        /// Text informující, které dny jedou spoje navíc podle nedělního JŘ
-        /// </summary>
-        public static string GetSundayString(DaysOfWeekCalendar calendar, DateTime startDate, DateTime endDate)
-        {
-            return $"{JoinDates(calendar.ListDatesWithChanges(new[] { DayOfWeek.Sunday }, startDate, endDate))} jede podle nedělního jízdního řádu.";
-        }
-
-
-        /// <summary>
         /// Vytiskne seznam datumů tak, že vždy sloučí ty ve stejném roce
         /// 
         /// Příklad: 24. a 25. 12. 2019, 1. 1., 10. 4., 13. 4. a 5. 7. 2020

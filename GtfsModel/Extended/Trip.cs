@@ -23,7 +23,7 @@ namespace GtfsModel.Extended
         /// <summary>
         /// Kalendář jízd (které dny je spoj vypraven).
         /// </summary>
-        public CalendarRecord CalendarRecord { get; set; }
+        public BaseCalendarRecord CalendarRecord { get; set; }
 
         /// <summary>
         /// Cílová zastávka.
@@ -111,6 +111,11 @@ namespace GtfsModel.Extended
         public RouteSubAgency SubAgency { get; set; }
 
         /// <summary>
+        /// Číslo spoje, pokud je definováno
+        /// </summary>
+        public int? TripNumber { get; set; }
+
+        /// <summary>
         /// Všechna zastavení v zastávkách
         /// </summary>
         public List<StopTime> StopTimes { get; set; }
@@ -141,8 +146,14 @@ namespace GtfsModel.Extended
         /// Vytvoří data o spoji z GTFS záznamu
         /// </summary>
         /// <param name="gtfsTrip">GTFS záznam</param>
-        public static Trip Construct(GtfsTrip gtfsTrip, IDictionary<string, CalendarRecord> calendars, IDictionary<string, Route> routes, IDictionary<string, Shape> shapes)
+        public static Trip Construct(GtfsTrip gtfsTrip, IDictionary<string, BaseCalendarRecord> calendars, IDictionary<string, Route> routes, IDictionary<string, Shape> shapes)
         {
+            if (!calendars.ContainsKey(gtfsTrip.ServiceId))
+            {
+                // je legitimní, že kalendář v souboru calendar.txt není, pokud je definován pouze výčtem dnů. Vytvoříme prázdný.
+                calendars.Add(gtfsTrip.ServiceId, new BaseCalendarRecord());
+            }
+
             return new Trip()
             {
                 BikesAllowed = gtfsTrip.BikesAllowed,
@@ -157,7 +168,7 @@ namespace GtfsModel.Extended
                 ShortName = gtfsTrip.ShortName,
                 WheelchairAccessible = gtfsTrip.WheelchairAccessible,
                 SubAgency = routes[gtfsTrip.RouteId].SubAgencies.FirstOrDefault(a => a.SubAgencyId == gtfsTrip.SubAgencyId),
-                HeadsignIcons = TransferIconCodes.ReverseTransform(gtfsTrip.HeadsignIcons).ToArray(),
+                HeadsignIcons = gtfsTrip.HeadsignIcons != null ? TransferIconCodes.ReverseTransform(gtfsTrip.HeadsignIcons).ToArray() : null, // je důležité odlišit null od prázdného pole, protože null je default hodnota a pokud všechny záznamy mají null, sloupec se nemusí vypisovat na výstup
             };
         }
 
@@ -180,7 +191,7 @@ namespace GtfsModel.Extended
                 WheelchairAccessible = WheelchairAccessible,
                 BikesAllowed = BikesAllowed,
                 IsExceptional = IsExceptional ? 1 : 0,
-                SubAgencyId = SubAgency?.SubAgencyId ?? 0,
+                SubAgencyId = SubAgency?.SubAgencyId,
                 HeadsignIcons = TransferIconCodes.Transform(HeadsignIcons),
             };
         }
@@ -209,7 +220,14 @@ namespace GtfsModel.Extended
 
         public override string ToString()
         {
-            return $"{GtfsId} ({StopTimes.First().Stop.Name} {StopTimes.First().DepartureTime} - {StopTimes.Last().Stop.Name} {StopTimes.Last().ArrivalTime})";
+            if (StopTimes.Any())
+            {
+                return $"{GtfsId} ({StopTimes.First().Stop.Name} {StopTimes.First().DepartureTime} - {StopTimes.Last().Stop.Name} {StopTimes.Last().ArrivalTime})";
+            }
+            else
+            {
+                return $"{GtfsId}";
+            }
         }
     }
 }

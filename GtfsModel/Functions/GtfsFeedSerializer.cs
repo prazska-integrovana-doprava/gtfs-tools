@@ -1,5 +1,6 @@
 ﻿using CsvSerializer;
 using System.IO;
+using System.Linq;
 
 namespace GtfsModel.Functions
 {
@@ -31,14 +32,14 @@ namespace GtfsModel.Functions
             CsvFileSerializer.SerializeFile(Path.Combine(outputFolder, "stop_times.txt"), gtfsFeed.StopTimes);
             if (gtfsFeed.Calendar != null) CsvFileSerializer.SerializeFile(Path.Combine(outputFolder, "calendar.txt"), gtfsFeed.Calendar);
             if (gtfsFeed.CalendarDates != null) CsvFileSerializer.SerializeFile(Path.Combine(outputFolder, "calendar_dates.txt"), gtfsFeed.CalendarDates);
-            if (gtfsFeed.FareRules != null) CsvFileSerializer.SerializeFile(Path.Combine(outputFolder, "fare_rules.txt"), gtfsFeed.FareRules);
-            if (gtfsFeed.Shapes != null) CsvFileSerializer.SerializeFile(Path.Combine(outputFolder, "shapes.txt"), gtfsFeed.Shapes);
-            if (gtfsFeed.Transfers != null) CsvFileSerializer.SerializeFile(Path.Combine(outputFolder, "transfers.txt"), gtfsFeed.Transfers);
-            if (gtfsFeed.FeedInfo != null) CsvFileSerializer.SerializeFile(Path.Combine(outputFolder, "feed_info.txt"), gtfsFeed.FeedInfo);
+            if (gtfsFeed.FareRules != null && gtfsFeed.FareRules.Any()) CsvFileSerializer.SerializeFile(Path.Combine(outputFolder, "fare_rules.txt"), gtfsFeed.FareRules);
+            if (gtfsFeed.Shapes != null && gtfsFeed.Shapes.Any()) CsvFileSerializer.SerializeFile(Path.Combine(outputFolder, "shapes.txt"), gtfsFeed.Shapes);
+            if (gtfsFeed.Transfers != null && gtfsFeed.Transfers.Any()) CsvFileSerializer.SerializeFile(Path.Combine(outputFolder, "transfers.txt"), gtfsFeed.Transfers);
+            if (gtfsFeed.FeedInfo != null && gtfsFeed.FeedInfo.Any()) CsvFileSerializer.SerializeFile(Path.Combine(outputFolder, "feed_info.txt"), gtfsFeed.FeedInfo);
 
-            if (gtfsFeed.RouteSubAgencies != null) CsvFileSerializer.SerializeFile(Path.Combine(outputFolder, "route_sub_agencies.txt"), gtfsFeed.RouteSubAgencies);
-            if (gtfsFeed.TripRuns != null) CsvFileSerializer.SerializeFile(Path.Combine(outputFolder, "obehy.csv"), gtfsFeed.TripRuns);
-            if (gtfsFeed.RouteStops != null) CsvFileSerializer.SerializeFile(Path.Combine(outputFolder, "route_stops.txt"), gtfsFeed.RouteStops);
+            if (gtfsFeed.RouteSubAgencies != null && gtfsFeed.RouteSubAgencies.Any()) CsvFileSerializer.SerializeFile(Path.Combine(outputFolder, "route_sub_agencies.txt"), gtfsFeed.RouteSubAgencies);
+            if (gtfsFeed.TripRuns != null && gtfsFeed.TripRuns.Any()) CsvFileSerializer.SerializeFile(Path.Combine(outputFolder, "obehy.csv"), gtfsFeed.TripRuns);
+            if (gtfsFeed.RouteStops != null && gtfsFeed.RouteStops.Any()) CsvFileSerializer.SerializeFile(Path.Combine(outputFolder, "route_stops.txt"), gtfsFeed.RouteStops);
         }
 
         /// <summary>

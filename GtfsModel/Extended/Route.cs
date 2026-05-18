@@ -38,6 +38,11 @@ namespace GtfsModel.Extended
         public string LongName { get; set; }
 
         /// <summary>
+        /// Popis linky
+        /// </summary>
+        public string Description { get; set; }
+
+        /// <summary>
         /// Druh dopravy dle číselníku GTFS.
         /// </summary>
         public TrafficType Type { get; set; }
@@ -55,17 +60,17 @@ namespace GtfsModel.Extended
         /// <summary>
         /// Indikátor, zda jde o noční linku
         /// </summary>
-        public bool IsNight { get; set; }
+        public bool? IsNight { get; set; }
 
         /// <summary>
         /// Indikátor, zda jde o regionální linku
         /// </summary>
-        public bool IsRegional { get; set; }
+        public bool? IsRegional { get; set; }
 
         /// <summary>
         /// Indikátor, zda jde o linku náhradní dopravy
         /// </summary>
-        public bool IsSubstituteTransport { get; set; }
+        public bool? IsSubstituteTransport { get; set; }
 
         /// <summary>
         /// Spoje dané linky
@@ -96,6 +101,7 @@ namespace GtfsModel.Extended
                 GtfsId = gtfsRoute.Id,
                 ShortName = gtfsRoute.ShortName,
                 LongName = gtfsRoute.LongName,
+                Description = gtfsRoute.Description,
                 Color = ParseColorCode(gtfsRoute.Color),
                 TextColor = ParseColorCode(gtfsRoute.TextColor),
                 IsNight = gtfsRoute.IsNight,
@@ -129,6 +135,7 @@ namespace GtfsModel.Extended
                 AgencyId = Agency != null ? Agency.Id : defaultAgencyId,
                 ShortName = ShortName,
                 LongName = LongName,
+                Description = Description,
                 Type = Type,
                 Url = AswId != 0 && ShortName.All(ch => ch >= '0' && ch <= '9' || ch >= 'A' && ch <= 'Z' || ch >= 'a' && ch <= 'z') ? $"https://pid.cz/linka/{ShortName}" : null,
                 Color = $"{Color.R:X2}{Color.G:X2}{Color.B:X2}",

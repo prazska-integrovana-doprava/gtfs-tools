@@ -3,6 +3,7 @@ using System.Linq;
 using GtfsLogging;
 using GtfsModel.Enumerations;
 using CommonLibrary;
+using CommonLibrary.DotNet48;
 using GtfsModel.Extended;
 using System;
 using GtfsProcessor.DataClasses;
@@ -111,8 +112,8 @@ namespace GtfsProcessor
                 {
                     foreach (var st2 in stopTimesByNode[n])
                     {
-                        var cal1 = st1.Trip.CalendarRecord.AsServiceBitmap(globalStartDate);
-                        var cal2 = st2.Trip.CalendarRecord.AsServiceBitmap(globalStartDate);
+                        var cal1 = ((CalendarRecord)st1.Trip.CalendarRecord).AsServiceBitmap(globalStartDate); // můžeme přetypovat, pracujeme pouze s klasickými kalendáři
+                        var cal2 = ((CalendarRecord)st2.Trip.CalendarRecord).AsServiceBitmap(globalStartDate); // můžeme přetypovat, pracujeme pouze s klasickými kalendáři
                         if (st1 != st2 && st1.DepartureTime == st2.DepartureTime && st1.Trip.StopTimes.First() != st1 && !cal1.Intersect(cal2).IsEmpty)
                         {
                             allTransfers.Add(new TimedTransfer()
@@ -157,7 +158,7 @@ namespace GtfsProcessor
                 yield break;
             }
 
-            var waitingTripServiceBitmap = waitingTrip.CalendarRecord.AsServiceBitmap(globalStartDate);
+            var waitingTripServiceBitmap = ((CalendarRecord)waitingTrip.CalendarRecord).AsServiceBitmap(globalStartDate);
             var fromRoutes = gtfsRoutesByAswId.GetValueOrDefault(remark.FromRouteLineNumber); // kvůli verzím může jedno číslo odkazovat na víc reálných linek
             if (fromRoutes == null || !fromRoutes.Any())
             {
@@ -239,7 +240,7 @@ namespace GtfsProcessor
             var minArrivalTime = maxArrivalTime.AddMinutes(-maxMinutesWaiting);
             
             // jen spoje, které jedou alespoň v jeden stejný den jako spoj, na který navazujeme
-            trips = trips.Where(trip => !trip.CalendarRecord.AsServiceBitmap(globalStartDate).Intersect(departureCalendar).IsEmpty);
+            trips = trips.Where(trip => !((CalendarRecord)trip.CalendarRecord).AsServiceBitmap(globalStartDate).Intersect(departureCalendar).IsEmpty);
 
             // průjezdy zastávkou, kde dochází k návaznosti
             var stopTimes = trips.Select(trip => FindStopTimeOnTrip(trip, remark.FromStop, remark.FromRouteStopDirection)).Where(st => st != null).ToArray();
@@ -274,7 +275,7 @@ namespace GtfsProcessor
         {
             var otherTrip = otherStopTime.Trip;
             int nMins = (departureTime - otherStopTime.ArrivalTime) / 60;
-            return $"na {otherStopTime.Trip} zast. {otherStopTime.Stop} příj. {otherStopTime.ArrivalTime} cal {otherStopTime.Trip.CalendarRecord.AsServiceBitmap(globalStartDate)} ze směru {otherTrip.PublicStopTimes.First().Stop.Name} (přestup {nMins} minut).";
+            return $"na {otherStopTime.Trip} zast. {otherStopTime.Stop} příj. {otherStopTime.ArrivalTime} cal {((CalendarRecord)otherStopTime.Trip.CalendarRecord).AsServiceBitmap(globalStartDate)} ze směru {otherTrip.PublicStopTimes.First().Stop.Name} (přestup {nMins} minut).";
         }
     }
 }

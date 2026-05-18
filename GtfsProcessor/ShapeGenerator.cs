@@ -1,8 +1,6 @@
-﻿using CommonLibrary;
-using CsvSerializer;
+﻿using CommonLibrary.DotNet48;
 using GtfsLogging;
 using GtfsProcessor.DataClasses;
-using GtfsProcessor.Logging;
 using System.Collections.Generic;
 
 namespace GtfsProcessor

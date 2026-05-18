@@ -38,8 +38,15 @@ namespace GtfsModel.Functions
             return result.ToString(); ;
         }
 
-        public static string DescribeCalendarRecord(CalendarRecord calendarRecord)
+        public static string DescribeCalendarRecord(BaseCalendarRecord baseCalendarRecord)
         {
+            var calendarRecord = baseCalendarRecord as CalendarRecord;
+            if (calendarRecord == null)
+            {
+                // kdyby to někomu vadilo, museli bychom to nějak udělat pořádně
+                return "<BaseCalendarRecord>";
+            }
+
             var result = new StringBuilder($"{calendarRecord.StartDate:dd.MM.yyyy}-{calendarRecord.EndDate:dd.MM.yyyy}:");
             var currentMonth = new DateTime(DateTime.Now.AddDays(-3).Year, DateTime.Now.AddDays(-3).Month, 1);
             var serviceBitmap = calendarRecord.AsServiceBitmap(currentMonth);
@@ -80,7 +87,9 @@ namespace GtfsModel.Functions
                 times = $"{stopTime.ArrivalTime}-{stopTime.DepartureTime}";
             }
 
-            return $"{stopTime.Stop.Name} [{stopTime.Stop.ZoneId}] {times}";
+            var fareKilometers = stopTime.FareKilometerDistance.HasValue ? $", {stopTime.FareKilometerDistance} km" : "";
+
+            return $"{stopTime.Stop.Name} [{stopTime.Stop.ZoneId}] {times}{fareKilometers}";
         }
     }
 }

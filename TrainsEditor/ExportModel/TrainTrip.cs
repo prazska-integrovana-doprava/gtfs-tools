@@ -1,10 +1,12 @@
 ﻿using CommonLibrary;
+using CommonLibrary.DotNet48;
 using GtfsLogging;
 using GtfsModel.Enumerations;
 using GtfsModel.Extended;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using TrainsEditor.CommonLogic;
 
 namespace TrainsEditor.ExportModel
 {
@@ -58,8 +60,9 @@ namespace TrainsEditor.ExportModel
         /// <param name="loaderLog">Logger načítání dat</param>
         /// <param name="processLog">Logger načtených vlaků</param>
         /// <param name="emptyLineHandler">Procedura, která se zavolá, když se narazí na vlak s nevyplněnou linkou</param>
+        /// <param name="currentIntegratedSystem">IDS, pro který generujeme data</param>
         public static TrainTrip Construct(Train wholeTrain, List<StationTime> stationTimes, RouteDatabase lineDb, ICommonLogger loaderLog, ISimpleLogger processLog,
-            Train.TrainWithEmptyLineHandler emptyLineHandler)
+            Train.TrainWithEmptyLineHandler emptyLineHandler, IntegratedSystemsEnum currentIntegratedSystem)
         {
             if (!stationTimes.Where(st => !st.IsSubstituteTransportOnDeparture).Any2())
                 return null;
@@ -72,21 +75,21 @@ namespace TrainsEditor.ExportModel
             var integratedStopTimesPart = TrimUnknownStops(stationTimes);
             if (!integratedStopTimesPart.Any2())
             {
-                processLog.Log($"{wholeTrain.FileName}: {trainShortName} {trainRoute} - ignorován, mimo PID");
+                processLog.Log($"{wholeTrain.FileName}: {trainShortName} {trainRoute} - ignorován, mimo {currentIntegratedSystem}");
                 return null;
             }
 
             if (!integratedStopTimesPart.Where(st => st.IsPublic).Any2())
             {
-                processLog.Log($"{wholeTrain.FileName}: {trainShortName} {trainRoute} - ignorován - je v PID, ale nemá tam dostatek veřejných zastavení");
+                processLog.Log($"{wholeTrain.FileName}: {trainShortName} {trainRoute} - ignorován - je v {currentIntegratedSystem}, ale nemá tam dostatek veřejných zastavení");
                 return null;
             }
 
             var trainRouteInPID = $"{integratedStopTimesPart.First().Stop} {integratedStopTimesPart.First().DepartureTime} - {integratedStopTimesPart.Last().Stop} {integratedStopTimesPart.Last().ArrivalTime}";
 
-            if (stationTimes.First().TrainLineOnDeparture.IsNonPidLine)
+            if (!stationTimes.First().TrainLineOnDeparture.IsPossibleFor(currentIntegratedSystem))
             {
-                processLog.Log($"{wholeTrain.FileName}: {trainShortName} {trainRoute} v PID {trainRouteInPID}, avšak není označen PIDovou linkou - ignorován");
+                processLog.Log($"{wholeTrain.FileName}: {trainShortName} {trainRoute} v {currentIntegratedSystem} {trainRouteInPID}, avšak není označen kompatibilní linkou - ignorován");
                 emptyLineHandler?.Invoke(stationTimes);
                 return null;
             }
@@ -94,7 +97,7 @@ namespace TrainsEditor.ExportModel
             var line = lineDb.Lines.GetValueOrDefault(stationTimes.First().TrainLineOnDeparture.LineName);
             if (line == null)
             {
-                processLog.Log($"{wholeTrain.FileName}: {trainShortName} {trainRoute} v PID {trainRouteInPID}, avšak linka {stationTimes.First().TrainLineOnDeparture.LineName} není v číselníku - ignorován");
+                processLog.Log($"{wholeTrain.FileName}: {trainShortName} {trainRoute} v {currentIntegratedSystem} {trainRouteInPID}, avšak linka {stationTimes.First().TrainLineOnDeparture.LineName} není v číselníku - ignorován");
                 return null;
             }
 
@@ -106,7 +109,6 @@ namespace TrainsEditor.ExportModel
                 WholeTrain = wholeTrain,
                 BikesAllowed = BikeAccessibility.Possible,
                 DirectionId = (trainNumber % 2 == 1) ? Direction.Inbound : Direction.Outbound, // BÚNO
-                IsExceptional = line.AswId >= 1100 && line.AswId < 1200,
                 StopTimes = stationTimes.Select(st => st as StopTime).ToList(),
                 ShortName = trainShortName,
                 TrainNumber = trainNumber,
@@ -133,7 +135,7 @@ namespace TrainsEditor.ExportModel
                 result.PreviousTripInBlock.NextTripInBlock = result;
             }
 
-            processLog.Log($"{wholeTrain.FileName}: {trainShortName} {trainRoute} v PID {trainRouteInPID} linka {line} - zpracováno OK, kalendář od {result.StartDate:d.M.yyyy}: {result.ServiceBitmap}");
+            processLog.Log($"{wholeTrain.FileName}: {trainShortName} {trainRoute} v {currentIntegratedSystem} {trainRouteInPID} linka {line} - zpracováno OK, kalendář od {result.StartDate:d.M.yyyy}: {result.ServiceBitmap}");
 
             return result;
         }
@@ -191,9 +193,9 @@ namespace TrainsEditor.ExportModel
             // kontrola, jestli nejsou uprostřed nějaké zastávky, které nebyly nalezeny v číselníku
             foreach (var stationTime in StopTimes.Cast<StationTime>())
             {
-                if (stationTime.IsPublic && !((TrainStop)stationTime.Stop).IsFromAsw)
+                if (stationTime.IsPublic && !((TrainStop)stationTime.Stop).IsIntegrated)
                 {
-                    loaderLog.Log(LogMessageType.WARNING_TRAIN_MISSING_STOP_IN_ASW, $"Zastávka {stationTime.StationCode} {stationTime.StationName} není v číselníku ASW, přitom se nachází uvnitř trasy vlaku {ShortName}. Pro jistotu označuji jako neveřejnou (mohlo by jít o omylné označení neveřejné stanice).");
+                    loaderLog.Log(LogMessageType.WARNING_TRAIN_MISSING_STOP_IN_ASW, $"Zastávka {stationTime.StationCode} {stationTime.StationName} není zadána explicitně v konfiguraci, přitom se nachází uvnitř trasy vlaku {ShortName}. Pro jistotu označuji jako neveřejnou (mohlo by jít o omylné označení neveřejné stanice).");
                     stationTime.PickupType = PickupType.None;
                     stationTime.DropOffType = DropOffType.None;
                 }
@@ -209,8 +211,8 @@ namespace TrainsEditor.ExportModel
         {
             if (StopTimes.Any())
             {
-                var firstStopTime = WholeTrain.StopTimes.First();
-                var lastStopTime = WholeTrain.StopTimes.Last();
+                var firstStopTime = StopTimes.First();
+                var lastStopTime = StopTimes.Last();
                 return $"{ShortName} ({firstStopTime.Stop.Name} {firstStopTime.DepartureTime} - {lastStopTime.Stop.Name} {lastStopTime.ArrivalTime})";
             }
             else

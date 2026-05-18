@@ -43,7 +43,7 @@ namespace GtfsModel
         /// <summary>
         /// Web adresa s detailem zastávky
         /// </summary>
-        [CsvField("stop_url", 8, CsvFieldPostProcess.Quote)]
+        [CsvField("stop_url", 8, CsvFieldPostProcess.Quote, null, CsvColumnPresence.OmitColumntIfEmpty)]
         public string Url { get; set; }
 
         /// <summary>
@@ -67,7 +67,7 @@ namespace GtfsModel
         /// <summary>
         /// ID úrovně, na které se bod nachází
         /// </summary>
-        [CsvField("level_id", 13)]
+        [CsvField("level_id", 13, CsvFieldPostProcess.None, null, CsvColumnPresence.OmitColumntIfEmpty)]
         public string LevelId { get; set; }
 
         /// <summary>
@@ -79,20 +79,26 @@ namespace GtfsModel
         /// <summary>
         /// ID uzlu v systému ASW JŘ
         /// </summary>
-        [CsvField("asw_node_id", 51, CsvFieldPostProcess.None, 0)]
+        [CsvField("asw_node_id", 51, CsvFieldPostProcess.None, 0, CsvColumnPresence.OmitColumntIfEmpty)]
         public int AswNodeId { get; set; }
 
         /// <summary>
         /// ID zastávky v rámci uzlu v systému ASW JŘ
         /// </summary>
-        [CsvField("asw_stop_id", 52, CsvFieldPostProcess.None, 0)]
+        [CsvField("asw_stop_id", 52, CsvFieldPostProcess.None, 0, CsvColumnPresence.OmitColumntIfEmpty)]
         public int AswStopId { get; set; }
+
+        /// <summary>
+        /// ID zastávky v CIS JŘ
+        /// </summary>
+        [CsvField("cis_id", 53, CsvFieldPostProcess.None, 0, CsvColumnPresence.OmitColumntIfEmpty)]
+        public int CisId { get; set; }
 
         /// <summary>
         /// Kategorie umístění zastávky pro určení polohy zastávky v systému a výpočet jízdného na mezikrajských linkách. Definováno jen pro zastávky,
         /// u ostatních typů je null
         /// </summary>
-        [CsvField("zone_region_type", 53, CsvFieldPostProcess.None, ZoneRegionType.Undefined)]
+        [CsvField("zone_region_type", 54, CsvFieldPostProcess.None, ZoneRegionType.Undefined, CsvColumnPresence.OmitColumntIfEmpty)]
         public ZoneRegionType ZoneRegionType { get; set; }
 
         public GtfsStop()

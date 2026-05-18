@@ -74,18 +74,21 @@ namespace StopTimetableGen.Transformations
         private void DoTopologicalOrdering(Stop stop)
         {
             openedStops.Add(stop);
-            foreach (var prevStop in edges.GetValueOrDefault(stop, new HashSet<Stop>()))
+            if (edges.TryGetValue(stop, out var edge))
             {
-                if (order.ContainsKey(prevStop))
-                    continue;
-
-                if (openedStops.Contains(prevStop))
+                foreach (var prevStop in edge)
                 {
-                    // bohužel úplně neumíme určit, který spoj za to "může", protože si nevedeme záznam, od kterého spoje pochází která hrana
-                    throw new InvalidOperationException("V pořadí zastávek existuje cyklus. To znamená, že existují dva spoje, které některou dvojici zastávek projíždí v opačném pořadí. Příčinou může být, že vlak v sudém směru má liché číslo nebo naopak.");
-                }
+                    if (order.ContainsKey(prevStop))
+                        continue;
 
-                DoTopologicalOrdering(prevStop);
+                    if (openedStops.Contains(prevStop))
+                    {
+                        // bohužel úplně neumíme určit, který spoj za to "může", protože si nevedeme záznam, od kterého spoje pochází která hrana
+                        throw new InvalidOperationException("V pořadí zastávek existuje cyklus. To znamená, že existují dva spoje, které některou dvojici zastávek projíždí v opačném pořadí. Příčinou může být, že vlak v sudém směru má liché číslo nebo naopak.");
+                    }
+
+                    DoTopologicalOrdering(prevStop);
+                }
             }
 
             order[stop] = currentOrder++;

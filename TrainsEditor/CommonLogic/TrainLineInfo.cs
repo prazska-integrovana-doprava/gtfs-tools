@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System;
+using System.Text.RegularExpressions;
 
 namespace TrainsEditor.CommonLogic
 {
@@ -27,13 +28,32 @@ namespace TrainsEditor.CommonLogic
         /// </summary>
         public int LineTrIdentification { get; private set; }
 
-        // pozor, že vrátí true, neznamená, že jde o PIDovou linku - cílem je jen vyloučit například brněnské S1 apod.
-        // vrací true u expresů, rychlíků a vlaků z PIDu a okolních regionů
-        public bool IsNonPidLine
+        /// <summary>
+        /// pozor, že vrátí true, neznamená, že o linku daného systému - cílem je jen vyloučit například brněnské S1 PIDu apod.
+        /// vrací true u expresů, rychlíků a vlaků z PIDu a okolních regionů
+        /// </summary>
+        /// <param name="integratedSystem">Právě jeden IDS</param>
+        /// <returns>True, pokud vlak může patřit do zadaného IDS</returns>
+        public bool IsPossibleFor(IntegratedSystemsEnum integratedSystem)
         {
-            get
+            if (LineType == TrainLineType.Unknown || LineType == TrainLineType.Undefined)
             {
-                return LineType == TrainLineType.Unknown || LineType == TrainLineType.Undefined || LineType == TrainLineType.Odis;
+                return false;
+            }
+
+            if (integratedSystem == IntegratedSystemsEnum.PID)
+            {
+                //return LineType != TrainLineType.Odis && LineType != TrainLineType.IdsJmk && LineType != TrainLineType.Ideska;
+                return LineType == TrainLineType.FastTrain || LineType == TrainLineType.PidFastTrain || LineType == TrainLineType.Pid
+                    || LineType == TrainLineType.Duk || LineType == TrainLineType.Iredo || LineType == TrainLineType.Idol;
+            }
+            else if (integratedSystem == IntegratedSystemsEnum.ODIS)
+            {
+                return LineType != TrainLineType.Pid && LineType != TrainLineType.IdsJmk;
+            }
+            else
+            {
+                throw new ArgumentException("Unsupported integrated system " + integratedSystem.ToString());
             }
         }
 
@@ -100,6 +120,25 @@ namespace TrainsEditor.CommonLogic
             {
                 return new TrainLineInfo(TrainLineType.Pid, $"T{trainLineNumberCode % 100}", trainLineNumberCode);
             }
+            else if (trainLineNumberCode > 3100 && trainLineNumberCode < 3200)
+            {
+                return new TrainLineInfo(TrainLineType.Ideska, $"S{trainLineNumberCode % 100}", trainLineNumberCode);
+            }
+            else if (trainLineNumberCode >= 3200 && trainLineNumberCode < 3300)
+            {
+                if (trainLineNumberCode == 3200)
+                {
+                    return new TrainLineInfo(TrainLineType.Poved, $"P1Z", trainLineNumberCode);
+                }
+                else if (trainLineNumberCode == 3201)
+                {
+                    return new TrainLineInfo(TrainLineType.Poved, $"P1J", trainLineNumberCode);
+                }
+                else
+                {
+                    return new TrainLineInfo(TrainLineType.Poved, $"P{trainLineNumberCode % 100}", trainLineNumberCode);
+                }
+            }
             else if (trainLineNumberCode > 4000 && trainLineNumberCode < 4100)
             {
                 return new TrainLineInfo(TrainLineType.Duk, $"U{trainLineNumberCode % 100}", trainLineNumberCode);
@@ -129,19 +168,27 @@ namespace TrainsEditor.CommonLogic
             }
             else if (trainLineNumberCode > 8000 && trainLineNumberCode < 8100)
             {
-                return new TrainLineInfo(TrainLineType.Odis, $"S{trainLineNumberCode % 100}", trainLineNumberCode);
+                if (trainLineNumberCode < 8060)
+                {
+                    return new TrainLineInfo(TrainLineType.Odis, $"S{trainLineNumberCode % 100}", trainLineNumberCode);
+                }
+                else
+                {
+                    return new TrainLineInfo(TrainLineType.Odis, $"R{trainLineNumberCode % 100}", trainLineNumberCode);
+                }
             }
             else
             {
                 return new TrainLineInfo(TrainLineType.Unknown, "", trainLineNumberCode);
             }
         }
-        
+
         /// <summary>
-        /// Převede stringový název linky na číslo dle číselníku SŽ. Funguje korektně pouze pro PID (kvůli kolizím, "S1" se nedá jednoznačně určit, jestli je pražská, brněnská nebo ostravská).
+        /// Převede stringový název linky na číslo dle číselníku SŽ.
         /// </summary>
         /// <param name="lineName">Název linky (např. "S1" nebo "Ex7")</param>
-        public static int TrainLineNameToNumberPid(string lineName)
+        /// <param name="primaryIntegratedSystem">Který IDS se má preferovat, pokud je název linky víceznačný (kvůli kolizím, "S1" se nedá jednoznačně určit, jestli je pražská, brněnská nebo ostravská).</param>
+        public static int TrainLineNameToNumber(string lineName, IntegratedSystemsEnum primaryIntegratedSystem)
         {
             var regex = new Regex("([A-Za-z]+)([0-9]+)");
             var match = regex.Match(lineName);
@@ -162,17 +209,25 @@ namespace TrainsEditor.CommonLogic
                 {
                     return lineNumber;
                 }
-                else if (lineType == "R")
+                else if (lineType == "R" && lineNumber < 60)
                 {
                     return 1100 + lineNumber;
+                }
+                else if (lineType == "R" && lineNumber < 70)
+                {
+                    return 8000 + lineNumber;
                 }
                 else if (lineType == "T")
                 {
                     return 2000 + lineNumber;
                 }
-                else if (lineType == "S")
+                else if (lineType == "S" && primaryIntegratedSystem == IntegratedSystemsEnum.PID)
                 {
                     return 1000 + lineNumber;
+                }
+                else if (lineType == "S" && primaryIntegratedSystem == IntegratedSystemsEnum.ODIS)
+                {
+                    return 8000 + lineNumber;
                 }
                 else if (lineType == "U")
                 {

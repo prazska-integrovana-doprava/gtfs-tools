@@ -5,6 +5,7 @@ using System.IO;
 using System.Globalization;
 using GtfsLogging;
 using CommonLibrary;
+using CommonLibrary.DotNet48;
 using GtfsProcessor.DataClasses;
 using GtfsProcessor.Logging;
 

@@ -14,6 +14,8 @@ namespace CsvSerializer
     /// <typeparam name="T">Typ záznamu</typeparam>
     internal class CsvRecordDeserializer<T> where T : new()
     {
+        private string fileName;
+
         private TextReader reader;
 
         // může obsahovat NULL položky, pokud jsou ve vstupním souboru neznámé sloupce
@@ -22,13 +24,16 @@ namespace CsvSerializer
         private char separator;
         private CultureInfo cultureInfo;
         private string dateTimeFormat;
+        private string lineSeparator;
 
-        public CsvRecordDeserializer(TextReader reader, char separator, CultureInfo cultureInfo, string dateTimeFormat)
+        public CsvRecordDeserializer(TextReader reader, char separator, CultureInfo cultureInfo, string dateTimeFormat, string lineSeparator, string fileName)
         {
             this.reader = reader;
             this.separator = separator;
             this.cultureInfo = cultureInfo;
             this.dateTimeFormat = dateTimeFormat;
+            this.lineSeparator = lineSeparator;
+            this.fileName = fileName;
         }
 
         /// <summary>
@@ -37,10 +42,10 @@ namespace CsvSerializer
         /// <param name="members">Seřazený seznam položek (odpovídá sloupcům v souboru)</param>
         public void ReadHeader(MemberAndAttribute[] members)
         {
-            var membersDictionary = members.ToDictionary(m => m.Attribute.Name);
+            var membersDictionary = members.ToDictionary(m => m.Attribute.Name.ToLower());
             membersOrdered = new List<MemberAndAttribute>();
 
-            var headers = reader.ReadLine().Split(separator);
+            var headers = ReadLine().ToLower().Split(separator);
             
             foreach (var header in headers)
             {
@@ -80,7 +85,7 @@ namespace CsvSerializer
             }
 
             var result = new T();
-            var line = reader.ReadLine();
+            var line = ReadLine();
             if (string.IsNullOrWhiteSpace(line))
             {
                 return default(T);
@@ -89,7 +94,7 @@ namespace CsvSerializer
             var row = line.SplitWithRespectToQuotes(separator).ToArray();
             if (row.Length < membersOrdered.Count)
             {
-                throw new FormatException("Line is too short");
+                throw new FormatException($"Line is too short. File {fileName}.");
             }
 
             for (int i = 0; i < membersOrdered.Count; i++)
@@ -102,6 +107,17 @@ namespace CsvSerializer
             }
 
             return result;
+        }
+
+        private string ReadLine()
+        {
+            var line = reader.ReadLine();
+            if (line != null && !string.IsNullOrEmpty(lineSeparator) && line.EndsWith(lineSeparator))
+            {
+                line = line.Substring(0, line.Length - lineSeparator.Length);
+            }
+
+            return line;
         }
 
         // zapíše hodnotu do instance

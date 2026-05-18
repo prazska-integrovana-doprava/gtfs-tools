@@ -64,10 +64,16 @@ namespace GtfsModel
         public double? ShapeDistanceTraveled { get; set; }
 
         /// <summary>
+        /// Tarifní kilometráž
+        /// </summary>
+        [CsvField("fare_km_distance", 51, CsvFieldPostProcess.None, null, CsvColumnPresence.OmitColumntIfEmpty)]
+        public int? FareKilometerDistance { get; set; }
+
+        /// <summary>
         /// Typ výkonu na odjezdu ze zastávky
         /// </summary>
-        [CsvField("trip_operation_type", 61)]
-        public TripOperationType TripOperationType { get; set; }
+        [CsvField("trip_operation_type", 61, CsvFieldPostProcess.None, null, CsvColumnPresence.OmitColumntIfEmpty)]
+        public TripOperationType? TripOperationType { get; set; }
 
         /// <summary>
         /// Možnosti přepravy kol na spoji v dané zastávce
@@ -78,13 +84,13 @@ namespace GtfsModel
         /// <summary>
         /// Ikonky přestupů k této zastávce a tomuto spoji ve formátu dvoupísmenných zkratek
         /// </summary>
-        [CsvField("stop_icons", 63)]
+        [CsvField("stop_icons", 63, CsvFieldPostProcess.None, null, CsvColumnPresence.OmitColumntIfEmpty)]
         public string StopIcons { get; set; }
 
         /// <summary>
         /// Ikonky přestupů k zastávce <see cref="StopHeadsign"/> (pokud je zadaná) ve formátu dvoupísmenných zkratek
         /// </summary>
-        [CsvField("headsign_icons", 64)]
+        [CsvField("headsign_icons", 64, CsvFieldPostProcess.None, null, CsvColumnPresence.OmitColumntIfEmpty)]
         public string HeadsignIcons { get; set; }
 
         public override string ToString()

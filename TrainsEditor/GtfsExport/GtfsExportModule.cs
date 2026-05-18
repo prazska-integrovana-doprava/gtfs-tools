@@ -34,12 +34,11 @@ namespace TrainsEditor.GtfsExport
         // Složka s XML soubory vlaků
         private readonly string _trainFilesPath;
 
-        /// <summary>
-        /// ID dopravce "PID" v GTFS
-        /// </summary>
-        public const string PidAgencyId = "99";
-
         private TrainGroupLoader _trainGroupLoader;
+
+        private PublicHolidaysCalendar _holidaysCalendar;
+
+        private IntegratedSystemsEnum _currentIntegratedSystem;
 
         private readonly StationDatabase _stopDatabase;
         private readonly RouteDatabase _routeDatabase;
@@ -47,33 +46,35 @@ namespace TrainsEditor.GtfsExport
         private readonly ISimpleLogger processLog = Loggers.TrainsProcessLoggerInstance;
         private readonly ISimpleLogger outputLog = Loggers.TrainsOutputLoggerInstance;
 
-        public GtfsExportModule(StationDatabase stationDb, RouteDatabase routeDb, List<TripDirectionSpec> representativeTrips, string trainsFilesPath, TrainGroupLoader trainGroupLoader)
+        public GtfsExportModule(StationDatabase stationDb, RouteDatabase routeDb, List<TripDirectionSpec> representativeTrips, string trainsFilesPath, TrainGroupLoader trainGroupLoader, PublicHolidaysCalendar holidaysCalendar, IntegratedSystemsEnum currentIntegratedSystem)
         {
             _stopDatabase = stationDb;
             _routeDatabase = routeDb;
             _trainFilesPath = trainsFilesPath;
             _trainGroupLoader = trainGroupLoader;
             RepresentativeTrips = representativeTrips;
+            _holidaysCalendar = holidaysCalendar;
+            _currentIntegratedSystem = currentIntegratedSystem;
         }
 
-        public GtfsExportModule(StationDatabase stationDb, RouteDatabase routeDb, List<TripDirectionSpec> representativeTrips, string trainFilesPath, TrainGroupLoader trainGroupLoader, DateTime referenceStartDate)
-            : this(stationDb, routeDb, representativeTrips, trainFilesPath, trainGroupLoader)
+        public GtfsExportModule(StationDatabase stationDb, RouteDatabase routeDb, List<TripDirectionSpec> representativeTrips, string trainFilesPath, TrainGroupLoader trainGroupLoader, PublicHolidaysCalendar holidaysCalendar, IntegratedSystemsEnum currentIntegratedSystem, DateTime referenceStartDate)
+            : this(stationDb, routeDb, representativeTrips, trainFilesPath, trainGroupLoader, holidaysCalendar, currentIntegratedSystem)
         {
             ReferenceStartDate = referenceStartDate;
         }
 
-        public GtfsExportModule(StationDatabase stationDb, RouteDatabase routeDb, List<TripDirectionSpec> representativeTrips, string trainFilesPath, TrainGroupLoader trainGroupLoader,
+        public GtfsExportModule(StationDatabase stationDb, RouteDatabase routeDb, List<TripDirectionSpec> representativeTrips, string trainFilesPath, TrainGroupLoader trainGroupLoader, PublicHolidaysCalendar holidaysCalendar, IntegratedSystemsEnum currentIntegratedSystem,
             ICommonLogger loaderLog, ISimpleLogger processLog, ISimpleLogger outputLog)
-            : this(stationDb, routeDb, representativeTrips, trainFilesPath, trainGroupLoader)
+            : this(stationDb, routeDb, representativeTrips, trainFilesPath, trainGroupLoader, holidaysCalendar, currentIntegratedSystem)
         {
             this.loaderLog = loaderLog;
             this.processLog = processLog;
             this.outputLog = outputLog;
         }
 
-        public GtfsExportModule(StationDatabase stationDb, RouteDatabase routeDb, List<TripDirectionSpec> representativeTrips, string trainFilesPath, TrainGroupLoader trainGroupLoader, DateTime referenceStartDate,
+        public GtfsExportModule(StationDatabase stationDb, RouteDatabase routeDb, List<TripDirectionSpec> representativeTrips, string trainFilesPath, TrainGroupLoader trainGroupLoader, PublicHolidaysCalendar holidaysCalendar, IntegratedSystemsEnum currentIntegratedSystem, DateTime referenceStartDate,
         ICommonLogger loaderLog, ISimpleLogger processLog, ISimpleLogger outputLog)
-            : this(stationDb, routeDb, representativeTrips, trainFilesPath, trainGroupLoader, loaderLog, processLog, outputLog)
+            : this(stationDb, routeDb, representativeTrips, trainFilesPath, trainGroupLoader, holidaysCalendar, currentIntegratedSystem, loaderLog, processLog, outputLog)
         {
             ReferenceStartDate = referenceStartDate;
         }
@@ -82,12 +83,13 @@ namespace TrainsEditor.GtfsExport
         /// Spustí generování GTFS ze složky. Načte data do modelu <see cref="TrainGroupCollection"/> a následně jej transformuje do GTFS.
         /// </summary>
         /// <param name="mapNetworkFileName">Soubor se sítí vlaků (pro trasy)</param>
+        /// <param name="fareKmFileName">Soubor definující tarifní kilometráž (nemusí být zadáno, pak se km nebudou počítat)</param>
         /// <param name="outputFolder">Složka, kam mají být uloženy GTFS soubory</param>
         /// <param name="logPath">Složka, kam se budou ukládat logy</param>
         /// <param name="reportCallback">Callback, kam se hlásí progress a může zrušit načítání dat</param>
-        public bool Run(string mapNetworkFileName, string outputFolder, string logPath, TextWriter console, TrainGroupLoader.TrainsLoaderCallback reportCallback = null)
+        public bool Run(string mapNetworkFileName, string fareKmFileName, string outputFolder, string logPath, TextWriter console, TrainGroupLoader.TrainsLoaderCallback reportCallback = null)
         {
-            var calendarConstructor = new CalendarConstructor(ReferenceStartDate);
+            var calendarConstructor = new CalendarConstructor(ReferenceStartDate, _holidaysCalendar);
             console.WriteLine("Načítání vlaků...");
             var trainsByTrId = LoadTrainsFromFolder(_trainFilesPath, reportCallback);
 
@@ -107,6 +109,13 @@ namespace TrainsEditor.GtfsExport
             {
                 console.WriteLine("PŘERUŠENO");
                 return false;
+            }
+
+            if (!string.IsNullOrEmpty(fareKmFileName))
+            {
+                console.WriteLine("Doplnění tarifních kilometrů...");
+                var fareKmDb = FareKilometerDatabase.Create(fareKmFileName, _stopDatabase, loaderLog);
+                fareKmDb.ProcessTrips(trainTrips);
             }
 
             console.WriteLine("Výpis vlaků do logu...");
@@ -146,12 +155,13 @@ namespace TrainsEditor.GtfsExport
 
             // TODO a na to si udělat nějaký obecnější framework? stejně tak na ty .IsUsed a možná na celou tu "Feed databázi"
             console.WriteLine("Ukládání dat...");
+            var agencyInstance = CreateAgencyInstance(_currentIntegratedSystem);
             var feed = new GtfsFeed()
             {
-                Agency = new List<GtfsAgency>() { CreateAgencyInstance() },
+                Agency = new List<GtfsAgency>() { agencyInstance },
                 Calendar = calendars.Select(cal => cal.ToGtfsCalendar()).ToList(),
                 CalendarDates = calendars.SelectMany(cal => cal.GetAllGtfsExceptions()).ToList(),
-                Routes = _routeDatabase.UsedLines.Select(l => l.ToGtfsRoute(PidAgencyId)).ToList(),
+                Routes = _routeDatabase.UsedLines.Select(l => l.ToGtfsRoute(agencyInstance.Id)).ToList(),
                 Stops = _stopDatabase.UsedStops.Select(s => s.ToGtfsStop()).Distinct().ToList(),
                 StopTimes = trainTrips.SelectMany(t => t.GetGtfsStopTimes()).ToList(),
                 Trips = trainTrips.Select(t => t.ToGtfsTrip()).ToList(),
@@ -194,7 +204,7 @@ namespace TrainsEditor.GtfsExport
             foreach (var trainTrip in trainTrips)
             {
                 // vytvořit kalendář a označit linku a zastávky referencované tripem
-                trainTrip.GtfsId = $"{trainTrip.Route.AswId}_{trainTrip.TrainNumber}_{trainTrip.StartDate:yyMMdd}";
+                trainTrip.GtfsId = $"{((TrainRoute)trainTrip.Route).RouteId}_{trainTrip.TrainNumber}_{trainTrip.StartDate:yyMMdd}";
                 while (!tripIdSet.Add(trainTrip.GtfsId))
                 {
                     loaderLog.Log(LogMessageType.WARNING_TRAIN_DUPLICATE_ID, $"Duplicitní ID: {trainTrip.GtfsId}, nastavuji alternativní připojením 'X'. Příčinou může být, že vlak je rozdělen náhradní dopravou na dva samostatné kusy.");
@@ -218,7 +228,7 @@ namespace TrainsEditor.GtfsExport
 
         private TrainGroupCollection LoadTrainsFromFolder(string folder, TrainGroupLoader.TrainsLoaderCallback reportCallback)
         {
-            return _trainGroupLoader.LoadTrainFiles(folder, DateTime.Now.AddHours(-3).Date, reportCallback);
+            return _trainGroupLoader.LoadTrainFiles(folder, true, reportCallback);
         }
 
 
@@ -226,7 +236,7 @@ namespace TrainsEditor.GtfsExport
         {
             var compareAndMerge = new TrainVariantMerge(processLog);
             var transformedGroup = group.TrainFiles.Where(tr => !tr.IsCancelation).Select(
-                tr => Train.Create(tr, _stopDatabase, _routeDatabase, loaderLog, processLog, stt => CheckTrainPrevVersionLineInfo(stt, tr.OverwrittenTrains, console))
+                tr => Train.Create(tr, _stopDatabase, _routeDatabase, loaderLog, processLog, stt => CheckTrainPrevVersionLineInfo(stt, tr.OverwrittenTrains, console), _currentIntegratedSystem)
             );
 
             // provedeme znovu filtering na datum, protože u některých vlaků jsme mohli posunout EndDate na základě přepsaného konce bitmapy
@@ -348,17 +358,37 @@ namespace TrainsEditor.GtfsExport
             //return tripsOfDirection.FirstOrDefault(t => t.StopTimes.Count == maxStopCount);
         }
 
-        private static GtfsAgency CreateAgencyInstance()
+        private static GtfsAgency CreateAgencyInstance(IntegratedSystemsEnum integratedSystem)
         {
-            return new GtfsAgency()
+            if (integratedSystem == IntegratedSystemsEnum.PID)
             {
-                Id = PidAgencyId,
-                Name = "Pražská integrovaná doprava - vlaky",
-                Lang = "cs",
-                Phone = "+420234704560",
-                Timezone = "Europe/Prague",
-                Url = "https://pid.cz",
-            };
+                return new GtfsAgency()
+                {
+                    Id = "99",
+                    Name = "Pražská integrovaná doprava - vlaky",
+                    Lang = "cs",
+                    Phone = "+420234704560",
+                    Timezone = "Europe/Prague",
+                    Url = "https://pid.cz",
+                };
+            }
+            else if (integratedSystem == IntegratedSystemsEnum.ODIS)
+            {
+                return new GtfsAgency()
+                {
+                    Id = "ODIS",
+                    Name = "ODIS",
+                    Lang = "cs",
+                    Phone = "+420597608508",
+                    Timezone = "Europe/Prague",
+                    Url = "https://www.kodis.cz",
+                    Email = "info@kodis.cz"
+                };
+            }
+            else
+            {
+                throw new ArgumentException($"Nepodporovaný IDS {integratedSystem}.");
+            }
         }
     }
 }

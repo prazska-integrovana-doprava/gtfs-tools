@@ -35,18 +35,21 @@ namespace TrainsEditor.ViewModel
 
         public TrainNetworkSpecificParamsProvider NetworkSpecificParamsProvider { get; private set; }
 
+        private PublicHolidaysCalendar holidaysCalendar;
+
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public TrainFile(SingleTrainFile trainFile, StationDatabase stationDb, RouteDatabase routeDb)
+        public TrainFile(SingleTrainFile trainFile, StationDatabase stationDb, RouteDatabase routeDb, PublicHolidaysCalendar holidaysCalendar, IntegratedSystemsEnum currentIntegratedSystem)
             : base(trainFile)
         {
-            ResetData(trainFile, stationDb, routeDb);
+            this.holidaysCalendar = holidaysCalendar;
+            ResetData(trainFile, stationDb, routeDb, currentIntegratedSystem);
         }
         
-        public override void ResetData(SingleTrainFile trainFile, StationDatabase stationDb, RouteDatabase routeDb)
+        public override void ResetData(SingleTrainFile trainFile, StationDatabase stationDb, RouteDatabase routeDb, IntegratedSystemsEnum currentIntegratedSystem)
         {
-            base.ResetData(trainFile, stationDb, routeDb);
+            base.ResetData(trainFile, stationDb, routeDb, currentIntegratedSystem);
             Calendar.PropertyChanged += Calendar_PropertyChanged;
             NetworkSpecificParamsProvider = new TrainNetworkSpecificParamsProvider(TrainData);
 
@@ -56,7 +59,7 @@ namespace TrainsEditor.ViewModel
             {
                 var isFirstLocation = location == TrainData.CZPTTInformation.CZPTTLocation.First();
                 var isLastLocation = location == TrainData.CZPTTInformation.CZPTTLocation.Last();
-                var locationEx = TrainLocation.Construct(location, prevLocation, isFirstLocation || isLastLocation, stationDb, routeDb, NetworkSpecificParamsProvider);
+                var locationEx = TrainLocation.Construct(location, prevLocation, isFirstLocation || isLastLocation, stationDb, routeDb, NetworkSpecificParamsProvider, currentIntegratedSystem);
                 locationEx.PropertyChanged += Location_PropertyChanged;
                 Locations.Add(locationEx);
 
@@ -152,7 +155,7 @@ namespace TrainsEditor.ViewModel
             for (int i = 0; i < bitmap.Length; i++)
             {
                 var date = Calendar.StartDate.AddDays(i);
-                if (DaysOfWeekCalendars.TrainsInstance.GetDayOfWeekFor(date) == dayOfWeek)
+                if (holidaysCalendar.GetDayOfWeekFor(date) == dayOfWeek)
                 {
                     if (bitmap[i] == '1')
                     {

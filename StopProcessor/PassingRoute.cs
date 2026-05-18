@@ -123,7 +123,7 @@ namespace StopProcessor
             Direction = direction;
             Name = route.ShortName;
             Type = route.Type;
-            IsNight = route.IsNight;
+            IsNight = route.IsNight.GetValueOrDefault();
             headsignFrequencies = new Dictionary<string, int>();
             exitOnlyHeadsignFrequencies = new Dictionary<string, int>();
             ExitOnly = exitOnly;

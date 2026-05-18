@@ -35,12 +35,17 @@ namespace TrainsEditor
 
         private readonly RouteDatabase RouteDatabase;
 
+        private readonly PublicHolidaysCalendar holidaysCalendar;
+
+        private readonly IntegratedSystemsEnum currentIntegratedSystem;
+
         private TrainFile Train => (TrainFile) DataContext;
 
-        internal TrainWindow(StationDatabase stationDatabase, RouteDatabase routeDatabase)
+        internal TrainWindow(StationDatabase stationDatabase, RouteDatabase routeDatabase, PublicHolidaysCalendar holidaysCalendar, IntegratedSystemsEnum currentIntegratedSystem)
         {
             StationDatabase = stationDatabase;
             RouteDatabase = routeDatabase;
+            this.currentIntegratedSystem = currentIntegratedSystem;
 
             InitializeComponent();
             foreach (var shiftValue in ShiftValues)
@@ -54,6 +59,9 @@ namespace TrainsEditor
             {
                 cbTrainType.Items.Add(trainType);
             }
+
+            this.holidaysCalendar = holidaysCalendar;
+            this.currentIntegratedSystem = currentIntegratedSystem;
         }
 
         private void CopySelectedLocations()
@@ -82,7 +90,7 @@ namespace TrainsEditor
                 var isFirstAdded = (locationObj == locationObjects.First());
                 var isLastAdded = (locationObj == locationObjects.Last());
                 var isNewLast = (currentIndex == lvLocations.Items.Count);
-                var locationViewModel = TrainLocation.Construct(locationObj, prevLocation?.LocationData, isNewFirst || isNewLast && isLastAdded, StationDatabase, RouteDatabase, Train.NetworkSpecificParamsProvider);
+                var locationViewModel = TrainLocation.Construct(locationObj, prevLocation?.LocationData, isNewFirst || isNewLast && isLastAdded, StationDatabase, RouteDatabase, Train.NetworkSpecificParamsProvider, currentIntegratedSystem);
                 if (isNewFirst && lvLocations.Items.Count > 1)
                 {
                     var nextLocation = (TrainLocation)lvLocations.Items[0];
@@ -126,7 +134,7 @@ namespace TrainsEditor
 
         private void CancelAndReloadFile()
         {
-            FilesManager.ReloadFile(Train, StationDatabase, RouteDatabase);
+            FilesManager.ReloadFile(Train, StationDatabase, RouteDatabase, currentIntegratedSystem);
             // TODO problémy viz MainWindow.ReloadFile
             Close();
         }
@@ -360,7 +368,7 @@ namespace TrainsEditor
 
         private void btnDatesSet1Workdays_Click(object sender, RoutedEventArgs e)
         {
-            SetDatesUniversal(true, d => DaysOfWeekCalendars.TrainsInstance.IsWorkday(d));
+            SetDatesUniversal(true, d => holidaysCalendar.IsWorkday(d));
         }
 
         private void btnDatesSet1Saturdays_Click(object sender, RoutedEventArgs e)
@@ -375,12 +383,12 @@ namespace TrainsEditor
 
         private void btnDatesSet1Holidays_Click(object sender, RoutedEventArgs e)
         {
-            SetDatesUniversal(true, d => DaysOfWeekCalendars.TrainsInstance.DayExceptions.Keys.Contains(d));
+            SetDatesUniversal(true, d => holidaysCalendar.AllHolidays.Contains(d));
         }
 
         private void btnDatesSet0Workdays_Click(object sender, RoutedEventArgs e)
         {
-            SetDatesUniversal(false, d => DaysOfWeekCalendars.TrainsInstance.IsWorkday(d));
+            SetDatesUniversal(false, d => holidaysCalendar.IsWorkday(d));
         }
 
         private void btnDatesSet0Saturdays_Click(object sender, RoutedEventArgs e)
@@ -395,7 +403,7 @@ namespace TrainsEditor
 
         private void btnDatesSet0Holidays_Click(object sender, RoutedEventArgs e)
         {
-            SetDatesUniversal(false, d => DaysOfWeekCalendars.TrainsInstance.DayExceptions.Keys.Contains(d));
+            SetDatesUniversal(false, d => holidaysCalendar.AllHolidays.Contains(d));
         }
         private void SetDatesUniversal(bool destValue, Func<DateTime, bool> dateSelector)
         {

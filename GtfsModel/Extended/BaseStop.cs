@@ -1,4 +1,5 @@
 ﻿using CommonLibrary;
+using CommonLibrary.DotNet48;
 using GtfsModel.Enumerations;
 using GtfsModel.Functions;
 using System;
@@ -67,6 +68,7 @@ namespace GtfsModel.Extended
                         ZoneId = gtfsStop.ZoneId,
                         AswNodeId = gtfsStop.AswNodeId,
                         AswStopId = gtfsStop.AswStopId,
+                        CisId = gtfsStop.CisId,
                         ZoneRegionType = gtfsStop.ZoneRegionType,
                     };
 

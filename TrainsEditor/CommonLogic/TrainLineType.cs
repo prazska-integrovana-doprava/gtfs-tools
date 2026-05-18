@@ -32,6 +32,12 @@
         // S a R linky IDS JMK
         IdsJmk,
 
+        // P linky plzeňské
+        Poved,
+
+        // jihočeské S linky
+        Ideska,
+
         // Ostatní
         Unknown,
 

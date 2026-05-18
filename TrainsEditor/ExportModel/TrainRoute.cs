@@ -10,6 +10,8 @@ namespace TrainsEditor.ExportModel
     /// </summary>
     class TrainRoute : Route
     {
+        public string RouteId { get; set; }
+
         /// <summary>
         /// Nastaveno na true, pokud existuje nějaký spoj této linky
         /// </summary>
@@ -17,8 +19,6 @@ namespace TrainsEditor.ExportModel
 
         public TrainRoute()
         {
-            Color = Color.FromArgb(37, 30, 98);
-            TextColor = Color.White;
             Type = TrafficType.Rail;
             IsRegional = true;
         }

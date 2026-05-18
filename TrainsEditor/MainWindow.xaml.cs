@@ -1,6 +1,13 @@
 ﻿using AswModel.Extended;
+using CommonLibrary;
+using GtfsLogging;
+using GtfsModel.Functions;
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -8,20 +15,17 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
+using System.Xml;
+using System.Xml.Serialization;
 using TrainsEditor.CommonLogic;
-using TrainsEditor.Properties;
-using TrainsEditor.ViewModel;
-using System;
+using TrainsEditor.CommonModel;
+using TrainsEditor.EditorLogic;
 using TrainsEditor.ExportModel;
 using TrainsEditor.GtfsExport;
-using System.Windows.Threading;
-using System.Collections.ObjectModel;
-using TrainsEditor.EditorLogic;
-using System.Diagnostics;
-using GtfsModel.Functions;
-using GtfsLogging;
-using TrainsEditor.CommonModel;
-using System.IO;
+using TrainsEditor.Properties;
+using TrainsEditor.SystemDescriptionModel;
+using TrainsEditor.ViewModel;
 
 namespace TrainsEditor
 {
@@ -40,6 +44,10 @@ namespace TrainsEditor
 
         RouteDatabase RouteDatabase { get; set; }
 
+        int startYear;
+        int endYear;
+        PublicHolidaysCalendar holidaysCalendar;
+
         Regex FilterRegex { get; set; }
         Regex FulltextRegex { get; set; }
 
@@ -47,10 +55,12 @@ namespace TrainsEditor
 
         private readonly DispatcherTimer refreshTimer;
 
+        private readonly IntegratedSystemsEnum currentIntegratedSystem;
+
         private class BackgroundLoaderArgument
         {
             public string Folder { get; set; }
-            public DateTime? PastDataLimit { get; set; }
+            public bool IgnorePastData { get; set; }
             public DateTime? StartDateForVisualCalendar { get; set; }
             public DateTime? EndDateForVisualCalendar { get; set; }
         }
@@ -73,11 +83,33 @@ namespace TrainsEditor
         {
             InitializeComponent();
 
+            startYear = DateTime.Now.Year;
+            if (DateTime.Now.Month == 12 && DateTime.Now.Day >= 18) startYear++;
+            endYear = DateTime.Now.Year;
+            if (DateTime.Now.Month >= 11) endYear++;
+            holidaysCalendar = new PublicHolidaysCalendar(startYear, endYear);
+
             Loggers.InitAswDataLoggers(Settings.Default.LogFolder);
-            AswXmlData = TheAswDatabase.Construct(false, Settings.Default.StopsAndLinesFileName);
-            StationDatabase = StationDatabase.CreateStationDb(AswXmlData.Stops, Settings.Default.SR70Stops, CorrectionConfig.RewriteStations);
-            RouteDatabase = RouteDatabase.CreateRouteDb(AswXmlData.Lines);
-            Loggers.ClLoseAswDataLoggers();
+            if (!string.IsNullOrEmpty(Settings.Default.StopsAndLinesFileNameAsw))
+            {
+                AswXmlData = TheAswDatabase.Construct(false, Settings.Default.StopsAndLinesFileNameAsw);
+                StationDatabase = StationDatabase.CreateStationDb(AswXmlData.Stops, Settings.Default.SR70Stops);
+                RouteDatabase = RouteDatabase.CreateRouteDb(AswXmlData.Lines);
+                currentIntegratedSystem = IntegratedSystemsEnum.PID;
+            }
+            else
+            {
+                var xmlSerializer = new XmlSerializer(typeof(SystemData));
+                var xmlReader = XmlReader.Create(Settings.Default.StopsAndLinesFileName);
+                var systemData = (SystemData)xmlSerializer.Deserialize(xmlReader);
+                StationDatabase = StationDatabase.CreateStationDb(systemData.Stops, Settings.Default.SR70Stops);
+                RouteDatabase = RouteDatabase.CreateRouteDb(systemData.Routes, systemData.Agencies);
+                currentIntegratedSystem = (IntegratedSystemsEnum)Enum.Parse(typeof(IntegratedSystemsEnum), systemData.SystemName);
+            }
+
+            StationDatabase.ApplyRewriteRules(CorrectionConfig.RewriteStations);
+
+            Loggers.CloseAswDataLoggers();
 
             txtFolderRepo.Text = Settings.Default.RepositoryFolder;
             refreshTimer = new DispatcherTimer();
@@ -88,6 +120,9 @@ namespace TrainsEditor
                 cbIntegratedSystemsList.Items.Add(integratedSystem);
                 cbIntegratedSystemsList.SelectedIndex = 0;
             }
+
+            Title += " – " + currentIntegratedSystem;
+            cbIntegratedSystemsList.SelectedValue = currentIntegratedSystem;
         }
 
         private void SetRefreshTimer()
@@ -101,7 +136,7 @@ namespace TrainsEditor
             var arg = (BackgroundLoaderArgument)e.Argument;
             try
             {
-                var orderedTrains = FilesManager.LoadTrainFiles(arg.Folder, arg.PastDataLimit, StationDatabase, RouteDatabase, arg.StartDateForVisualCalendar, arg.EndDateForVisualCalendar, LoadTrainFilesCallback);
+                var orderedTrains = FilesManager.LoadTrainFiles(arg.Folder, arg.IgnorePastData, StationDatabase, RouteDatabase, holidaysCalendar, arg.StartDateForVisualCalendar, arg.EndDateForVisualCalendar, currentIntegratedSystem, LoadTrainFilesCallback);
                 e.Result = new BackgroundLoaderResult()
                 {
                     LoadedFiles = new ObservableCollection<AbstractTrainFile>(orderedTrains),
@@ -187,7 +222,7 @@ namespace TrainsEditor
             backgroundWorker.RunWorkerAsync(new BackgroundLoaderArgument()
             {
                 Folder = txtFolderRepo.Text,
-                PastDataLimit = chcIgnorePastData.IsChecked.GetValueOrDefault() ? DateTime.Now.AddHours(-4) : (DateTime?)null,
+                IgnorePastData = chcIgnorePastData.IsChecked.GetValueOrDefault(),
                 StartDateForVisualCalendar = dtStartDate.SelectedDate,
                 EndDateForVisualCalendar = dtEndDate.SelectedDate,
             });
@@ -251,7 +286,7 @@ namespace TrainsEditor
         {
             if (((FrameworkElement)e.OriginalSource).DataContext is TrainFile item)
             {
-                var trainWindow = new TrainWindow(StationDatabase, RouteDatabase);
+                var trainWindow = new TrainWindow(StationDatabase, RouteDatabase, holidaysCalendar, currentIntegratedSystem);
                 trainWindow.DataContext = item;
                 trainWindow.Show();
             }
@@ -313,12 +348,12 @@ namespace TrainsEditor
                 foreach (var train in trains)
                 {
                     var lastTrainInGroup = train.OverwrittingTrains.Any() ? train.OverwrittingTrains.Last() : train;
-                    var duplicatedTrain = FilesManager.DuplicateFile(train, selectDateDialogResult.StartDate, selectDateDialogResult.EndDate, StationDatabase, RouteDatabase);
+                    var duplicatedTrain = FilesManager.DuplicateFile(train, selectDateDialogResult.StartDate, selectDateDialogResult.EndDate, StationDatabase, RouteDatabase, holidaysCalendar, currentIntegratedSystem);
                     TrainFiles.Insert(TrainFiles.IndexOf(lastTrainInGroup) + 1, duplicatedTrain);
                     listView.SelectedItems.Add(duplicatedTrain);
                     if (duplicatedTrain is TrainFile)
                     {
-                        var trainWindow = new TrainWindow(StationDatabase, RouteDatabase);
+                        var trainWindow = new TrainWindow(StationDatabase, RouteDatabase, holidaysCalendar, currentIntegratedSystem);
                         trainWindow.DataContext = duplicatedTrain;
                         trainWindow.Show();
                     }
@@ -375,7 +410,7 @@ namespace TrainsEditor
             var trains = listView.SelectedItems.OfType<AbstractTrainFile>().ToArray();
             foreach (var train in trains)
             {
-                FilesManager.ReloadFile(train, StationDatabase, RouteDatabase);
+                FilesManager.ReloadFile(train, StationDatabase, RouteDatabase, currentIntegratedSystem);
 
                 // TODO dnes neumíme dobře vyřešit, když se změní CreationDate nebo OwnerGroup
                 // v případě změny CreationDate to sice umíme inkorporovat do kalendáře, ale už nerealizujeme posun v seznamu vlaků (takže kalendáře budou dobře, ale vlaky budou prohozené)
@@ -465,7 +500,7 @@ namespace TrainsEditor
             backgroundWorker.ProgressChanged += BackgroundWorker_ProgressChanged;
 
             Loggers.InitExportModuleLoggers(Settings.Default.LogFolder);
-            backgroundWorker.RunWorkerAsync(new GtfsExportModule(StationDatabase, RouteDatabase, Settings.Default.RepresentativeTrips, txtFolderRepo.Text, FilesManager.TrainGroupLoader));
+            backgroundWorker.RunWorkerAsync(new GtfsExportModule(StationDatabase, RouteDatabase, Settings.Default.RepresentativeTrips, txtFolderRepo.Text, FilesManager.TrainGroupLoader, holidaysCalendar, currentIntegratedSystem));
         }
 
         private void BackgroundWorker_DoGenerateGtfs(object sender, DoWorkEventArgs e)
@@ -474,7 +509,7 @@ namespace TrainsEditor
             var writer = new StringWriter();
             try
             {
-                var finished = gtfsExportModule.Run(Settings.Default.TrackNetworkFile, Settings.Default.OutputFolder, Settings.Default.LogFolder, writer, LoadTrainFilesCallback);
+                var finished = gtfsExportModule.Run(Settings.Default.TrackNetworkFile, Settings.Default.FareKmFile, Settings.Default.OutputFolder, Settings.Default.LogFolder, writer, LoadTrainFilesCallback);
                 e.Result = new BackgroundGtfsGenerateResult()
                 {
                     Finished = finished,
@@ -528,10 +563,7 @@ namespace TrainsEditor
 
             backgroundWorker = null;
 
-            if (result.Exception == null && result.Finished)
-            {
-                TextWindow.ShowTextInfo(resultText);
-            }
+            TextWindow.ShowTextInfo(resultText);
         }
 
 
@@ -568,9 +600,6 @@ namespace TrainsEditor
 
         private void btnDownload_Click(object sender, RoutedEventArgs e)
         {
-            var startYear = 2026;
-            var endYear = 2026;
-
             var filesDownloaders = new List<FilesDownloader>();
             for (int year = startYear; year <= endYear; year++)
             {
@@ -761,9 +790,15 @@ namespace TrainsEditor
             var trainGroupCollection = TrainGroupCollection.FromTrainCollection(trains.Select(tr => tr.FileData));
 
             var writer = new StringWriter();
-            var gtfsExportModule = new GtfsExportModule(StationDatabase, RouteDatabase, Settings.Default.RepresentativeTrips, null, FilesManager.TrainGroupLoader, new CommonLogger(writer), new SimpleLogger(writer), new SimpleLogger(writer));
-            var calendarConstructor = new CalendarConstructor(gtfsExportModule.ReferenceStartDate);
+            var gtfsExportModule = new GtfsExportModule(StationDatabase, RouteDatabase, Settings.Default.RepresentativeTrips, null, FilesManager.TrainGroupLoader, holidaysCalendar, currentIntegratedSystem, new CommonLogger(writer), new SimpleLogger(writer), new SimpleLogger(writer));
+            var calendarConstructor = new CalendarConstructor(gtfsExportModule.ReferenceStartDate, holidaysCalendar);
             var transformedTrains = gtfsExportModule.TransformTrains(trainGroupCollection, calendarConstructor, writer);
+
+            if (!string.IsNullOrEmpty(Settings.Default.FareKmFile))
+            {
+                var fareKmDb = FareKilometerDatabase.Create(Settings.Default.FareKmFile, StationDatabase, null);
+                fareKmDb.ProcessTrips(transformedTrains);
+            }
 
             var trainGtfsTexts = transformedTrains.Select(tr => VerboseDescriptor.DescribeTrip(tr));
             TextWindow.ShowTextInfo(string.Join("\n\n", trainGtfsTexts) + "\n\n------------------\n\n" + writer.ToString());

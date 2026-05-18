@@ -66,9 +66,14 @@ namespace GtfsModel.Extended
         public double? ShapeDistanceTraveledMeters { get; set; }
 
         /// <summary>
+        /// Tarifní vzdálenost v kilometrech
+        /// </summary>
+        public int? FareKilometerDistance { get; set; }
+
+        /// <summary>
         /// Typ výkonu na odjezdu ze zastávky
         /// </summary>
-        public TripOperationType TripOperationType { get; set; }
+        public TripOperationType? TripOperationType { get; set; }
 
         /// <summary>
         /// Možnosti přepravy kol na spoji v dané zastávce
@@ -129,10 +134,12 @@ namespace GtfsModel.Extended
                 StopHeadsign = gtfsStopTime.StopHeadsign,
                 Stop = (Stop) stops[gtfsStopTime.StopId],
                 Trip = trips[gtfsStopTime.TripId],
+                FareKilometerDistance = gtfsStopTime.FareKilometerDistance,
                 TripOperationType = gtfsStopTime.TripOperationType,
                 BikesAllowed = gtfsStopTime.BikesAllowed,
-                StopIcons = TransferIconCodes.ReverseTransform(gtfsStopTime.StopIcons).ToArray(),
-                HeadsignIcons = TransferIconCodes.ReverseTransform(gtfsStopTime.HeadsignIcons).ToArray(),
+                // u položek níže je důležité odlišit null od prázdného pole, protože null je default hodnota a pokud všechny záznamy mají null, sloupec se nemusí vypisovat na výstup
+                StopIcons = gtfsStopTime.StopIcons != null ? TransferIconCodes.ReverseTransform(gtfsStopTime.StopIcons).ToArray() : null,
+                HeadsignIcons = gtfsStopTime.HeadsignIcons != null ? TransferIconCodes.ReverseTransform(gtfsStopTime.HeadsignIcons).ToArray() : null,
             };
         }
 
@@ -145,10 +152,11 @@ namespace GtfsModel.Extended
                 DepartureTime = DepartureTime,
                 StopId = Stop.GtfsId,
                 StopSequence = SequenceNumber,
-                StopHeadsign = StopHeadsign != null ? StopHeadsign : "",
+                StopHeadsign = StopHeadsign,
                 PickupType = PickupType,
                 DropOffType = DropOffType,
                 ShapeDistanceTraveled = ShapeDistanceTraveledMeters / 1000.0,
+                FareKilometerDistance = FareKilometerDistance,
                 TripOperationType = TripOperationType,
                 BikesAllowed = BikesAllowed,
                 StopIcons = TransferIconCodes.Transform(StopIcons),
