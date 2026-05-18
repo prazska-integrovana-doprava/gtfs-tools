@@ -42,10 +42,10 @@ namespace CsvSerializer
         /// <param name="members">Seřazený seznam položek (odpovídá sloupcům v souboru)</param>
         public void ReadHeader(MemberAndAttribute[] members)
         {
-            var membersDictionary = members.ToDictionary(m => m.Attribute.Name);
+            var membersDictionary = members.ToDictionary(m => m.Attribute.Name.ToLower());
             membersOrdered = new List<MemberAndAttribute>();
 
-            var headers = ReadLine().Split(separator);
+            var headers = ReadLine().ToLower().Split(separator);
             
             foreach (var header in headers)
             {

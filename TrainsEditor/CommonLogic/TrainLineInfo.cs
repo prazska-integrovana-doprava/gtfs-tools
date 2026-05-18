@@ -43,7 +43,9 @@ namespace TrainsEditor.CommonLogic
 
             if (integratedSystem == IntegratedSystemsEnum.PID)
             {
-                return LineType != TrainLineType.Odis && LineType != TrainLineType.IdsJmk;
+                //return LineType != TrainLineType.Odis && LineType != TrainLineType.IdsJmk && LineType != TrainLineType.Ideska;
+                return LineType == TrainLineType.FastTrain || LineType == TrainLineType.PidFastTrain || LineType == TrainLineType.Pid
+                    || LineType == TrainLineType.Duk || LineType == TrainLineType.Iredo || LineType == TrainLineType.Idol;
             }
             else if (integratedSystem == IntegratedSystemsEnum.ODIS)
             {
