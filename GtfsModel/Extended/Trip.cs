@@ -159,7 +159,7 @@ namespace GtfsModel.Extended
                 BikesAllowed = gtfsTrip.BikesAllowed,
                 BlockId = gtfsTrip.BlockId,
                 CalendarRecord = calendars[gtfsTrip.ServiceId],
-                IsExceptional = gtfsTrip.IsExceptional != 0,
+                IsExceptional = gtfsTrip.IsExceptional.GetValueOrDefault(),
                 Headsign = gtfsTrip.Headsign,
                 GtfsId = gtfsTrip.Id,
                 DirectionId = gtfsTrip.DirectionId,
@@ -175,8 +175,9 @@ namespace GtfsModel.Extended
         /// <summary>
         /// Vytvoří GTFS záznam spoje
         /// </summary>
+        /// <param name="exportExceptionalFlag">True, pokud má být na výstupu vyplňován i flag <see cref="GtfsTrip.IsExceptional">. Pokud je nastaveno false, bude atribut spojů IsExceptional vždy null.</param>
         /// <returns></returns>
-        public GtfsTrip ToGtfsTrip()
+        public GtfsTrip ToGtfsTrip(bool exportExceptionalFlag)
         {
             return new GtfsTrip()
             {
@@ -190,7 +191,7 @@ namespace GtfsModel.Extended
                 ShapeId = Shape?.Id,
                 WheelchairAccessible = WheelchairAccessible,
                 BikesAllowed = BikesAllowed,
-                IsExceptional = IsExceptional ? 1 : 0,
+                IsExceptional = exportExceptionalFlag ? IsExceptional : (bool?)null,
                 SubAgencyId = SubAgency?.SubAgencyId,
                 HeadsignIcons = TransferIconCodes.Transform(HeadsignIcons),
             };

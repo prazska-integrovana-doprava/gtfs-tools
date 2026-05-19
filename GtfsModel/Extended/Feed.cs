@@ -223,7 +223,7 @@ namespace GtfsModel.Extended
             return duplicateItems;
         }
 
-        public GtfsFeed ToGtfsFeed()
+        public GtfsFeed ToGtfsFeed(bool exportExceptionalAttribute, bool exportIsNightAttribute, bool exportIsSubstituteAttribute)
         {
             return new GtfsFeed()
             {
@@ -231,13 +231,13 @@ namespace GtfsModel.Extended
                 Calendar = Calendar.Values.Where(cal => cal is CalendarRecord).Select(cal => ((CalendarRecord)cal).ToGtfsCalendar()).ToList(),
                 CalendarDates = Calendar.Values.SelectMany(cal => cal.GetAllGtfsExceptions()).ToList(),
                 FeedInfo = FeedInfo != null ? new List<GtfsFeedInfo>() { FeedInfo } : new List<GtfsFeedInfo>(),
-                Routes = Routes.Values.Select(r => r.ToGtfsRoute(Agency.Values.First().Id)).ToList(),
+                Routes = Routes.Values.Select(r => r.ToGtfsRoute(Agency.Values.First().Id, exportIsNightAttribute, true, exportIsSubstituteAttribute)).ToList(),
                 RouteSubAgencies = Routes.Values.SelectMany(r => r.SubAgencies).Distinct().ToList(),
                 Shapes = Shapes.Values.SelectMany(s => s.ToGtfsShape()).ToList(),
                 Stops = Stops.Values.Select(s => s.ToGtfsStop()).ToList(),
                 StopTimes = Trips.Values.SelectMany(t => t.StopTimes.Select(st => st.ToGtfsStopTime())).ToList(),
                 Transfers = Transfers.Select(tr => tr.ToGtfsTransfer()).ToList(),
-                Trips = Trips.Values.Select(t => t.ToGtfsTrip()).ToList(),
+                Trips = Trips.Values.Select(t => t.ToGtfsTrip(exportExceptionalAttribute)).ToList(),
                 TripRuns = null, // neřešíme zde, musí si vyřešit volající sám
             };
         }

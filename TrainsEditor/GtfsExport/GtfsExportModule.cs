@@ -10,6 +10,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Windows.Media;
 using TrainsEditor.CommonLogic;
 using TrainsEditor.CommonModel;
 using TrainsEditor.ExportModel;
@@ -156,15 +158,19 @@ namespace TrainsEditor.GtfsExport
             // TODO a na to si udělat nějaký obecnější framework? stejně tak na ty .IsUsed a možná na celou tu "Feed databázi"
             console.WriteLine("Ukládání dat...");
             var agencyInstance = CreateAgencyInstance(_currentIntegratedSystem);
+            var anyExceptionalTrip = trainTrips.Any(tt => tt.IsExceptional);
+            var anyRouteIsNight = _routeDatabase.UsedLines.Any(r => r.IsNight);
+            var anyRouteIsRegional = _routeDatabase.UsedLines.Any(r => r.IsRegional);
+            var anyRouteIsSubstitute = _routeDatabase.UsedLines.Any(r => r.IsSubstituteTransport);
             var feed = new GtfsFeed()
             {
                 Agency = new List<GtfsAgency>() { agencyInstance },
                 Calendar = calendars.Select(cal => cal.ToGtfsCalendar()).ToList(),
                 CalendarDates = calendars.SelectMany(cal => cal.GetAllGtfsExceptions()).ToList(),
-                Routes = _routeDatabase.UsedLines.Select(l => l.ToGtfsRoute(agencyInstance.Id)).ToList(),
+                Routes = _routeDatabase.UsedLines.Select(l => l.ToGtfsRoute(agencyInstance.Id, anyRouteIsNight, anyRouteIsRegional, anyRouteIsSubstitute)).ToList(),
                 Stops = _stopDatabase.UsedStops.Select(s => s.ToGtfsStop()).Distinct().ToList(),
                 StopTimes = trainTrips.SelectMany(t => t.GetGtfsStopTimes()).ToList(),
-                Trips = trainTrips.Select(t => t.ToGtfsTrip()).ToList(),
+                Trips = trainTrips.Select(t => t.ToGtfsTrip(anyExceptionalTrip)).ToList(),
                 Shapes = shapeDatabase.Shapes.SelectMany(s => s.ToGtfsShape()).ToList(),
                 RouteSubAgencies = _routeDatabase.UsedLines.SelectMany(l => l.SubAgencies).ToList(),
             };

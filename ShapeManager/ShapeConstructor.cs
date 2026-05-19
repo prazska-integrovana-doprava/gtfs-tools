@@ -7,6 +7,7 @@ using NetTopologySuite.Index.Strtree;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace ShapeManager
 {
@@ -87,6 +88,11 @@ namespace ShapeManager
         public void LoadPointData(string fileName)
         {
             var allLines = CsvFileSerializer.DeserializeFile<CsvPoint>(fileName);
+            if (allLines.Count == 0)
+            {
+                throw new Exception($"Subor {fileName} neexistuje nebo je prázdný.");
+            }
+
             foreach (var line in allLines)
             {
                 if (line.LineId <= 0)

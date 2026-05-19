@@ -73,8 +73,8 @@ namespace GtfsModel
         /// <summary>
         /// Jednička pro divné spoje, které se nemají zobrazovat v mapách
         /// </summary>
-        [CsvField("exceptional", 51, CsvFieldPostProcess.None, 0, CsvColumnPresence.OmitColumntIfEmpty)]
-        public int IsExceptional { get; set; }
+        [CsvField("exceptional", 51, CsvFieldPostProcess.None, null, CsvColumnPresence.OmitColumntIfEmpty)]
+        public bool? IsExceptional { get; set; }
 
         /// <summary>
         /// Interní ID dopravce (index do route_sub_agencies.txt)

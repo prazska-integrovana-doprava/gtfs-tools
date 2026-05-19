@@ -207,7 +207,8 @@ namespace GtfsProcessor
             Console.WriteLine("Generuji trasy...");
             Dictionary<MergedTripGroup, ShapeEx> shapeToTripAssignment;
             gtfsFeedEx.Shapes = new ShapeGenerator().GenerateAndAssignShapes(
-                mergedTripGroups.Where(t => t.TrafficType != AswTrafficType.Metro && t.TrafficType != AswTrafficType.Tram),
+                mergedTripGroups.Where(t => t.TrafficType != AswTrafficType.Metro && t.TrafficType != AswTrafficType.Tram 
+                && (t.TrafficType != AswTrafficType.Bus || string.IsNullOrEmpty(config.BusNetworkFile))),
                 out shapeToTripAssignment, log).ToDictionary(sh => sh.Id);
 
             // protože spoje mají IDčka v ASW víceméně náhodná (každý den jiná) a protože chceme, aby byly IDčka spojů pokud možno
@@ -245,6 +246,11 @@ namespace GtfsProcessor
             Console.WriteLine("Konstruuji trasy metra a tramvají...");
             ConstructShapesFromNetwork(config.MetroNetworkFile, null, GtfsModel.Enumerations.TrafficType.Metro, gtfsFeedEx);
             ConstructShapesFromNetwork(config.TramNetworkFile, config.TramWaypointsFile, GtfsModel.Enumerations.TrafficType.Tram, gtfsFeedEx);
+            if (!string.IsNullOrEmpty(config.BusNetworkFile))
+            {
+                Console.WriteLine("..a autobusů...");
+                ConstructShapesFromNetwork(config.BusNetworkFile, null, GtfsModel.Enumerations.TrafficType.Bus, gtfsFeedEx);
+            }
 
             if (!config.TripDbAsReadOnly)
             {
@@ -280,8 +286,8 @@ namespace GtfsProcessor
             Console.WriteLine("Verifikuji počty vygenerovaných spojů...");
             VerifyLoadedTripCount(gtfsFeedEx, trip => trip.Route.Type == GtfsModel.Enumerations.TrafficType.Metro, config.MinimumMetroTrips, "METRO");
             VerifyLoadedTripCount(gtfsFeedEx, trip => trip.Route.Type == GtfsModel.Enumerations.TrafficType.Tram, config.MinimumTramTrips, "TRAM");
-            VerifyLoadedTripCount(gtfsFeedEx, trip => trip.Route.Type == GtfsModel.Enumerations.TrafficType.Bus && !trip.Route.IsRegional.GetValueOrDefault(), config.MinimumBusTo299Trips, "BUS městský");
-            VerifyLoadedTripCount(gtfsFeedEx, trip => trip.Route.Type == GtfsModel.Enumerations.TrafficType.Bus && trip.Route.IsRegional.GetValueOrDefault(), config.MinimumBusFrom300Trips, "BUS příměstský");
+            VerifyLoadedTripCount(gtfsFeedEx, trip => trip.Route.Type == GtfsModel.Enumerations.TrafficType.Bus && !trip.Route.IsRegional, config.MinimumBusTo299Trips, "BUS městský");
+            VerifyLoadedTripCount(gtfsFeedEx, trip => trip.Route.Type == GtfsModel.Enumerations.TrafficType.Bus && trip.Route.IsRegional, config.MinimumBusFrom300Trips, "BUS příměstský");
             VerifyLoadedTripCount(gtfsFeedEx, trip => trip.Route.Type == GtfsModel.Enumerations.TrafficType.Rail, config.MinimumTrainTrips, "VLAK");
 
             if (!string.IsNullOrEmpty(config.AdditionalTransfersFileName))
@@ -312,7 +318,7 @@ namespace GtfsProcessor
             archivedStopsDb.SaveArchivedStops();
 
             Console.WriteLine("Transformuji data do finálního GTFS modelu...");
-            var gtfsFeed = gtfsFeedEx.ToGtfsFeed();
+            var gtfsFeed = gtfsFeedEx.ToGtfsFeed(true, true, true);
             MergeFeedStops(gtfsFeed, archivedStopsToAdd);
             if (extraStops != null)
             {

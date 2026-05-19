@@ -60,17 +60,17 @@ namespace GtfsModel.Extended
         /// <summary>
         /// Indikátor, zda jde o noční linku
         /// </summary>
-        public bool? IsNight { get; set; }
+        public bool IsNight { get; set; }
 
         /// <summary>
         /// Indikátor, zda jde o regionální linku
         /// </summary>
-        public bool? IsRegional { get; set; }
+        public bool IsRegional { get; set; }
 
         /// <summary>
         /// Indikátor, zda jde o linku náhradní dopravy
         /// </summary>
-        public bool? IsSubstituteTransport { get; set; }
+        public bool IsSubstituteTransport { get; set; }
 
         /// <summary>
         /// Spoje dané linky
@@ -104,9 +104,9 @@ namespace GtfsModel.Extended
                 Description = gtfsRoute.Description,
                 Color = ParseColorCode(gtfsRoute.Color),
                 TextColor = ParseColorCode(gtfsRoute.TextColor),
-                IsNight = gtfsRoute.IsNight,
-                IsRegional = gtfsRoute.IsRegional,
-                IsSubstituteTransport = gtfsRoute.IsSubstituteTransport,
+                IsNight = gtfsRoute.IsNight.GetValueOrDefault(),
+                IsRegional = gtfsRoute.IsRegional.GetValueOrDefault(),
+                IsSubstituteTransport = gtfsRoute.IsSubstituteTransport.GetValueOrDefault(),
                 Type = gtfsRoute.Type,
                 SubAgencies = subAgencies.Where(a => a.RouteId == gtfsRoute.Id).ToList(),
             };
@@ -126,8 +126,12 @@ namespace GtfsModel.Extended
         /// <summary>
         /// Vrátí GTFS záznam linky
         /// </summary>
+        /// <param name="defaultAgencyId">ID agency</param>
+        /// <param name="exportIsNightAttribute">True, pokud má být vyplněn i atribut <see cref="GtfsRoute.IsNight"/>. Je-li nastaveno false, bude IsNight vždy null.</param>
+        /// <param name="exportIsRegionalAttribute">True, pokud má být vyplněn atribut <see cref="GtfsRoute.IsRegional"/>.</param>
+        /// <param name="exportIsSubstituteTransportAttribute">True, pokud má být vyplněn atribut <see cref="GtfsRoute.IsSubstituteTransport"/>.</param>
         /// <returns>GTFS záznam linky</returns>
-        public GtfsRoute ToGtfsRoute(string defaultAgencyId)
+        public GtfsRoute ToGtfsRoute(string defaultAgencyId, bool exportIsNightAttribute, bool exportIsRegionalAttribute, bool exportIsSubstituteTransportAttribute)
         {
             return new GtfsRoute()
             {
@@ -140,9 +144,9 @@ namespace GtfsModel.Extended
                 Url = AswId != 0 && ShortName.All(ch => ch >= '0' && ch <= '9' || ch >= 'A' && ch <= 'Z' || ch >= 'a' && ch <= 'z') ? $"https://pid.cz/linka/{ShortName}" : null,
                 Color = $"{Color.R:X2}{Color.G:X2}{Color.B:X2}",
                 TextColor = $"{TextColor.R:X2}{TextColor.G:X2}{TextColor.B:X2}",
-                IsNight = IsNight,
-                IsRegional = IsRegional,
-                IsSubstituteTransport = IsSubstituteTransport,
+                IsNight = exportIsNightAttribute ? IsNight : (bool?)null,
+                IsRegional = exportIsRegionalAttribute ? IsRegional : (bool?)null,
+                IsSubstituteTransport = exportIsSubstituteTransportAttribute ? IsSubstituteTransport : (bool?)null,
             };
         }
         

@@ -190,7 +190,7 @@ namespace StopProcessor
                     }
 
                     var gtfsTrip = trips[gtfsStopTime.TripId];
-                    if (gtfsTrip.IsExceptional != 0)
+                    if (gtfsTrip.IsExceptional.GetValueOrDefault())
                         continue; // výjezdy, zátahy a přejezdy neberem
 
                     var gtfsCalendar = calendars[gtfsTrip.ServiceId];

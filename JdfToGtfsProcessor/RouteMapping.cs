@@ -142,7 +142,7 @@ namespace JdfToGtfsProcessor
             switch (route.Type)
             {
                 case GtfsModel.Enumerations.TrafficType.Bus:
-                    if (route.IsRegional!.Value) return ColorTranslator.FromHtml("#AE4A84"); // linkám nastavujeme IsRegional vždy
+                    if (route.IsRegional) return ColorTranslator.FromHtml("#AE4A84"); // linkám nastavujeme IsRegional vždy
                     else return ColorTranslator.FromHtml("#0078BF");
                 case GtfsModel.Enumerations.TrafficType.Tram:
                     return ColorTranslator.FromHtml("#E31E24");

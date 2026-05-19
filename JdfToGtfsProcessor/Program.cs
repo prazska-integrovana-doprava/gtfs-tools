@@ -139,7 +139,7 @@ namespace JdfToGtfsProcessor
                 Console.WriteLine("XX Soubor s GTFS vlaků nezadán, vlaky nebudou načteny.");
             }
 
-            var gtfsFeed = gtfsFeedEx.ToGtfsFeed();
+            var gtfsFeed = gtfsFeedEx.ToGtfsFeed(false, false, false);
 
             Console.WriteLine("Ukládám GTFS soubory...");
             GtfsFeedSerializer.SerializeFeed(settings.OutputFolder, gtfsFeed);
