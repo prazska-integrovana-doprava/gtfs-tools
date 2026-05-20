@@ -249,7 +249,7 @@ namespace GtfsProcessor
             if (!string.IsNullOrEmpty(config.BusNetworkFile))
             {
                 Console.WriteLine("..a autobusů...");
-                ConstructShapesFromNetwork(config.BusNetworkFile, null, GtfsModel.Enumerations.TrafficType.Bus, gtfsFeedEx);
+                ConstructShapesFromNetwork(config.BusNetworkFile, config.BusWaypointsFile, GtfsModel.Enumerations.TrafficType.Bus, gtfsFeedEx);
             }
 
             if (!config.TripDbAsReadOnly)
