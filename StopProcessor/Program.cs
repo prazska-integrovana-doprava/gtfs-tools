@@ -55,8 +55,7 @@ namespace StopProcessor
             var oisMapping = CreateOisMapping(db);
 
             Console.WriteLine($"Ukládání souborů ..");
-            var stopsSorted = db.ToList();
-            stopsSorted.Sort((first, second) => first.UniqueName.CompareTo(second.UniqueName));
+            var stopsSorted = db.OrderByDescending(s => s.IsTrain).OrderBy(s => s.UniqueName).ToList();
             var stopsByNameWithMetadata = StopsByNameWithMetadata.FromStopList(stopsSorted);
             SaveXml(Path.Combine(config.StopsOutputFolder, "StopsByName.xml"), stopsByNameWithMetadata);
             SaveJson(Path.Combine(config.StopsOutputFolder, "stops.json"), stopsByNameWithMetadata, true);
@@ -146,9 +145,6 @@ namespace StopProcessor
                 int stopId = gtfsStop.AswStopId;
                 if (nodeId != 0 && stopId != 0)
                 {
-                    if (gtfsStop.ZoneId == "-" && stopId >= 300)
-                        continue; // vlaková zastávka bez pásma, ty ignorujeme (ale autobusové naopak necháváme - mezikrajská linka)
-
                     var stop = stopDb.FindStop(nodeId, stopId);
                     if (stop != null)
                     {
