@@ -87,6 +87,12 @@ namespace ShapeManager
         /// <param name="fileName">CSV soubor s multilines</param>
         public void LoadPointData(string fileName)
         {
+            if (string.IsNullOrEmpty(fileName))
+            {
+                AllPoints = new List<Point>();
+                return;
+            }
+
             var allLines = CsvFileSerializer.DeserializeFile<CsvPoint>(fileName);
             if (allLines.Count == 0)
             {
