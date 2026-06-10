@@ -19,7 +19,7 @@ namespace TrainsEditor.CommonLogic
         public TrainLineType LineType { get; private set; }
 
         /// <summary>
-        /// Plný název linky (např. "S1" nebo "Ex7")
+        /// Plný název linky (např. "S1" nebo "Ex7"). V případě kolize názvů např. PID vs. IDESKA může obsahovat i identifikační znak pro IDS (např. "jS2")
         /// </summary>
         public string LineName { get; private set; }
 
@@ -45,7 +45,7 @@ namespace TrainsEditor.CommonLogic
             {
                 //return LineType != TrainLineType.Odis && LineType != TrainLineType.IdsJmk && LineType != TrainLineType.Ideska;
                 return LineType == TrainLineType.FastTrain || LineType == TrainLineType.PidFastTrain || LineType == TrainLineType.Pid
-                    || LineType == TrainLineType.Duk || LineType == TrainLineType.Iredo || LineType == TrainLineType.Idol;
+                    || LineType == TrainLineType.Duk || LineType == TrainLineType.Iredo || LineType == TrainLineType.Idol || LineType == TrainLineType.Ideska;
             }
             else if (integratedSystem == IntegratedSystemsEnum.ODIS)
             {
@@ -63,7 +63,6 @@ namespace TrainsEditor.CommonLogic
             LineName = lineName;
             LineTrIdentification = lineTrIdentification;
         }
-
 
         public override bool Equals(object obj)
         {
@@ -95,6 +94,16 @@ namespace TrainsEditor.CommonLogic
         }
 
         /// <summary>
+        /// Abychom v PID datech mohli mít jihočeské i pidové "S" linky, označujeme ty jihočeské místo "S" jako "jS". Do výstupního souboru to tak ale nechceme.
+        /// Tahle metoda přepisuje názvy linek používané v rámci aplikace na ty, které se mají používat vůči uživateli.
+        /// </summary>
+        /// <param name="lineName">Název linky v rámci aplikace</param>
+        public static string GetLineNameForExport(string lineName)
+        {
+            return lineName.Replace("jS", "S");
+        }
+
+        /// <summary>
         /// Vytvoří instanci <see cref="TrainLineInfo"/> z číselníkové hodnoty SŽ (ta obsahuje informaci o IDS+lince)
         /// </summary>
         /// <param name="trainLineNumberCode">Číslo linky dle číselníku linek SŽ</param>
@@ -122,7 +131,7 @@ namespace TrainsEditor.CommonLogic
             }
             else if (trainLineNumberCode > 3100 && trainLineNumberCode < 3200)
             {
-                return new TrainLineInfo(TrainLineType.Ideska, $"S{trainLineNumberCode % 100}", trainLineNumberCode);
+                return new TrainLineInfo(TrainLineType.Ideska, $"jS{trainLineNumberCode % 100}", trainLineNumberCode);
             }
             else if (trainLineNumberCode >= 3200 && trainLineNumberCode < 3300)
             {
@@ -190,7 +199,7 @@ namespace TrainsEditor.CommonLogic
         /// <param name="primaryIntegratedSystem">Který IDS se má preferovat, pokud je název linky víceznačný (kvůli kolizím, "S1" se nedá jednoznačně určit, jestli je pražská, brněnská nebo ostravská).</param>
         public static int TrainLineNameToNumber(string lineName, IntegratedSystemsEnum primaryIntegratedSystem)
         {
-            var regex = new Regex("([A-Za-z]+)([0-9]+)");
+            var regex = new Regex("^([A-Za-z]+)([0-9]+)$");
             var match = regex.Match(lineName);
             if (match.Success)
             {
@@ -228,6 +237,10 @@ namespace TrainsEditor.CommonLogic
                 else if (lineType == "S" && primaryIntegratedSystem == IntegratedSystemsEnum.ODIS)
                 {
                     return 8000 + lineNumber;
+                }
+                else if (lineType == "jS")
+                {
+                    return 3100 + lineNumber;
                 }
                 else if (lineType == "U")
                 {

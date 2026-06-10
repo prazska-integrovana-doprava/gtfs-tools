@@ -3,6 +3,7 @@ using GtfsModel;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using TrainsEditor.CommonLogic;
 using TrainsEditor.GtfsExport;
 using TrainsEditor.SystemDescriptionModel;
 
@@ -46,7 +47,7 @@ namespace TrainsEditor.ExportModel
                     RouteId = aswLineFirstVersion.LineNumber.ToString(),
                     GtfsId = $"L{aswLineFirstVersion.LineNumber}",
                     LongName = aswLineFirstVersion.RouteDescription,
-                    ShortName = aswLineFirstVersion.LineName,
+                    ShortName = TrainLineInfo.GetLineNameForExport(aswLineFirstVersion.LineName),
                     Color = Color.FromArgb(37, 30, 98),
                     TextColor = Color.White,
                 };
@@ -61,13 +62,13 @@ namespace TrainsEditor.ExportModel
                     });
                 }
 
-                if (!lines.ContainsKey(line.ShortName))
+                if (!lines.ContainsKey(aswLineFirstVersion.LineName))
                 {
-                    lines.Add(line.ShortName, line);
+                    lines.Add(aswLineFirstVersion.LineName, line);
                 }
                 else
                 {
-                    log.Log(LogMessageType.WARNING_TRAIN_LINE_DUPLICATE, $"Linka {line.ShortName} je v číselníku vícekrát (rozdílné kalendáře?). Beru jen první výskyt, ID {line.AswId}.");
+                    log.Log(LogMessageType.WARNING_TRAIN_LINE_DUPLICATE, $"Linka {aswLineFirstVersion.LineName} je v číselníku vícekrát (rozdílné kalendáře?). Beru jen první výskyt, ID {line.AswId}.");
                 }
             }
 
