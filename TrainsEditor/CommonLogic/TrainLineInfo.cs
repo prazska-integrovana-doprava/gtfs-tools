@@ -45,7 +45,8 @@ namespace TrainsEditor.CommonLogic
             {
                 //return LineType != TrainLineType.Odis && LineType != TrainLineType.IdsJmk && LineType != TrainLineType.Ideska;
                 return LineType == TrainLineType.FastTrain || LineType == TrainLineType.PidFastTrain || LineType == TrainLineType.Pid
-                    || LineType == TrainLineType.Duk || LineType == TrainLineType.Iredo || LineType == TrainLineType.Idol || LineType == TrainLineType.Ideska;
+                    || LineType == TrainLineType.Duk || LineType == TrainLineType.Iredo || LineType == TrainLineType.Idol || LineType == TrainLineType.Ideska
+                    || LineType == TrainLineType.Poved;
             }
             else if (integratedSystem == IntegratedSystemsEnum.ODIS)
             {
@@ -121,7 +122,8 @@ namespace TrainsEditor.CommonLogic
             {
                 return new TrainLineInfo(TrainLineType.PidFastTrain, $"R{trainLineNumberCode % 100}", trainLineNumberCode);
             }
-            else if (trainLineNumberCode > 1000 && trainLineNumberCode < 1100)
+            else if (trainLineNumberCode > 1000 && trainLineNumberCode < 1100 || trainLineNumberCode == 3160 || trainLineNumberCode == 3166)
+                // 3160 = jihočeská S60 a 3166 = jihočeská S66 - nejjednodušší je prostě je považovat za PIDové, aby se to na hranici nelámalo na 2 linky
             {
                 return new TrainLineInfo(TrainLineType.Pid, $"S{trainLineNumberCode % 100}", trainLineNumberCode);
             }

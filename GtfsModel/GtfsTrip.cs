@@ -79,7 +79,7 @@ namespace GtfsModel
         /// <summary>
         /// Interní ID dopravce (index do route_sub_agencies.txt)
         /// </summary>
-        [CsvField("sub_agency_id", 52, CsvFieldPostProcess.None, 0)]
+        [CsvField("sub_agency_id", 52)]
         public string SubAgencyId { get; set; }
 
         /// <summary>

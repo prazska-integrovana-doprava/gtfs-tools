@@ -128,7 +128,6 @@ namespace AswModel.Extended.Processors
 
                 case "K":
                 case "P":
-                case "C":
                     return ZoneRegionType.StopOutsideInPid;
 
                 default:

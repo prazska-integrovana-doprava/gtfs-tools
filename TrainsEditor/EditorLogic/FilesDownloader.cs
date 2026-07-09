@@ -234,7 +234,7 @@ namespace TrainsEditor.EditorLogic
 
         private IEnumerable<string> GetFoldersToDownload(int year, DateTime lastDownloadedFileCreatedTime)
         {
-            var startingMonth = new DateTime(year, 1, 1).AddMonths(-1);
+            var startingMonth = new DateTime(year, 1, 1).AddMonths(-2);
             if (lastDownloadedFileCreatedTime > startingMonth)
             {
                 startingMonth = new DateTime(lastDownloadedFileCreatedTime.Year, lastDownloadedFileCreatedTime.Month, 1);
