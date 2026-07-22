@@ -48,7 +48,10 @@ namespace JdfToGtfsProcessor.Calendars
                         calendar.Monday = calendar.Tuesday = calendar.Wednesday = calendar.Thursday = calendar.Friday = true;
                         foreach (var date in holidaysOnWorkdays)
                         {
-                            calendar.AddException(date, GtfsModel.Enumerations.CalendarExceptionType.Remove);
+                            if (!calendar.Exceptions.ContainsKey(date))
+                            {
+                                calendar.AddException(date, GtfsModel.Enumerations.CalendarExceptionType.Remove);
+                            }
                         }
                     }
                     else if (fixedCodeChar == FixedCodes.OperatesOnSundaysAndHolidays)
@@ -56,6 +59,11 @@ namespace JdfToGtfsProcessor.Calendars
                         calendar.Sunday = true;
                         foreach (var date in holidaysOnWorkdays)
                         {
+                            if (calendar.Exceptions.ContainsKey(date))
+                            {
+                                calendar.Exceptions.Remove(date);
+                            }
+
                             calendar.AddException(date, GtfsModel.Enumerations.CalendarExceptionType.Add);
                         }
                     }
