@@ -38,6 +38,7 @@
                                     <TextBlock Text="pid" FontWeight="Bold" Foreground="Red" Visibility="{Binding IsPid, Converter={StaticResource BoolToVis}}" />
                                     <TextBlock Text="odis" FontWeight="Bold" Foreground="DarkBlue" Visibility="{Binding IsOdis, Converter={StaticResource BoolToVis}}" />
                                     <TextBlock Text="jmk" FontWeight="Bold" Foreground="Green" Visibility="{Binding IsJmk, Converter={StaticResource BoolToVis}}" />
+                                    <TextBlock Text="idzk" FontWeight="Bold" Foreground="CornflowerBlue" Visibility="{Binding IsIdzk, Converter={StaticResource BoolToVis}}" />
                                 </StackPanel>
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>

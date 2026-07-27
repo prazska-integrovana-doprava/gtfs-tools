@@ -38,6 +38,9 @@
         // jihočeské S linky
         Ideska,
 
+        // zlínské S a Sp linky
+        Idzk,
+
         // Ostatní
         Unknown,
 

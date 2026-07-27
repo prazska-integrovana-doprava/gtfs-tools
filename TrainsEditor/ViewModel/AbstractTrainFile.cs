@@ -124,6 +124,11 @@ namespace TrainsEditor.ViewModel
         /// </summary>
         public bool IsJmk => IntegratedSystems.Contains(IntegratedSystemsEnum.IDSJMK);
 
+        /// <summary>
+        /// True, pokud je vlak integrován v IDZK
+        /// </summary>
+        public bool IsIdzk => IntegratedSystems.Contains(IntegratedSystemsEnum.IDZK);
+
         protected AbstractTrainFile(SingleTrainFile fileData)
         {
             FileData = fileData;

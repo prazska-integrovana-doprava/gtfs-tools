@@ -15,5 +15,7 @@ namespace TrainsEditor.CommonLogic
         ODIS = 2,
 
         IDSJMK = 4,
+
+        IDZK = 8,
     }
 }

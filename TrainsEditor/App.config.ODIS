@@ -20,7 +20,7 @@
                 <value>c:\temp\jrspoje\GVD</value>
             </setting>
             <setting name="TrackNetworkFile" serializeAs="String">
-                <value>c:\temp\jrspoje\GVD\sit_vlak.csv</value>
+                <value>c:\temp\jrspoje\GVD\sit_vlak_odis.csv</value>
             </setting>
             <setting name="OutputFolder" serializeAs="String">
                 <value>c:\temp\jrspoje\gtfs_vlaky</value>
@@ -29,7 +29,7 @@
                 <value>c:\temp\jrspoje\log</value>
             </setting>
             <setting name="StopsAndLinesFileName" serializeAs="String">
-                <value>c:\temp\jrspoje\GVD\VlakyIdzk.xml</value>
+                <value>c:\temp\jrspoje\GVD\VlakyOdis.xml</value>
             </setting>
             <setting name="FareKmFile" serializeAs="String">
                 <value>c:\temp\jrspoje\GVD\fare_km.csv</value>

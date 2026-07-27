@@ -391,6 +391,18 @@ namespace TrainsEditor.GtfsExport
                     Email = "info@kodis.cz"
                 };
             }
+            else if (integratedSystem == IntegratedSystemsEnum.IDZK)
+            {
+                return new GtfsAgency()
+                {
+                    Id = "IDZK",
+                    Name = "Integrovaná doprava Zlínského kraje",
+                    Lang = "cs",
+                    Timezone = "Europe/Prague",
+                    Url = "https://www.idzk.cz",
+                    Email = "info@idzk.cz"
+                };
+            }
             else
             {
                 throw new ArgumentException($"Nepodporovaný IDS {integratedSystem}.");

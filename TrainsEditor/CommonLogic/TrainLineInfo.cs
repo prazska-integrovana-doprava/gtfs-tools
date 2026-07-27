@@ -50,7 +50,12 @@ namespace TrainsEditor.CommonLogic
             }
             else if (integratedSystem == IntegratedSystemsEnum.ODIS)
             {
-                return LineType != TrainLineType.Pid && LineType != TrainLineType.IdsJmk;
+                return LineType == TrainLineType.Express || LineType == TrainLineType.FastTrain || LineType == TrainLineType.Odis;
+                //return LineType != TrainLineType.Pid && LineType != TrainLineType.IdsJmk;
+            }
+            else if (integratedSystem == IntegratedSystemsEnum.IDZK)
+            {
+                return LineType == TrainLineType.FastTrain || LineType == TrainLineType.Idzk;
             }
             else
             {
@@ -177,6 +182,17 @@ namespace TrainsEditor.CommonLogic
                     return new TrainLineInfo(TrainLineType.IdsJmk, $"S{trainLineNumberCode % 100}", trainLineNumberCode);
                 }
             }
+            else if (trainLineNumberCode > 7200 && trainLineNumberCode < 7300)
+            {
+                if (trainLineNumberCode % 10 == 0)
+                {
+                    return new TrainLineInfo(TrainLineType.Idzk, $"Sp{trainLineNumberCode % 100 / 10}", trainLineNumberCode);
+                }
+                else
+                {
+                    return new TrainLineInfo(TrainLineType.Idzk, $"S{trainLineNumberCode % 100}", trainLineNumberCode);
+                }
+            }
             else if (trainLineNumberCode > 8000 && trainLineNumberCode < 8100)
             {
                 if (trainLineNumberCode < 8060)
@@ -240,6 +256,10 @@ namespace TrainsEditor.CommonLogic
                 {
                     return 8000 + lineNumber;
                 }
+                else if (lineType == "S" && primaryIntegratedSystem == IntegratedSystemsEnum.IDZK)
+                {
+                    return 7200 + lineNumber;
+                }
                 else if (lineType == "jS")
                 {
                     return 3100 + lineNumber;
@@ -255,6 +275,10 @@ namespace TrainsEditor.CommonLogic
                 else if (lineType == "V")
                 {
                     return 5200 + lineNumber;
+                }
+                else if (lineType == "Sp")
+                {
+                    return 7200 + lineNumber * 10;
                 }
                 else
                 {

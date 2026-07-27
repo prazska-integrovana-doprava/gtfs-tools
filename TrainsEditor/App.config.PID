@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<configuration>
+    <configSections>
+        <sectionGroup name="applicationSettings" type="System.Configuration.ApplicationSettingsGroup, System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" >
+            <section name="TrainsEditor.Properties.Settings" type="System.Configuration.ClientSettingsSection, System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" requirePermission="false" />
+        </sectionGroup>
+    </configSections>
+    <startup> 
+        <supportedRuntime version="v4.0" sku=".NETFramework,Version=v4.7.2" />
+    </startup>
+    <applicationSettings>
+        <TrainsEditor.Properties.Settings>
+            <setting name="StopsAndLinesFileNameAsw" serializeAs="String">
+                <value>..\..\inputy\ZastavkyLinkyDopravci.xml</value>
+            </setting>
+            <setting name="FareKmFile" serializeAs="String">
+                <value />
+            </setting>
+            <setting name="StopsAndLinesFileName" serializeAs="String">
+                <value />
+            </setting>
+            <setting name="SR70Stops" serializeAs="String">
+                <value>..\..\inputy\SR70.csv</value>
+            </setting>
+            <setting name="RepositoryFolder" serializeAs="String">
+                <value>c:\temp\jrspoje\xml_repository</value>
+            </setting>
+            <setting name="TrackNetworkFile" serializeAs="String">
+                <value>..\..\inputy\sit_vlak.csv</value>
+            </setting>
+            <setting name="OutputFolder" serializeAs="String">
+                <value>c:\temp\jrspoje\gtfs_vlaky</value>
+            </setting>
+            <setting name="LogFolder" serializeAs="String">
+                <value>c:\temp\jrspoje\log</value>
+            </setting>
+        </TrainsEditor.Properties.Settings>
+    </applicationSettings>
+</configuration>
