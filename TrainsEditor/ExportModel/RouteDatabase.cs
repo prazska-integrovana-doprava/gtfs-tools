@@ -93,11 +93,12 @@ namespace TrainsEditor.ExportModel
                     LongName = route.LongName,
                     ShortName = route.ShortName,
                     Color = string.IsNullOrEmpty(route.ColorCodeHtml) ? Color.Black : ColorTranslator.FromHtml(route.ColorCodeHtml),
-                    TextColor = Color.White,
+                    TextColor = string.IsNullOrEmpty(route.TextColorCodeHtml) ? Color.White : ColorTranslator.FromHtml(route.TextColorCodeHtml),
                 };
 
                 var agency = agencyData.FirstOrDefault(a => a.Id == route.AgencyId);
-                if (agency != null) {
+                if (agency != null) 
+                {
                     line.SubAgencies.Add(new RouteSubAgency()
                     {
                         RouteId = line.GtfsId,
