@@ -51,7 +51,7 @@ namespace StopProcessor
         /// Název2 zastávky dle ASW JŘ (nemusí být unikátní, ale měl by být bez různých přídomků typu "nábřeží", " - A" apod.)
         /// </summary>
         [XmlIgnore()]
-        public string Name2 { get; set; }
+        public string Name { get; set; }
 
         /// <summary>
         /// Název používaný v CRWS a vyhledávači IDOS (název 7 v ASW JŘ)
@@ -237,9 +237,9 @@ namespace StopProcessor
         public override string ToString()
         {
             if (!string.IsNullOrEmpty(PlatformCode))
-                return $"{NodeId}/{StopId} {Name2} {PlatformCode}";
+                return $"{NodeId}/{StopId} {Name} {PlatformCode}";
             else
-                return $"{NodeId}/{StopId} {Name2}";
+                return $"{NodeId}/{StopId} {Name}";
         }
     }
 }

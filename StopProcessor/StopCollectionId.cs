@@ -37,7 +37,7 @@
         /// <returns>Identifikace skupiny, do které zastávka patří</returns>
         public static StopCollectionId FromStop(Stop stop)
         {
-            return new StopCollectionId(stop.Name2, stop.DistrictCode, stop.IsTrain);
+            return new StopCollectionId(stop.Name, stop.DistrictCode, stop.IsTrain);
         }
 
         public override int GetHashCode()

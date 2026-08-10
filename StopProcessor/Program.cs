@@ -94,10 +94,11 @@ namespace StopProcessor
             {
                 var stop = new Stop()
                 {
+                    // některé položky pak budou přepsány z GTFS dat (u dat z ASW JŘ je to jedno, ale u metra a vlaků je to tak lepší)
                     NodeId = xmlStop.CUzlu,
                     StopId = xmlStop.CZast,
                     PlatformCode = xmlStop.Stanoviste ?? "",
-                    Name2 = xmlStop.Nazev2,
+                    Name = xmlStop.Nazev2,
                     IdosName = xmlStop.Nazev7,
                     IdosCategoryNumber = xmlStop.kIDOS,
                     GpsLatitude = xmlStop.Lat,
@@ -113,7 +114,7 @@ namespace StopProcessor
                     XmlStop = xmlStop
                 };
 
-                if (conflictedTrainStopNames.Contains(stop.Name2) && stop.IsTrain)
+                if (conflictedTrainStopNames.Contains(stop.Name) && stop.IsTrain)
                 {
                     xmlStop.NazevUnikatni = $"{stop.IdosName} (vlak)";
                 }
@@ -151,11 +152,44 @@ namespace StopProcessor
                         stop.IsUsed = true;
                         stop.XmlStop.IsUsed = true;
                         stop.GtfsIds.Add(gtfsStop.Id);
-                        stopDb.StopsByGtfsId.Add(gtfsStop.Id, stop);
 
-                        if (stop.CisNumber == 0)
+                        if (!gtfsStop.Id.Contains('_'))
                         {
-                            stopLog.Log(LogMessageType.WARNING_STOP_ZERO_CIS, $"Zastávka {stop} má nulové číslo CIS, přestože je veřejná a použitá ({gtfsStop.Id}).");
+                            // TODO možná až se jednou zbavíme CISu, tak tady by si to zasloužilo malou reformu.
+                            //      je vlastně otázka, jak to má být správně, když se název zastávky mění v průběhu.
+                            //      u stanovišť je potřeba dořešit, jak to vlastně má být správně u metra
+                            //if (stop.PlatformCode != gtfsStop.PlatformCode)
+                            //{
+                            //    stopLog.Log(LogMessageType.INFO_STOP_CORRECTING_PLATFORM_CODE, $"Zastávka {stop} - upravuji platform code podle GTFS z {stop.PlatformCode} na {gtfsStop.PlatformCode}.");
+                            //    stop.PlatformCode = gtfsStop.PlatformCode;
+                            //}
+
+                            //if (stop.Name != gtfsStop.Name)
+                            //{
+                            //    stopLog.Log(LogMessageType.INFO_STOP_CORRECTING_NAME, $"Zastávka {stop} - upravuji název podle GTFS z {stop.Name} na {gtfsStop.Name}.");
+                            //    stop.Name = gtfsStop.Name;
+                            //}
+
+                            if (stop.GpsLatitude == 0 && stop.GpsLongitude == 0)
+                            //if (Math.Abs(stop.GpsLatitude - gtfsStop.Latitude) > 0.0001 || Math.Abs(stop.GpsLongitude - gtfsStop.Longitude) > 0.0001)
+                            {
+                                stopLog.Log(LogMessageType.INFO_STOP_CORRECTING_POSITION, $"Zastávka {stop} měla nulové souřadnice - upravuji GPS souřadnice podle GTFS na [{gtfsStop.Latitude},{gtfsStop.Longitude}]. JTSK nebude sedět!");
+                                stop.GpsLatitude = (float)gtfsStop.Latitude;
+                                stop.GpsLongitude = (float)gtfsStop.Longitude;
+                            }
+
+                            if (stop.WheelchairBoarding != gtfsStop.WheelchairBoarding)
+                            {
+                                stopLog.Log(LogMessageType.INFO_STOP_CORRECTING_WHEELCHAIR, $"Zastávka {stop} - upravuji wheelchair accessibility podle GTFS z {stop.WheelchairBoarding} na {gtfsStop.WheelchairBoarding}.");
+                                stop.WheelchairBoarding = gtfsStop.WheelchairBoarding;
+                            }
+
+                            stopDb.StopsByGtfsId.Add(gtfsStop.Id, stop);
+
+                            if (stop.CisNumber == 0)
+                            {
+                                stopLog.Log(LogMessageType.WARNING_STOP_ZERO_CIS, $"Zastávka {stop} má nulové číslo CIS, přestože je veřejná a použitá ({gtfsStop.Id}).");
+                            }
                         }
                     }
                     else
