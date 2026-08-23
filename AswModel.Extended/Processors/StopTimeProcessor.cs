@@ -53,7 +53,7 @@ namespace AswModel.Extended.Processors
             }
 
             var remarks = ProcessRemarks(xmlStopTime.PozID, xmlStopTime);
-            var boardingAllowed = xmlStopTime.Cestujici && !inLoop;
+            var boardingAllowed = xmlStopTime.Cestujici && !xmlStopTime.Neverejny && !inLoop;
 
             var trackVariant = new ShapeFragmentDescriptor(ownerTrip.CompanyId, previousStopTime?.Stop, stop, xmlStopTime.VarTr);
             ShapeFragment trackToThisStop = null;

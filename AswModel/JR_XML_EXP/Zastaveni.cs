@@ -186,6 +186,10 @@ namespace JR_XML_EXP
         [DefaultValue(0)]
         public int IndexCaryLinSez;
 
+        [XmlAttribute("nev")]
+        [DefaultValue(false)]
+        public bool Neverejny;
+
         public Zastaveni()
         {
             Prijezd = -1;
