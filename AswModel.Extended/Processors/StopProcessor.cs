@@ -127,7 +127,6 @@ namespace AswModel.Extended.Processors
                     return ZoneRegionType.StopInCentralBohemia;
 
                 case "K":
-                case "P":
                     return ZoneRegionType.StopOutsideInPid;
 
                 default:
