@@ -76,7 +76,7 @@ namespace TrainsEditor.ExportModel
         /// <param name="isFirstOrLastStation">True, pokud jde o první nebo poslední stanici, jinak false</param>
         /// <param name="loaderLog">Logování</param>
         public static StationTime Create(CZPTTLocation location, CZPTTCISMessage czpttMessage, bool isWheelchairAccessible, TripOperationType? tripOperationType,
-            CZPTTLocation prevLocation, StationDatabase stopDb, bool isFirstOrLastStation, ICommonLogger loaderLog)
+            CZPTTLocation prevLocation, StationDatabase stopDb, bool isFirstOrLastStation, IntegratedSystemsEnum currentIntegratedSystem, ICommonLogger loaderLog)
         {
             if (location.TimingAtLocation == null || !location.IsInPublicPart(prevLocation))
             {
@@ -107,7 +107,7 @@ namespace TrainsEditor.ExportModel
             {
                 ArrivalTime = arrivalTime.Value,
                 DepartureTime = departureTime.Value,
-                TrainLineOnDeparture = location.GetLineInfo(),
+                TrainLineOnDeparture = location.GetLineInfo(currentIntegratedSystem),
                 DropOffType = !stopsHere ? DropOffType.None : requestStop ? DropOffType.DriverRequest : DropOffType.Regular,
                 PickupType = !stopsHere ? PickupType.None : requestStop ? PickupType.DriverRequest : PickupType.Regular,
                 StationCode = location.Location.LocationPrimaryCode,

@@ -214,7 +214,7 @@ namespace TrainsEditor.ViewModel
             AllTrainNumbers = trainLocations.Select(loc => loc.OperationalTrainNumber).Where(num => num > 0).Distinct().ToArray();
             TrainTypeAndNumber = string.Join(" / ", GetTrainTypesAndNumbers());
             
-            AllLineNames = trainLocations.Select(loc => loc.GetLineInfo().LineName).Where(lname => !string.IsNullOrWhiteSpace(lname)).Distinct().ToArray();
+            AllLineNames = trainLocations.Select(loc => loc.GetLineInfo(_primaryIntegratedSystem).LineName).Where(lname => !string.IsNullOrWhiteSpace(lname)).Distinct().ToArray();
             LineName = string.Join(" / ", AllLineNames);
 
             Route = trainLocations.First().GetLocationNameAndTime() + " – " + trainLocations.Last().GetLocationNameAndTime();

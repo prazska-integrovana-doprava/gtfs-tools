@@ -260,7 +260,7 @@ namespace TrainsEditor.GtfsExport
                 foreach (var train in overwrittenTrains)
                 {
                     var stationTimeInTrain = train.TrainData?.CZPTTInformation?.CZPTTLocation?.FirstOrDefault(loc => loc.Location.LocationPrimaryCode == stationTime.StationCode);
-                    if (stationTimeInTrain != null && stationTimeInTrain.GetLineInfo() != TrainLineInfo.UndefinedLineInfoInstance)
+                    if (stationTimeInTrain != null && stationTimeInTrain.GetLineInfo(_currentIntegratedSystem) != TrainLineInfo.UndefinedLineInfoInstance)
                     {
                         n++;
                         if (n >= 2)
@@ -401,6 +401,18 @@ namespace TrainsEditor.GtfsExport
                     Timezone = "Europe/Prague",
                     Url = "https://www.idzk.cz",
                     Email = "info@idzk.cz"
+                };
+            }
+            else if (integratedSystem == IntegratedSystemsEnum.IDESKA)
+            {
+                return new GtfsAgency()
+                {
+                    Id = "IDESKA",
+                    Name = "IDESKA",
+                    Lang = "cs",
+                    Timezone = "Europe/Prague",
+                    Url = "https://ideska.info",
+                    Email = "info@jikord.cz"
                 };
             }
             else

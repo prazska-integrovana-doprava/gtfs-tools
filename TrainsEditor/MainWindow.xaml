@@ -30,8 +30,8 @@
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
-                    <GridViewColumn Header="Linka" Width="55" DisplayMemberBinding="{Binding LineName}" />
-                    <GridViewColumn Header="IDS" Width="45">
+                    <GridViewColumn Header="Linka" Width="60" DisplayMemberBinding="{Binding LineName}" />
+                    <GridViewColumn Header="IDS" Width="55">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
                                 <StackPanel>
@@ -39,6 +39,7 @@
                                     <TextBlock Text="odis" FontWeight="Bold" Foreground="DarkBlue" Visibility="{Binding IsOdis, Converter={StaticResource BoolToVis}}" />
                                     <TextBlock Text="jmk" FontWeight="Bold" Foreground="Green" Visibility="{Binding IsJmk, Converter={StaticResource BoolToVis}}" />
                                     <TextBlock Text="idzk" FontWeight="Bold" Foreground="CornflowerBlue" Visibility="{Binding IsIdzk, Converter={StaticResource BoolToVis}}" />
+                                    <TextBlock Text="ideska" FontWeight="Bold" Foreground="DarkGreen" Visibility="{Binding IsIdeska, Converter={StaticResource BoolToVis}}" />
                                 </StackPanel>
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>

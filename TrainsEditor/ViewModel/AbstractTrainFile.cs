@@ -129,6 +129,14 @@ namespace TrainsEditor.ViewModel
         /// </summary>
         public bool IsIdzk => IntegratedSystems.Contains(IntegratedSystemsEnum.IDZK);
 
+        /// <summary>
+        /// True, pokud je vlak integrován v IDESKA
+        /// </summary>
+        public bool IsIdeska => IntegratedSystems.Contains(IntegratedSystemsEnum.IDESKA);
+
+        /// IDS, který je v aplikaci nastavený jako hlavní
+        protected IntegratedSystemsEnum _primaryIntegratedSystem;
+
         protected AbstractTrainFile(SingleTrainFile fileData)
         {
             FileData = fileData;
@@ -142,6 +150,7 @@ namespace TrainsEditor.ViewModel
         public virtual void ResetData(SingleTrainFile fileData, StationDatabase stationDb, RouteDatabase routeDb, IntegratedSystemsEnum currentIntegratedSystem)
         {
             FileData = fileData;
+            _primaryIntegratedSystem = currentIntegratedSystem;
         }
 
         /// <summary>

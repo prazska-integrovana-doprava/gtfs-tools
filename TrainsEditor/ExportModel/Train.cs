@@ -128,7 +128,7 @@ namespace TrainsEditor.ExportModel
                 var isLocationLast = location == czpttMessage.CZPTTInformation.CZPTTLocation.Last();
                 var isWheelchairAccessible = networkSpecificParamsProvider.FindCentralNotesForLocation(location, CentralNoteCode.WheelchairTransportAndPickup, CentralNoteCode.WheelchairTransportAvailable).Any();
 
-                var stationTime = StationTime.Create(location, czpttMessage, isWheelchairAccessible, tripOperationType, prevLocation, stopDb, isLocationFirst || isLocationLast, loaderLog);
+                var stationTime = StationTime.Create(location, czpttMessage, isWheelchairAccessible, tripOperationType, prevLocation, stopDb, isLocationFirst || isLocationLast, currentIntegratedSystem, loaderLog);
                 if (stationTime == null)
                     continue;
 
@@ -145,7 +145,7 @@ namespace TrainsEditor.ExportModel
                         || prevPublicStationTime.IsSubstituteTransportOnDeparture != stationTime.IsSubstituteTransportOnDeparture))
                 {
                     // nesmíme použít 'prevConstructedStationTime', protože potřebujeme vlastní referenci (bude jiná linka)
-                    stationTime = StationTime.Create(location, czpttMessage, isWheelchairAccessible, tripOperationType, prevLocation, stopDb, isLocationFirst || isLocationLast, loaderLog);
+                    stationTime = StationTime.Create(location, czpttMessage, isWheelchairAccessible, tripOperationType, prevLocation, stopDb, isLocationFirst || isLocationLast, currentIntegratedSystem, loaderLog);
                     if (stationTime.IsValid && stationTime.IsPublic)
                     {
                         var lineTrain = TrainTrip.Construct(resultTrain, stationTimes, lineDb, loaderLog, processLog, emptyLineHandler, currentIntegratedSystem);
@@ -167,7 +167,7 @@ namespace TrainsEditor.ExportModel
                 }
 
                 prevLocation = location;
-                if (stationTime.IsValid && stationTime.IsPublic)
+                if (stationTime.IsValid && stationTime.IsPublic || prevPublicStationTime == null)
                 {
                     prevPublicStationTime = stationTime;
                 }

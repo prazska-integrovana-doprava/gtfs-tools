@@ -145,7 +145,7 @@ namespace TrainsEditor.ViewModel
         {
             get
             {
-                return LocationData.GetLineInfo().LineName;
+                return LocationData.GetLineInfo(_primaryIntegratedSystem).LineName;
             }
             set
             {
@@ -267,7 +267,7 @@ namespace TrainsEditor.ViewModel
             TrainNetworkSpecificParamsProvider networkSpecificParams, IntegratedSystemsEnum currentIntegratedSystem)
         {
             var additionalData = locationData.GetAdditionalData(stationDb);
-            var lineInfo = locationData.GetLineInfo();
+            var lineInfo = locationData.GetLineInfo(currentIntegratedSystem);
 
             var integratedSystems = IntegratedSystemsEnum.None;
             if (lineInfo.LineType == TrainLineType.Pid || lineInfo.LineType == TrainLineType.PidFastTrain)

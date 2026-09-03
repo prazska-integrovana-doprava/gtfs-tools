@@ -46,14 +46,14 @@ namespace TrainsEditor.CommonLogic
         /// <summary>
         /// Vrátí info o lince platné v dané lokaci
         /// </summary>
-        public static TrainLineInfo GetLineInfo(this CZPTTLocation location)
+        public static TrainLineInfo GetLineInfo(this CZPTTLocation location, IntegratedSystemsEnum primaryIntegratedSystem)
         {
             var nsparam = location.NetworkSpecificParameter.FirstOrDefault(nsp => nsp.Name == "CZPassengerServiceNumber");
             if (!string.IsNullOrEmpty(nsparam?.Value))
             {
                 if (int.TryParse(nsparam.Value, out int trnum))
                 {
-                    return TrainLineInfo.TrainLineNumberToName(trnum);
+                    return TrainLineInfo.TrainLineNumberToName(trnum, primaryIntegratedSystem);
                 }
                 else
                 {

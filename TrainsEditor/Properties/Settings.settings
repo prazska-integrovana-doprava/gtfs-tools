@@ -2,24 +2,6 @@
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="TrainsEditor.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
-    <Setting Name="StopsAndLinesFileNameAsw" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">..\..\inputy\ZastavkyLinkyDopravci.xml</Value>
-    </Setting>
-    <Setting Name="FareKmFile" Type="System.String" Scope="Application">
-      <Value Profile="(Default)" />
-    </Setting>
-    <Setting Name="StopsAndLinesFileName" Type="System.String" Scope="Application">
-      <Value Profile="(Default)" />
-    </Setting>
-    <Setting Name="SR70Stops" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">..\..\inputy\SR70.csv</Value>
-    </Setting>
-    <Setting Name="RepositoryFolder" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">c:\temp\jrspoje\xml_repository</Value>
-    </Setting>
-    <Setting Name="TrackNetworkFile" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">..\..\inputy\sit_vlak.csv</Value>
-    </Setting>
     <Setting Name="OutputFolder" Type="System.String" Scope="Application">
       <Value Profile="(Default)">c:\temp\jrspoje\gtfs_vlaky</Value>
     </Setting>
@@ -87,6 +69,24 @@
 						&lt;/TripDirectionSpec&gt;
 					&lt;/ArrayOfTripDirectionSpec&gt;
 				</Value>
+    </Setting>
+    <Setting Name="StopsAndLinesFileNameAsw" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="SR70Stops" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">c:\temp\jrspoje\GVD\SR70.csv</Value>
+    </Setting>
+    <Setting Name="RepositoryFolder" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">c:\temp\jrspoje\GVD</Value>
+    </Setting>
+    <Setting Name="TrackNetworkFile" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">c:\temp\jrspoje\GVD\sit_vlak.csv</Value>
+    </Setting>
+    <Setting Name="StopsAndLinesFileName" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">c:\temp\jrspoje\GVD\VlakyIdeska.xml</Value>
+    </Setting>
+    <Setting Name="FareKmFile" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">c:\temp\jrspoje\GVD\fare_km.csv</Value>
     </Setting>
   </Settings>
 </SettingsFile>

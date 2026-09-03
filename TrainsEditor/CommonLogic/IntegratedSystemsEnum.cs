@@ -17,5 +17,9 @@ namespace TrainsEditor.CommonLogic
         IDSJMK = 4,
 
         IDZK = 8,
+
+        IDESKA = 16,
+
+        IDPK = 32,
     }
 }

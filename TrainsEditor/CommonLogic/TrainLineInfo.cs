@@ -57,6 +57,10 @@ namespace TrainsEditor.CommonLogic
             {
                 return LineType == TrainLineType.FastTrain || LineType == TrainLineType.Idzk;
             }
+            else if (integratedSystem == IntegratedSystemsEnum.IDESKA)
+            {
+                return LineType == TrainLineType.FastTrain || LineType == TrainLineType.Ideska;
+            }
             else
             {
                 throw new ArgumentException("Unsupported integrated system " + integratedSystem.ToString());
@@ -113,7 +117,7 @@ namespace TrainsEditor.CommonLogic
         /// Vytvoří instanci <see cref="TrainLineInfo"/> z číselníkové hodnoty SŽ (ta obsahuje informaci o IDS+lince)
         /// </summary>
         /// <param name="trainLineNumberCode">Číslo linky dle číselníku linek SŽ</param>
-        public static TrainLineInfo TrainLineNumberToName(int trainLineNumberCode)
+        public static TrainLineInfo TrainLineNumberToName(int trainLineNumberCode, IntegratedSystemsEnum primaryIntegratedSystem)
         {
             if (trainLineNumberCode <= 7)
             {
@@ -127,7 +131,7 @@ namespace TrainsEditor.CommonLogic
             {
                 return new TrainLineInfo(TrainLineType.PidFastTrain, $"R{trainLineNumberCode % 100}", trainLineNumberCode);
             }
-            else if (trainLineNumberCode > 1000 && trainLineNumberCode < 1100 || trainLineNumberCode == 3160 || trainLineNumberCode == 3166)
+            else if (trainLineNumberCode > 1000 && trainLineNumberCode < 1100 || (primaryIntegratedSystem == IntegratedSystemsEnum.PID && (trainLineNumberCode == 3160 || trainLineNumberCode == 3166)))
                 // 3160 = jihočeská S60 a 3166 = jihočeská S66 - nejjednodušší je prostě je považovat za PIDové, aby se to na hranici nelámalo na 2 linky
             {
                 return new TrainLineInfo(TrainLineType.Pid, $"S{trainLineNumberCode % 100}", trainLineNumberCode);
@@ -138,7 +142,14 @@ namespace TrainsEditor.CommonLogic
             }
             else if (trainLineNumberCode > 3100 && trainLineNumberCode < 3200)
             {
-                return new TrainLineInfo(TrainLineType.Ideska, $"jS{trainLineNumberCode % 100}", trainLineNumberCode);
+                if (primaryIntegratedSystem == IntegratedSystemsEnum.PID)
+                {
+                    return new TrainLineInfo(TrainLineType.Ideska, $"jS{trainLineNumberCode % 100}", trainLineNumberCode);
+                }
+                else
+                {
+                    return new TrainLineInfo(TrainLineType.Ideska, $"S{trainLineNumberCode % 100}", trainLineNumberCode);
+                }
             }
             else if (trainLineNumberCode >= 3200 && trainLineNumberCode < 3300)
             {
@@ -217,12 +228,13 @@ namespace TrainsEditor.CommonLogic
         /// <param name="primaryIntegratedSystem">Který IDS se má preferovat, pokud je název linky víceznačný (kvůli kolizím, "S1" se nedá jednoznačně určit, jestli je pražská, brněnská nebo ostravská).</param>
         public static int TrainLineNameToNumber(string lineName, IntegratedSystemsEnum primaryIntegratedSystem)
         {
-            var regex = new Regex("^([A-Za-z]+)([0-9]+)$");
+            var regex = new Regex("^([A-Za-z]+)([0-9]+)([A-Za-z0-9]*)$");
             var match = regex.Match(lineName);
             if (match.Success)
             {
                 var lineType = match.Groups[1].Value;
                 var lineNumber = int.Parse(match.Groups[2].Value);
+                var linePostfix = match.Groups[3].Value;
                 if (lineNumber == 0 || lineNumber >= 100)
                 {
                     return 0;
@@ -260,9 +272,24 @@ namespace TrainsEditor.CommonLogic
                 {
                     return 7200 + lineNumber;
                 }
-                else if (lineType == "jS")
+                else if (lineType == "jS" || lineType == "S" && primaryIntegratedSystem == IntegratedSystemsEnum.IDESKA)
                 {
                     return 3100 + lineNumber;
+                }
+                else if (lineType == "P")
+                {
+                    if (lineNumber == 1 && linePostfix == "Z")
+                    {
+                        return 3200;
+                    }
+                    else if (lineNumber == 1 && linePostfix == "J")
+                    {
+                        return 3201;
+                    }
+                    else
+                    {
+                        return 3200 + lineNumber;
+                    }
                 }
                 else if (lineType == "U")
                 {
